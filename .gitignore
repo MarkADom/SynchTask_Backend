@@ -1,0 +1,21 @@
+# Build & Gradle
+/build
+/.gradle
+
+# IntelliJ / IDE
+/.idea
+*.iml
+
+# Environment / secrets
+.env
+.env.*
+.envrc
+
+# OS
+.DS_Store
+
+# Security / crypto material
+config/keys/
+*.pem
+*.key
+*.jks

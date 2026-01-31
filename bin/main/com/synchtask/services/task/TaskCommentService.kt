@@ -1,0 +1,89 @@
+package com.synchtask.services.task
+
+import com.synchtask.dtos.task.TaskCommentCreateDTO
+import com.synchtask.dtos.task.TaskCommentResponseDTO
+import com.synchtask.entities.NotificationType
+import com.synchtask.entities.TaskComment
+import com.synchtask.exception.ResourceNotFoundException
+import com.synchtask.repositories.TaskCommentRepository
+import com.synchtask.repositories.TaskRepository
+import com.synchtask.repositories.UserRepository
+import com.synchtask.services.notification.NotificationService
+import org.slf4j.LoggerFactory
+import org.springframework.messaging.simp.SimpMessagingTemplate
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+
+/**
+ * **Task Comment Service**
+ *
+ * Handles creation and retrieval of comments for tasks.
+ */
+@Service
+class TaskCommentService(
+    private val taskCommentRepository: TaskCommentRepository,
+    private val taskRepository: TaskRepository,
+    private val userRepository: UserRepository,
+    private val notificationService: NotificationService,
+    private val messagingTemplate: SimpMessagingTemplate
+) {
+
+    private val logger = LoggerFactory.getLogger(TaskCommentService::class.java)
+
+    /**
+     * **Adds a comment to a task.**
+     */
+    /**
+     * **Adds a comment to a task.**
+     */
+    @Transactional
+    fun addComment(taskId: Long, userEmail: String, request: TaskCommentCreateDTO): TaskCommentResponseDTO {
+        val task = taskRepository.findById(taskId)
+            .orElseThrow { ResourceNotFoundException("Task not found") }
+
+        val user = userRepository.findByEmail(userEmail)
+            .orElseThrow { ResourceNotFoundException("User not found") }
+
+        // Verifies that the user has permission to comment
+        if (user != task.owner && !task.collaborators.contains(user)) {
+            throw IllegalAccessException("User not authorized to comment on this task")
+        }
+
+        val comment = TaskComment(
+            task = task,
+            user = user,
+            content = request.content
+        )
+
+        taskCommentRepository.save(comment)
+
+        // Sends notifications to the task owner and all collaborators
+        (task.collaborators + task.owner).forEach {
+            notificationService.sendNotification(
+                userEmail = it.email,
+                message = "New comment on task '${task.title}' by ${user.email}: ${request.content}",
+                type = NotificationType.TASK_UPDATE,
+                groupId = task.id
+            )
+        }
+
+        // Sends a real-time update via WebSocket
+        val commentDTO = TaskCommentResponseDTO.fromEntity(comment)
+        messagingTemplate.convertAndSend("/topic/tasks/${task.id}/comments", commentDTO)
+
+        logger.info("Comment added by ${user.email} on task '${task.title}'")
+        return commentDTO
+    }
+
+
+    /**
+     * **Gets all comments for a task.**
+     */
+    fun getCommentsForTask(taskId: Long): List<TaskCommentResponseDTO> {
+        val task = taskRepository.findById(taskId)
+            .orElseThrow { ResourceNotFoundException("Task not found") }
+
+        return taskCommentRepository.findByTaskOrderByCreatedAtAsc(task)
+            .map { TaskCommentResponseDTO.fromEntity(it) }
+    }
+}

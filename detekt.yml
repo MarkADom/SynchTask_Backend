@@ -1,0 +1,20 @@
+style:
+  MagicNumber:
+    active: true
+    ignoreNumbers: [ "-1", "0", "1", "2", "100", "60" ]
+    ignoreHashCodeFunction: true
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+
+  MaxLineLength:
+    active: true
+    maxLineLength: 140
+
+naming:
+  ClassNaming:
+    active: true
+    classPattern: '[A-Z][a-zA-Z0-9]*'
+
+comments:
+  UndocumentedPublicClass:
+    active: false
