@@ -24,7 +24,7 @@ class OAuth2Controller {
      * @param user The OAuth2 authenticated user principal.
      * @return A map containing email, name and roles.
      */
-    @GetMapping("/user")
+    @GetMapping("/com/synchtask/user")
     fun getAuthenticatedUser(@AuthenticationPrincipal user: OAuth2User): Map<String, Any> {
         val email = user.attributes["email"] ?: "unknown"
         val name = user.attributes["name"] ?: "unknown"

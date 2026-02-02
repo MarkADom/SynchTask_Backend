@@ -1,12 +1,13 @@
 package com.synchtask.services.project
 
+import com.synchtask.board.domain.entity.Board
 import com.synchtask.dtos.project.ProjectCreateDTO
 import com.synchtask.dtos.project.ProjectResponseDTO
 import com.synchtask.dtos.project.ProjectUpdateDTO
 import com.synchtask.dtos.project.toResponseDTO
 import com.synchtask.entities.Project
-import com.synchtask.entities.User
-import com.synchtask.repositories.BoardRepository
+import com.synchtask.user.domain.entity.User
+import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.repositories.ProjectRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -89,7 +90,7 @@ class ProjectService(
         projectRepository.delete(project)
     }
 
-    private fun validateBoardsExist(expectedIds: List<Long>, actualBoards: List<com.synchtask.entities.Board>) {
+    private fun validateBoardsExist(expectedIds: List<Long>, actualBoards: List<Board>) {
         if (actualBoards.size != expectedIds.size) {
             throw IllegalArgumentException("One or more boards not found for provided IDs")
         }

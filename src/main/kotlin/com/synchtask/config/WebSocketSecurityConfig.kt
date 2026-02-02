@@ -59,7 +59,7 @@ class WebSocketSecurityConfig(
         logger.info("Configuring STOMP broker prefixes")
         registry.enableSimpleBroker("/topic", "/queue")
         registry.setApplicationDestinationPrefixes("/app")
-        registry.setUserDestinationPrefix("/user")
+        registry.setUserDestinationPrefix("/com/synchtask/user")
     }
 
     @Bean
@@ -78,7 +78,7 @@ class WebSocketSecurityConfig(
         return MessageMatcherDelegatingAuthorizationManager.builder()
             .simpTypeMatchers(SimpMessageType.CONNECT).permitAll() // TODO: change to authenticated() in production
             .simpDestMatchers("/ws/**", "/ws-notifications/**").authenticated()
-            .simpDestMatchers("/user/queue/**").authenticated()
+            .simpDestMatchers("/com/synchtask/user/queue/**").authenticated()
             .simpDestMatchers("/topic/**").permitAll()
             .anyMessage().denyAll()
             .build()

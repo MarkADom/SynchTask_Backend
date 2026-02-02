@@ -2,7 +2,7 @@ package com.synchtask.dtos.notification
 
 import com.synchtask.entities.Notification
 import com.synchtask.entities.NotificationType
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import java.time.LocalDateTime
 
 data class NotificationRedisDTO(

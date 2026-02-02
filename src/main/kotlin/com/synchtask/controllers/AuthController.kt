@@ -1,14 +1,14 @@
 package com.synchtask.controllers
 
-import com.synchtask.dtos.user.UserLoginDTO
-import com.synchtask.dtos.user.UserRegistrationDTO
-import com.synchtask.dtos.user.UserResponseDTO
-import com.synchtask.entities.UserRole
+import com.synchtask.user.application.dto.UserLoginDTO
+import com.synchtask.user.application.dto.UserRegistrationDTO
+import com.synchtask.user.application.dto.UserResponseDTO
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.managers.AuthManager
 import com.synchtask.security.JwtKeyManager
 import com.synchtask.services.auth.AuthService
 import com.synchtask.services.auth.RefreshTokenService
-import com.synchtask.services.user.UserService
+import com.synchtask.user.application.service.UserService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.Logger
@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.core.user.OAuth2User
@@ -89,7 +88,7 @@ class AuthController(
             val responseBody = mapOf(
                 "accessToken" to tokens["accessToken"]!!,
                 "refreshToken" to tokens["refreshToken"]!!,
-                "user" to userDto
+                "com/synchtask/user" to userDto
             )
 
             ResponseEntity.ok(responseBody)

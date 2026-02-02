@@ -2,8 +2,9 @@ package com.synchtask.services.chat
 
 import com.synchtask.entities.ChatMessage
 import com.synchtask.entities.ChatRoom
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import com.synchtask.repositories.ChatMessageRepository
+import com.synchtask.user.domain.entity.UserRole
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -34,7 +35,7 @@ class ChatLoggingServiceTest {
             name = "Alice",
             email = "alice@synchtask.com",
             passwordHash = "hashedPassword",
-            role = com.synchtask.entities.UserRole.USER
+            role = UserRole.USER
         )
 
         chatRoom = ChatRoom(id = 100L)

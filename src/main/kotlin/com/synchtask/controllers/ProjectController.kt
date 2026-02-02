@@ -4,7 +4,7 @@ import com.synchtask.dtos.project.ProjectCreateDTO
 import com.synchtask.dtos.project.ProjectResponseDTO
 import com.synchtask.dtos.project.ProjectUpdateDTO
 import com.synchtask.services.project.ProjectService
-import com.synchtask.services.user.UserService
+import com.synchtask.user.application.service.UserService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize

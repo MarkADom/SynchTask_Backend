@@ -1,12 +1,16 @@
 package com.synchtask.controllers
 
-import com.synchtask.dtos.user.*
-import com.synchtask.entities.User
-import com.synchtask.entities.UserRole
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.exception.UnauthorizedAccessException
 import com.synchtask.services.friend.FriendService
-import com.synchtask.services.user.UserService
+import com.synchtask.user.application.service.UserService
+import com.synchtask.user.application.dto.UpdateUserDTO
+import com.synchtask.user.application.dto.UserRegistrationDTO
+import com.synchtask.user.application.dto.UserResponseDTO
+import com.synchtask.user.application.dto.UserStatusDTO
+import com.synchtask.user.presentation.controller.UserController
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.springframework.http.HttpStatus

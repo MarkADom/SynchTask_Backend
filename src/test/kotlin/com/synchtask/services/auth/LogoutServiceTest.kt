@@ -2,8 +2,8 @@
 package com.synchtask.services.auth
 
 import com.synchtask.entities.RefreshToken
-import com.synchtask.entities.User
-import com.synchtask.entities.UserRole
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.repositories.RefreshTokenRepository
 import io.mockk.*
 import jakarta.servlet.http.HttpServletRequest

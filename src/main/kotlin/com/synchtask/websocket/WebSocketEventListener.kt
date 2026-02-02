@@ -1,7 +1,7 @@
 package com.synchtask.websocket
 
 import com.synchtask.handlers.WebSocketReconnectionHandler
-import com.synchtask.services.user.UserService
+import com.synchtask.user.application.service.UserService
 import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor

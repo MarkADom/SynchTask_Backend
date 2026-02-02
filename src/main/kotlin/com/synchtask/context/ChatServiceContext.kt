@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.synchtask.managers.WebSocketManager
 import com.synchtask.repositories.ChatMessageRepository
 import com.synchtask.repositories.ChatRoomRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.services.redis.RedisPublisher
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component

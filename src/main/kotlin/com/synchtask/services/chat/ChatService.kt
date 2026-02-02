@@ -8,7 +8,7 @@ import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.exception.UnauthorizedAccessException
 import com.synchtask.repositories.ChatMessageRepository
 import com.synchtask.repositories.ChatRoomRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

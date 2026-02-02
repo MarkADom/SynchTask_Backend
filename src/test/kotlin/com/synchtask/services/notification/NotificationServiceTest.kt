@@ -4,7 +4,7 @@ import com.synchtask.dtos.notification.NotificationRedisDTO
 import com.synchtask.dtos.notification.NotificationResponseDTO
 import com.synchtask.entities.Notification
 import com.synchtask.entities.NotificationType
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import com.synchtask.mappers.NotificationMapper
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach

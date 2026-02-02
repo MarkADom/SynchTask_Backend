@@ -3,7 +3,7 @@ package com.synchtask.controllers
 import com.synchtask.dtos.friend.FriendRequestDTO
 import com.synchtask.entities.Friend
 import com.synchtask.entities.FriendshipStatus
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import com.synchtask.services.friend.FriendService
 import io.mockk.*
 import org.junit.jupiter.api.*

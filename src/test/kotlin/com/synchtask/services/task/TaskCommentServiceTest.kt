@@ -1,17 +1,19 @@
 package com.synchtask.services.task
 
+import com.synchtask.board.domain.entity.Board
 import com.synchtask.task.application.dto.TaskCommentCreateDTO
 import com.synchtask.task.application.dto.TaskCommentResponseDTO
 import com.synchtask.entities.*
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.task.domain.repository.TaskCommentRepository
 import com.synchtask.task.domain.repository.TaskRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.services.notification.NotificationService
 import com.synchtask.task.application.service.TaskCommentService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.task.domain.entity.TaskStatus
+import com.synchtask.user.domain.entity.User
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

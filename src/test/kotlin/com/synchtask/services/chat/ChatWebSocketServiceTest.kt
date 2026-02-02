@@ -5,11 +5,11 @@ import com.synchtask.context.ChatServiceContext
 import com.synchtask.dtos.chat.WebSocketMessageDTO
 import com.synchtask.entities.ChatMessage
 import com.synchtask.entities.ChatRoom
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import com.synchtask.managers.WebSocketManager
 import com.synchtask.repositories.ChatMessageRepository
 import com.synchtask.repositories.ChatRoomRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.services.redis.RedisPublisher
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach

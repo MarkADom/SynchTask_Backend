@@ -1,8 +1,8 @@
 package com.synchtask.managers
 
 import com.synchtask.context.AuthServiceContext
-import com.synchtask.dtos.user.UserRegistrationDTO
-import com.synchtask.entities.User
+import com.synchtask.user.application.dto.UserRegistrationDTO
+import com.synchtask.user.domain.entity.User
 import org.springframework.stereotype.Component
 
 @Component

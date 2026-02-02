@@ -3,7 +3,7 @@ package com.synchtask.services.notification
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.synchtask.dtos.notification.NotificationResponseDTO
 import com.synchtask.entities.NotificationType
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import com.synchtask.mappers.NotificationMapper
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory

@@ -4,7 +4,7 @@ import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.exception.UnauthorizedAccessException
 import com.synchtask.task.application.service.TaskService
-import com.synchtask.services.user.UserService
+import com.synchtask.user.application.service.UserService
 import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskLabelUpdateDTO

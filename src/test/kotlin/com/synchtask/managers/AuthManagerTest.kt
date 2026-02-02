@@ -1,13 +1,13 @@
 package com.synchtask.managers
 
 import com.synchtask.context.AuthServiceContext
-import com.synchtask.dtos.user.UserRegistrationDTO
+import com.synchtask.user.application.dto.UserRegistrationDTO
 import com.synchtask.entities.RefreshToken
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import com.synchtask.security.JwtTokenProvider
 import com.synchtask.services.auth.AuthService
 import com.synchtask.services.auth.RefreshTokenService
-import com.synchtask.services.user.UserService
+import com.synchtask.user.application.service.UserService
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

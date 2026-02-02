@@ -2,8 +2,8 @@ package com.synchtask.task.application.service
 
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskStatus
-import com.synchtask.entities.User
-import com.synchtask.repositories.queries.TaskSpecificationQueryBuilder
+import com.synchtask.user.domain.entity.User
+import com.synchtask.task.domain.repository.query.TaskSpecificationQueryBuilder
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service

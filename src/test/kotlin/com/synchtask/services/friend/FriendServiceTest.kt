@@ -2,11 +2,11 @@ package com.synchtask.services.friend
 
 import com.synchtask.entities.Friend
 import com.synchtask.entities.FriendshipStatus
-import com.synchtask.entities.User
-import com.synchtask.entities.UserRole
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.exception.FriendRequestAlreadySentException
 import com.synchtask.repositories.FriendRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.services.notification.NotificationService
 import io.mockk.*
 import org.junit.jupiter.api.*

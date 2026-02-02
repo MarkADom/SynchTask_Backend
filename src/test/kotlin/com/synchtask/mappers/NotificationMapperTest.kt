@@ -3,7 +3,7 @@ package com.synchtask.mappers
 import com.synchtask.dtos.notification.NotificationRedisDTO
 import com.synchtask.entities.Notification
 import com.synchtask.entities.NotificationType
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime

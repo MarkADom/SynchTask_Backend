@@ -1,6 +1,6 @@
 package com.synchtask.dtos.project
 
-import com.synchtask.dtos.board.BoardSimpleDTO
+import com.synchtask.board.application.dto.BoardSimpleDTO
 import com.synchtask.entities.Project
 import jakarta.validation.constraints.NotBlank
 import java.time.LocalDate

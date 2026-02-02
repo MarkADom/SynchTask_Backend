@@ -1,10 +1,10 @@
 package com.synchtask.services.chat
 
-import com.synchtask.entities.User
-import com.synchtask.entities.UserEncryptionKeys
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserEncryptionKeys
 import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.repositories.UserEncryptionKeysRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.domain.repository.UserEncryptionKeysRepository
+import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*

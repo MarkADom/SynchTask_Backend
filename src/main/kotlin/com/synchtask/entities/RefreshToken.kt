@@ -1,5 +1,6 @@
 package com.synchtask.entities
 
+import com.synchtask.user.domain.entity.User
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType

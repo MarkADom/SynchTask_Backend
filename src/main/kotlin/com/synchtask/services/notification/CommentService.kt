@@ -4,7 +4,7 @@ import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.task.domain.repository.TaskCommentRepository
 import com.synchtask.task.domain.repository.TaskRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

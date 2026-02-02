@@ -1,7 +1,7 @@
 package com.synchtask.repositories
 
 import com.synchtask.entities.ChatRoom
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query

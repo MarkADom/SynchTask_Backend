@@ -5,7 +5,7 @@ import com.synchtask.entities.Notification
 import com.synchtask.entities.NotificationType
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.repositories.NotificationRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service

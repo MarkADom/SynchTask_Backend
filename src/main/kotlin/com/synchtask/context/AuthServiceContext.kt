@@ -3,7 +3,7 @@ package com.synchtask.context
 import com.synchtask.security.JwtTokenProvider
 import com.synchtask.services.auth.AuthService
 import com.synchtask.services.auth.RefreshTokenService
-import com.synchtask.services.user.UserService
+import com.synchtask.user.application.service.UserService
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component

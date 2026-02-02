@@ -1,7 +1,7 @@
 package com.synchtask.task.domain.entity
 
-import com.synchtask.entities.Board
-import com.synchtask.entities.User
+import com.synchtask.board.domain.entity.Board
+import com.synchtask.user.domain.entity.User
 import jakarta.persistence.CascadeType
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column

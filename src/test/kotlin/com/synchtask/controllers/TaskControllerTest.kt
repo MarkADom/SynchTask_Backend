@@ -1,14 +1,16 @@
 package com.synchtask.controllers
 
+import com.synchtask.board.domain.entity.Board
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.entities.*
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.task.application.service.TaskService
-import com.synchtask.services.user.UserService
+import com.synchtask.user.application.service.UserService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.presentation.controller.TaskController
+import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,7 +28,7 @@ class TaskControllerTest {
     private lateinit var userService: UserService
     private lateinit var controller: TaskController
 
-    private lateinit var userEntity: com.synchtask.entities.User
+    private lateinit var userEntity: com.synchtask.user.domain.entity.User
     private lateinit var userDetails: UserDetails
     private lateinit var board: Board
 
@@ -36,7 +38,7 @@ class TaskControllerTest {
         userService = mockk()
         controller = TaskController(taskService, userService)
 
-        userEntity = com.synchtask.entities.User(
+        userEntity = com.synchtask.user.domain.entity.User(
             id = 1L,
             email = "user@synchtask.com",
             name = "User",

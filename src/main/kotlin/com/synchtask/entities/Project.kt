@@ -1,5 +1,7 @@
 package com.synchtask.entities
 
+import com.synchtask.board.domain.entity.Board
+import com.synchtask.user.domain.entity.User
 import jakarta.persistence.*
 import java.time.LocalDate
 import java.time.LocalDateTime

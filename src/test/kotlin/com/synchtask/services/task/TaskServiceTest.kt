@@ -1,5 +1,7 @@
 package com.synchtask.services.task
 
+import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.entities.*
 import com.synchtask.exception.ResourceNotFoundException
@@ -9,6 +11,9 @@ import com.synchtask.task.application.service.TaskService
 import com.synchtask.task.application.service.TaskSpecificationService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.repository.TaskRepository
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.websocket.TaskWebSocketService
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach

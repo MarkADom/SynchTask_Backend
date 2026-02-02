@@ -1,7 +1,7 @@
 package com.synchtask.repositories
 
 import com.synchtask.entities.RefreshToken
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -15,7 +15,7 @@ interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {
 
     fun findByToken(token: String): Optional<RefreshToken>
 
-    @EntityGraph(attributePaths = ["user"])
+    @EntityGraph(attributePaths = ["com/synchtask/user"])
     fun findAllByUserAndIsRevokedFalse(user: User): List<RefreshToken>
 
     @Modifying

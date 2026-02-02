@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface TaskCommentRepository : JpaRepository<TaskComment, Long> {
 
-    @EntityGraph(attributePaths = ["user"])
+    @EntityGraph(attributePaths = ["com/synchtask/user"])
     fun findByTaskOrderByCreatedAtAsc(task: Task): List<TaskComment>
 }

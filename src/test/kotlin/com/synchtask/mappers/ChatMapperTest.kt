@@ -4,7 +4,7 @@ import com.synchtask.dtos.chat.ChatMessageDTO
 import com.synchtask.dtos.chat.ChatRoomDTO
 import com.synchtask.entities.ChatMessage
 import com.synchtask.entities.ChatRoom
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
