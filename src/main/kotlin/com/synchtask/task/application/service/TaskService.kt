@@ -4,7 +4,7 @@ import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.entities.FriendshipStatus
-import com.synchtask.entities.NotificationType
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.user.domain.entity.User
@@ -15,7 +15,7 @@ import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.repositories.FriendRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.repository.UserRepository
-import com.synchtask.services.notification.NotificationService
+import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.websocket.TaskWebSocketService
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page

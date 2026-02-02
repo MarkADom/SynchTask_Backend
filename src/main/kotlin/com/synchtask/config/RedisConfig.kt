@@ -2,7 +2,7 @@ package com.synchtask.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.synchtask.dtos.notification.NotificationRedisDTO
+import com.synchtask.notification.application.dto.NotificationRedisDTO
 import com.synchtask.services.redis.RedisSubscriber
 import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory

@@ -1,4 +1,4 @@
-package com.synchtask.services.notification
+package com.synchtask.notification.application.service
 
 import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.exception.ResourceNotFoundException

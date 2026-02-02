@@ -7,7 +7,7 @@ import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.exception.FriendRequestAlreadySentException
 import com.synchtask.repositories.FriendRepository
 import com.synchtask.user.domain.repository.UserRepository
-import com.synchtask.services.notification.NotificationService
+import com.synchtask.notification.application.service.NotificationService
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*

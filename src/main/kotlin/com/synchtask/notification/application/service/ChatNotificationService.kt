@@ -1,4 +1,4 @@
-package com.synchtask.services.notification
+package com.synchtask.notification.application.service
 
 import com.synchtask.chat.application.dto.ChatNotificationDTO
 import org.slf4j.LoggerFactory

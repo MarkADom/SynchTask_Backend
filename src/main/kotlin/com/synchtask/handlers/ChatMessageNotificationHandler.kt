@@ -1,8 +1,9 @@
 package com.synchtask.handlers
 
-import com.synchtask.entities.NotificationType
+import com.synchtask.notification.application.handler.NotificationHandler
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.user.domain.entity.User
-import com.synchtask.services.notification.NotificationService
+import com.synchtask.notification.application.service.NotificationService
 import org.springframework.stereotype.Component
 
 /**

@@ -2,8 +2,8 @@ package com.synchtask.services.redis
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.synchtask.chat.application.dto.ChatMessageDTO
-import com.synchtask.dtos.notification.NotificationDTO
-import com.synchtask.entities.NotificationType
+import com.synchtask.notification.application.dto.NotificationDTO
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.managers.WebSocketManager
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach

@@ -1,6 +1,6 @@
 package com.synchtask.services.redis
 
-import com.synchtask.dtos.notification.NotificationRedisDTO
+import com.synchtask.notification.application.dto.NotificationRedisDTO
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.scheduling.annotation.Scheduled

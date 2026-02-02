@@ -1,6 +1,6 @@
-package com.synchtask.services.notification
+package com.synchtask.notification.application.service
 
-import com.synchtask.dtos.notification.NotificationDTO
+import com.synchtask.notification.application.dto.NotificationDTO
 import com.synchtask.managers.WebSocketManager
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate

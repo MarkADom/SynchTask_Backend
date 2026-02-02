@@ -1,4 +1,4 @@
-package com.synchtask.entities
+package com.synchtask.notification.domain.entity
 
 enum class NotificationType {
     PERSONAL,

@@ -1,9 +1,9 @@
-package com.synchtask.mappers
+package com.synchtask.notification.presentation.mapper
 
-import com.synchtask.dtos.notification.NotificationDTO
-import com.synchtask.dtos.notification.NotificationRedisDTO
-import com.synchtask.dtos.notification.NotificationResponseDTO
-import com.synchtask.entities.Notification
+import com.synchtask.notification.application.dto.NotificationDTO
+import com.synchtask.notification.application.dto.NotificationRedisDTO
+import com.synchtask.notification.application.dto.NotificationResponseDTO
+import com.synchtask.notification.domain.entity.Notification
 
 object NotificationMapper {
 

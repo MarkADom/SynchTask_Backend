@@ -1,6 +1,6 @@
-package com.synchtask.repositories
+package com.synchtask.notification.domain.repository
 
-import com.synchtask.entities.Notification
+import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.user.domain.entity.User
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository

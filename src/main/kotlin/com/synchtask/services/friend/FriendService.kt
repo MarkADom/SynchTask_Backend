@@ -2,8 +2,9 @@ package com.synchtask.services.friend
 
 import com.synchtask.entities.*
 import com.synchtask.exception.*
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.repositories.*
-import com.synchtask.services.notification.NotificationService
+import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory

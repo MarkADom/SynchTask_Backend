@@ -1,24 +1,24 @@
-package com.synchtask.handlers
+package com.synchtask.notification.application.handler
 
-import com.synchtask.entities.NotificationType
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.user.domain.entity.User
-import com.synchtask.services.notification.NotificationService
+import com.synchtask.notification.application.service.NotificationService
 import org.springframework.stereotype.Component
 
 @Component
-class InvitationNotificationHandler(
+class TaskUpdateNotificationHandler(
     private val notificationService: NotificationService
 ) : NotificationHandler {
 
     override fun supports(type: NotificationType): Boolean {
-        return type == NotificationType.INVITATION
+        return type == NotificationType.TASK_UPDATE
     }
 
     override fun handle(user: User) {
         notificationService.sendNotification(
             user.email,
-            "You've been invited to collaborate on a board!",
-            NotificationType.INVITATION
+            "A task assigned to you has been updated.",
+            NotificationType.TASK_UPDATE
         )
     }
 }

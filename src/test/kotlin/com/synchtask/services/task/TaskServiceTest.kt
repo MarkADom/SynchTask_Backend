@@ -3,10 +3,9 @@ package com.synchtask.services.task
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.task.application.dto.TaskCreateDTO
-import com.synchtask.entities.*
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.repositories.*
-import com.synchtask.services.notification.NotificationService
+import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.task.application.service.TaskService
 import com.synchtask.task.application.service.TaskSpecificationService
 import com.synchtask.task.domain.entity.Task

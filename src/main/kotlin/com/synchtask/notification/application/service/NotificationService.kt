@@ -1,10 +1,10 @@
-package com.synchtask.services.notification
+package com.synchtask.notification.application.service
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.synchtask.dtos.notification.NotificationResponseDTO
-import com.synchtask.entities.NotificationType
+import com.synchtask.notification.application.dto.NotificationResponseDTO
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.user.domain.entity.User
-import com.synchtask.mappers.NotificationMapper
+import com.synchtask.notification.presentation.mapper.NotificationMapper
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.MessagingException

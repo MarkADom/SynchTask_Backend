@@ -1,6 +1,6 @@
-package com.synchtask.dtos.notification
+package com.synchtask.notification.application.dto
 
-import com.synchtask.entities.NotificationType
+import com.synchtask.notification.domain.entity.NotificationType
 import java.time.LocalDateTime
 
 data class NotificationResponseDTO(

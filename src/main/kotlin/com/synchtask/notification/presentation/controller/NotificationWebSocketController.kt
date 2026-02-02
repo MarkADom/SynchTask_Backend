@@ -1,6 +1,6 @@
-package com.synchtask.controllers
+package com.synchtask.notification.presentation.controller
 
-import com.synchtask.dtos.notification.NotificationDTO
+import com.synchtask.notification.application.dto.NotificationDTO
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.security.core.context.SecurityContextHolder

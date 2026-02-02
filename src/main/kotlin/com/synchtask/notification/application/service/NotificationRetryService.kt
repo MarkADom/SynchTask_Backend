@@ -1,7 +1,7 @@
-package com.synchtask.services.notification
+package com.synchtask.notification.application.service
 
-import com.synchtask.mappers.NotificationMapper
-import com.synchtask.repositories.NotificationRepository
+import com.synchtask.notification.presentation.mapper.NotificationMapper
+import com.synchtask.notification.domain.repository.NotificationRepository
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service

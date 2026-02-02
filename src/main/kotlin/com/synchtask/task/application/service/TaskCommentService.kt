@@ -2,13 +2,13 @@ package com.synchtask.task.application.service
 
 import com.synchtask.task.application.dto.TaskCommentCreateDTO
 import com.synchtask.task.application.dto.TaskCommentResponseDTO
-import com.synchtask.entities.NotificationType
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.task.domain.repository.TaskCommentRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.repository.UserRepository
-import com.synchtask.services.notification.NotificationService
+import com.synchtask.notification.application.service.NotificationService
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service

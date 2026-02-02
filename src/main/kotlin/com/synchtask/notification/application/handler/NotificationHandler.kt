@@ -1,6 +1,6 @@
-package com.synchtask.handlers
+package com.synchtask.notification.application.handler
 
-import com.synchtask.entities.NotificationType
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.user.domain.entity.User
 
 interface NotificationHandler {

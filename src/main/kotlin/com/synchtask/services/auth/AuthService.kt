@@ -3,7 +3,7 @@ package com.synchtask.services.auth
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.exception.InvalidCredentialsException
 import com.synchtask.managers.NotificationManager
-import com.synchtask.handlers.WelcomeNotificationHandler
+import com.synchtask.notification.application.handler.WelcomeNotificationHandler
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.security.JwtTokenProvider
 import org.slf4j.LoggerFactory

@@ -3,7 +3,7 @@ package com.synchtask.services.redis
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.synchtask.chat.application.dto.ChatMessageDTO
-import com.synchtask.dtos.notification.NotificationDTO
+import com.synchtask.notification.application.dto.NotificationDTO
 import com.synchtask.managers.WebSocketManager
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.MessagingException

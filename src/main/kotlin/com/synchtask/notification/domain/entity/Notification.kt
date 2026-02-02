@@ -1,4 +1,4 @@
-package com.synchtask.entities
+package com.synchtask.notification.domain.entity
 
 import com.synchtask.user.domain.entity.User
 import jakarta.persistence.Column
@@ -15,7 +15,6 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.Fetch
 import org.hibernate.annotations.FetchMode
-import org.hibernate.grammars.hql.HqlLexer.JOIN
 import java.time.LocalDateTime
 
 @Entity

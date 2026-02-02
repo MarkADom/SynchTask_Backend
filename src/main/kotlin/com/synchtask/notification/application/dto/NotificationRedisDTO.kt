@@ -1,7 +1,7 @@
-package com.synchtask.dtos.notification
+package com.synchtask.notification.application.dto
 
-import com.synchtask.entities.Notification
-import com.synchtask.entities.NotificationType
+import com.synchtask.notification.domain.entity.Notification
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.user.domain.entity.User
 import java.time.LocalDateTime
 
