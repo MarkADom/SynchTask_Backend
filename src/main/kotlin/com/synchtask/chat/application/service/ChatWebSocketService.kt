@@ -1,8 +1,8 @@
-package com.synchtask.services.chat
+package com.synchtask.chat.application.service
 
 import com.synchtask.context.ChatServiceContext
-import com.synchtask.dtos.chat.WebSocketMessageDTO
-import com.synchtask.entities.ChatMessage
+import com.synchtask.chat.application.dto.WebSocketMessageDTO
+import com.synchtask.chat.domain.entity.ChatMessage
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.exception.UnauthorizedAccessException
 import org.slf4j.LoggerFactory

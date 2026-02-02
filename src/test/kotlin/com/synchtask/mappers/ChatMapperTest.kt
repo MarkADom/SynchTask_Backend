@@ -1,9 +1,10 @@
 package com.synchtask.mappers
 
-import com.synchtask.dtos.chat.ChatMessageDTO
-import com.synchtask.dtos.chat.ChatRoomDTO
-import com.synchtask.entities.ChatMessage
-import com.synchtask.entities.ChatRoom
+import com.synchtask.chat.application.dto.ChatMessageDTO
+import com.synchtask.chat.application.dto.ChatRoomDTO
+import com.synchtask.chat.domain.entity.ChatMessage
+import com.synchtask.chat.domain.entity.ChatRoom
+import com.synchtask.chat.presentation.mapper.ChatMapper
 import com.synchtask.user.domain.entity.User
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

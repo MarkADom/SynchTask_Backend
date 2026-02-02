@@ -1,9 +1,10 @@
 package com.synchtask.services.chat
 
-import com.synchtask.entities.ChatMessage
-import com.synchtask.entities.ChatRoom
+import com.synchtask.chat.application.service.ChatLoggingService
+import com.synchtask.chat.domain.entity.ChatMessage
+import com.synchtask.chat.domain.entity.ChatRoom
 import com.synchtask.user.domain.entity.User
-import com.synchtask.repositories.ChatMessageRepository
+import com.synchtask.chat.domain.repository.ChatMessageRepository
 import com.synchtask.user.domain.entity.UserRole
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs

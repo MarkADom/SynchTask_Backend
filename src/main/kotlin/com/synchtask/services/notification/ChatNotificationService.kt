@@ -1,6 +1,6 @@
 package com.synchtask.services.notification
 
-import com.synchtask.dtos.chat.ChatNotificationDTO
+import com.synchtask.chat.application.dto.ChatNotificationDTO
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Service

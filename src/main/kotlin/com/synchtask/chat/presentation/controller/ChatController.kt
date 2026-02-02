@@ -1,15 +1,20 @@
-package com.synchtask.controllers
+package com.synchtask.chat.presentation.controller
 
-import com.synchtask.dtos.chat.ChatMessageDTO
-import com.synchtask.dtos.chat.ChatRoomDTO
-import com.synchtask.services.chat.ChatService
-import com.synchtask.services.chat.KeyExchangeService
+import com.synchtask.chat.application.dto.ChatMessageDTO
+import com.synchtask.chat.application.dto.ChatRoomDTO
+import com.synchtask.chat.application.service.ChatService
+import com.synchtask.chat.application.service.KeyExchangeService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 /**
  * Chat-related HTTP endpoints.

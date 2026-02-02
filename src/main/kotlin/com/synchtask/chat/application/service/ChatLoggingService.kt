@@ -1,7 +1,7 @@
-package com.synchtask.services.chat
+package com.synchtask.chat.application.service
 
-import com.synchtask.entities.ChatMessage
-import com.synchtask.repositories.ChatMessageRepository
+import com.synchtask.chat.domain.entity.ChatMessage
+import com.synchtask.chat.domain.repository.ChatMessageRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

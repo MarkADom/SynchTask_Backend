@@ -1,7 +1,7 @@
-package com.synchtask.repositories
+package com.synchtask.chat.domain.repository
 
-import com.synchtask.entities.ChatMessage
-import com.synchtask.entities.ChatRoom
+import com.synchtask.chat.domain.entity.ChatMessage
+import com.synchtask.chat.domain.entity.ChatRoom
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository

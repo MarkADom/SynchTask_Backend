@@ -1,6 +1,6 @@
-package com.synchtask.dtos.chat
+package com.synchtask.chat.application.dto
 
-import com.synchtask.entities.ChatMessage
+import com.synchtask.chat.domain.entity.ChatMessage
 import java.time.LocalDateTime
 
 data class ChatMessageDTO(

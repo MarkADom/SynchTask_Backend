@@ -2,13 +2,14 @@ package com.synchtask.services.chat
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.synchtask.context.ChatServiceContext
-import com.synchtask.dtos.chat.WebSocketMessageDTO
-import com.synchtask.entities.ChatMessage
-import com.synchtask.entities.ChatRoom
+import com.synchtask.chat.application.dto.WebSocketMessageDTO
+import com.synchtask.chat.application.service.ChatWebSocketService
+import com.synchtask.chat.domain.entity.ChatMessage
+import com.synchtask.chat.domain.entity.ChatRoom
 import com.synchtask.user.domain.entity.User
 import com.synchtask.managers.WebSocketManager
-import com.synchtask.repositories.ChatMessageRepository
-import com.synchtask.repositories.ChatRoomRepository
+import com.synchtask.chat.domain.repository.ChatMessageRepository
+import com.synchtask.chat.domain.repository.ChatRoomRepository
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.services.redis.RedisPublisher
 import io.mockk.*

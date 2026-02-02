@@ -1,4 +1,4 @@
-package com.synchtask.services.chat
+package com.synchtask.chat.application.service
 
 import com.synchtask.user.domain.entity.UserEncryptionKeys
 import com.synchtask.exception.ResourceNotFoundException

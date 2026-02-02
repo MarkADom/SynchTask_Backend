@@ -137,7 +137,7 @@ Then run the analysis:
 ```
 
 - **SonarQube UI:**      
-http://localhosadmiat:9001
+http://localhost:9001
 
 
 Stop SonarQube when done:

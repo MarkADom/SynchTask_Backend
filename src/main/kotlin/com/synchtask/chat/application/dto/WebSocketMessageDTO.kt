@@ -1,4 +1,4 @@
-package com.synchtask.dtos.chat
+package com.synchtask.chat.application.dto
 
 import java.time.LocalDateTime
 

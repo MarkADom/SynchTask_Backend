@@ -1,9 +1,9 @@
-package com.synchtask.mappers
+package com.synchtask.chat.presentation.mapper
 
-import com.synchtask.dtos.chat.ChatMessageDTO
-import com.synchtask.dtos.chat.ChatRoomDTO
-import com.synchtask.entities.ChatMessage
-import com.synchtask.entities.ChatRoom
+import com.synchtask.chat.application.dto.ChatMessageDTO
+import com.synchtask.chat.application.dto.ChatRoomDTO
+import com.synchtask.chat.domain.entity.ChatMessage
+import com.synchtask.chat.domain.entity.ChatRoom
 
 object ChatMapper {
 

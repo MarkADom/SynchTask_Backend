@@ -2,8 +2,8 @@ package com.synchtask.context
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.synchtask.managers.WebSocketManager
-import com.synchtask.repositories.ChatMessageRepository
-import com.synchtask.repositories.ChatRoomRepository
+import com.synchtask.chat.domain.repository.ChatMessageRepository
+import com.synchtask.chat.domain.repository.ChatRoomRepository
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.services.redis.RedisPublisher
 import org.springframework.messaging.simp.SimpMessagingTemplate

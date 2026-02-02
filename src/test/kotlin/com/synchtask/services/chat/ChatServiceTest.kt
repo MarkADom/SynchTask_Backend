@@ -1,13 +1,14 @@
 package com.synchtask.services.chat
 
-import com.synchtask.dtos.chat.ChatMessageDTO
-import com.synchtask.dtos.chat.ChatRoomDTO
-import com.synchtask.entities.ChatMessage
-import com.synchtask.entities.ChatRoom
+import com.synchtask.chat.application.dto.ChatMessageDTO
+import com.synchtask.chat.application.dto.ChatRoomDTO
+import com.synchtask.chat.application.service.ChatService
+import com.synchtask.chat.domain.entity.ChatMessage
+import com.synchtask.chat.domain.entity.ChatRoom
 import com.synchtask.user.domain.entity.User
 import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.repositories.ChatMessageRepository
-import com.synchtask.repositories.ChatRoomRepository
+import com.synchtask.chat.domain.repository.ChatMessageRepository
+import com.synchtask.chat.domain.repository.ChatRoomRepository
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*

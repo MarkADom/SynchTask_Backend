@@ -1,5 +1,6 @@
 package com.synchtask.services.chat
 
+import com.synchtask.chat.application.service.KeyExchangeService
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserEncryptionKeys
 import com.synchtask.exception.ResourceNotFoundException

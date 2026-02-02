@@ -1,6 +1,6 @@
-package com.synchtask.dtos.chat
+package com.synchtask.chat.application.dto
 
-import com.synchtask.entities.ChatRoom
+import com.synchtask.chat.domain.entity.ChatRoom
 
 data class ChatRoomDTO(
     val id: Long,

@@ -1,7 +1,7 @@
 package com.synchtask.services.redis
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.synchtask.dtos.chat.ChatMessageDTO
+import com.synchtask.chat.application.dto.ChatMessageDTO
 import com.synchtask.dtos.notification.NotificationDTO
 import com.synchtask.entities.NotificationType
 import com.synchtask.managers.WebSocketManager

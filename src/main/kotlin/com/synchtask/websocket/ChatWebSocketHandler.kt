@@ -1,7 +1,7 @@
 package com.synchtask.websocket
 
-import com.synchtask.dtos.chat.WebSocketMessageDTO
-import com.synchtask.services.chat.ChatWebSocketService
+import com.synchtask.chat.application.dto.WebSocketMessageDTO
+import com.synchtask.chat.application.service.ChatWebSocketService
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload

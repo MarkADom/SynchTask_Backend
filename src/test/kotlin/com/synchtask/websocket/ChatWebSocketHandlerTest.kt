@@ -1,14 +1,12 @@
 package com.synchtask.websocket
 
-import com.synchtask.dtos.chat.WebSocketMessageDTO
-import com.synchtask.services.chat.ChatWebSocketService
+import com.synchtask.chat.application.dto.WebSocketMessageDTO
+import com.synchtask.chat.application.service.ChatWebSocketService
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import java.time.LocalDateTime
-import kotlin.test.assertEquals
 
 class ChatWebSocketHandlerTest {
 

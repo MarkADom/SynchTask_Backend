@@ -1,4 +1,4 @@
-package com.synchtask.entities
+package com.synchtask.chat.domain.entity
 
 import com.synchtask.user.domain.entity.User
 import jakarta.persistence.Column
