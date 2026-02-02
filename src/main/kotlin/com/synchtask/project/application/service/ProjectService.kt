@@ -1,17 +1,18 @@
-package com.synchtask.services.project
+package com.synchtask.project.application.service
 
 import com.synchtask.board.domain.entity.Board
-import com.synchtask.dtos.project.ProjectCreateDTO
-import com.synchtask.dtos.project.ProjectResponseDTO
-import com.synchtask.dtos.project.ProjectUpdateDTO
-import com.synchtask.dtos.project.toResponseDTO
-import com.synchtask.entities.Project
-import com.synchtask.user.domain.entity.User
 import com.synchtask.board.domain.repository.BoardRepository
-import com.synchtask.repositories.ProjectRepository
+import com.synchtask.project.application.dto.ProjectCreateDTO
+import com.synchtask.project.application.dto.ProjectResponseDTO
+import com.synchtask.project.application.dto.ProjectUpdateDTO
+import com.synchtask.project.application.dto.toResponseDTO
+import com.synchtask.project.domain.entity.Project
+import com.synchtask.project.domain.repository.ProjectRepository
+import com.synchtask.user.domain.entity.User
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 class ProjectService(
@@ -76,7 +77,7 @@ class ProjectService(
             project.boards.addAll(boardsFromDB)
         }
 
-        project.updatedAt = java.time.LocalDateTime.now()
+        project.updatedAt = LocalDateTime.now()
 
         return projectRepository.save(project).toResponseDTO()
     }

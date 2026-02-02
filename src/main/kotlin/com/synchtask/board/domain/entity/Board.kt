@@ -1,6 +1,6 @@
 package com.synchtask.board.domain.entity
 
-import com.synchtask.entities.Project
+import com.synchtask.project.domain.entity.Project
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.user.domain.entity.User
 import jakarta.persistence.CascadeType

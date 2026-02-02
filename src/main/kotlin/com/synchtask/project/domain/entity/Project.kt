@@ -1,8 +1,21 @@
-package com.synchtask.entities
+package com.synchtask.project.domain.entity
 
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.user.domain.entity.User
-import jakarta.persistence.*
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Index
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
 import java.time.LocalDate
 import java.time.LocalDateTime
 

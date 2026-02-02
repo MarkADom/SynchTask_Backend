@@ -1,7 +1,7 @@
-package com.synchtask.dtos.project
+package com.synchtask.project.application.dto
 
 import com.synchtask.board.application.dto.BoardSimpleDTO
-import com.synchtask.entities.Project
+import com.synchtask.project.domain.entity.Project
 import jakarta.validation.constraints.NotBlank
 import java.time.LocalDate
 
@@ -45,5 +45,3 @@ data class ProjectUpdateDTO(
     val dueDate: LocalDate? = null,
     val boardIds: List<Long>? = null
 )
-
-
