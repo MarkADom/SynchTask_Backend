@@ -1,9 +1,9 @@
-package com.synchtask.controllers
+package com.synchtask.task.presentation.controller
 
-import com.synchtask.dtos.task.TaskAttachmentDTO
-import com.synchtask.dtos.task.TaskLinkDTO
-import com.synchtask.services.task.TaskAttachmentService
-import com.synchtask.services.task.TaskLinkService
+import com.synchtask.task.application.dto.TaskAttachmentDTO
+import com.synchtask.task.application.dto.TaskLinkDTO
+import com.synchtask.task.application.service.TaskAttachmentService
+import com.synchtask.task.application.service.TaskLinkService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal

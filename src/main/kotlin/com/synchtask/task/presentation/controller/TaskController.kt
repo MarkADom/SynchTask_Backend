@@ -1,12 +1,15 @@
-package com.synchtask.controllers
+package com.synchtask.task.presentation.controller
 
-import com.synchtask.dtos.task.*
-import com.synchtask.entities.TaskStatus
-import com.synchtask.entities.UserRole
+import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.exception.UnauthorizedAccessException
-import com.synchtask.services.task.TaskService
+import com.synchtask.task.application.service.TaskService
 import com.synchtask.services.user.UserService
+import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
+import com.synchtask.task.application.dto.TaskCreateDTO
+import com.synchtask.task.application.dto.TaskLabelUpdateDTO
+import com.synchtask.task.application.dto.TaskResponseDTO
+import com.synchtask.task.application.dto.TaskUpdateDTO
 import jakarta.persistence.EntityManager
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory

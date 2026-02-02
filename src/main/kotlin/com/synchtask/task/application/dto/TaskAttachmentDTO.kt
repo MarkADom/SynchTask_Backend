@@ -1,6 +1,6 @@
-package com.synchtask.dtos.task
+package com.synchtask.task.application.dto
 
-import com.synchtask.entities.TaskAttachment
+import com.synchtask.task.domain.entity.TaskAttachment
 import java.time.LocalDateTime
 
 data class TaskAttachmentDTO(

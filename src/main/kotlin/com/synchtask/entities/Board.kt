@@ -1,5 +1,6 @@
 package com.synchtask.entities
 
+import com.synchtask.task.domain.entity.Task
 import jakarta.persistence.*
 import java.time.LocalDateTime
 

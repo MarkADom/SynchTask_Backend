@@ -1,9 +1,9 @@
 package com.synchtask.services.notification
 
-import com.synchtask.entities.TaskComment
+import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.repositories.TaskCommentRepository
-import com.synchtask.repositories.TaskRepository
+import com.synchtask.task.domain.repository.TaskCommentRepository
+import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.repositories.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

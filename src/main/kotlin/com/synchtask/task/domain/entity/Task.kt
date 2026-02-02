@@ -1,5 +1,7 @@
-package com.synchtask.entities
+package com.synchtask.task.domain.entity
 
+import com.synchtask.entities.Board
+import com.synchtask.entities.User
 import jakarta.persistence.CascadeType
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column

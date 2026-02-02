@@ -1,20 +1,19 @@
-package com.synchtask.services.task
+package com.synchtask.task.application.service
 
-import com.synchtask.dtos.task.TaskCreateDTO
-import com.synchtask.dtos.task.TaskResponseDTO
-import com.synchtask.dtos.task.TaskUpdateDTO
+import com.synchtask.task.application.dto.TaskCreateDTO
+import com.synchtask.task.application.dto.TaskResponseDTO
+import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.entities.FriendshipStatus
 import com.synchtask.entities.NotificationType
-import com.synchtask.entities.Task
-import com.synchtask.entities.TaskPriority
-import com.synchtask.entities.TaskStatus
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.entities.User
 import com.synchtask.entities.UserRole
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.exception.UnauthorizedAccessException
 import com.synchtask.repositories.BoardRepository
 import com.synchtask.repositories.FriendRepository
-import com.synchtask.repositories.TaskRepository
+import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.repositories.UserRepository
 import com.synchtask.services.notification.NotificationService
 import com.synchtask.websocket.TaskWebSocketService

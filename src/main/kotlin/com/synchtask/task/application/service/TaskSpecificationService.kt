@@ -1,7 +1,7 @@
-package com.synchtask.services.task
+package com.synchtask.task.application.service
 
-import com.synchtask.entities.Task
-import com.synchtask.entities.TaskStatus
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.entities.User
 import com.synchtask.repositories.queries.TaskSpecificationQueryBuilder
 import org.springframework.data.domain.Page

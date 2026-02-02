@@ -1,10 +1,14 @@
 package com.synchtask.controllers
 
-import com.synchtask.dtos.task.TaskCreateDTO
+import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.entities.*
 import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.services.task.TaskService
+import com.synchtask.task.application.service.TaskService
 import com.synchtask.services.user.UserService
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskPriority
+import com.synchtask.task.domain.entity.TaskStatus
+import com.synchtask.task.presentation.controller.TaskController
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

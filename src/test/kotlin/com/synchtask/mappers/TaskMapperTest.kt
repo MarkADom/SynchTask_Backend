@@ -1,6 +1,11 @@
 package com.synchtask.mappers
 
 import com.synchtask.entities.*
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskComment
+import com.synchtask.task.domain.entity.TaskPriority
+import com.synchtask.task.domain.entity.TaskStatus
+import com.synchtask.task.presentation.mapper.TaskMapper
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

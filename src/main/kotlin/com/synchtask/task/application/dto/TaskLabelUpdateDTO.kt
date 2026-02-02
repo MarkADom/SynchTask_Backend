@@ -1,4 +1,4 @@
-package com.synchtask.dtos.task
+package com.synchtask.task.application.dto
 
 data class TaskLabelUpdateDTO(
     val labels: List<String>

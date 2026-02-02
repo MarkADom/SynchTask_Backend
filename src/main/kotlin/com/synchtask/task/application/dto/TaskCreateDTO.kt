@@ -1,8 +1,8 @@
-package com.synchtask.dtos.task
+package com.synchtask.task.application.dto
 
-import com.synchtask.entities.Task
-import com.synchtask.entities.TaskPriority
-import com.synchtask.entities.TaskStatus
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskPriority
+import com.synchtask.task.domain.entity.TaskStatus
 import java.time.LocalDateTime
 
 data class TaskCreateDTO(

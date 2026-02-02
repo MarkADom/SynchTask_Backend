@@ -1,9 +1,9 @@
-package com.synchtask.mappers
+package com.synchtask.task.presentation.mapper
 
-import com.synchtask.dtos.task.TaskCommentResponseDTO
-import com.synchtask.dtos.task.TaskResponseDTO
-import com.synchtask.entities.Task
-import com.synchtask.entities.TaskComment
+import com.synchtask.task.application.dto.TaskCommentResponseDTO
+import com.synchtask.task.application.dto.TaskResponseDTO
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskComment
 
 object TaskMapper {
 
@@ -36,4 +36,3 @@ object TaskMapper {
         )
     }
 }
-

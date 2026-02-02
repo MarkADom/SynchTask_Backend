@@ -1,10 +1,14 @@
 package com.synchtask.services.task
 
-import com.synchtask.dtos.task.TaskCreateDTO
+import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.entities.*
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.repositories.*
 import com.synchtask.services.notification.NotificationService
+import com.synchtask.task.application.service.TaskService
+import com.synchtask.task.application.service.TaskSpecificationService
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.websocket.TaskWebSocketService
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach

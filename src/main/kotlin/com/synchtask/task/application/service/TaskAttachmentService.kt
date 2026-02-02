@@ -1,11 +1,11 @@
-package com.synchtask.services.task
+package com.synchtask.task.application.service
 
-import com.synchtask.dtos.task.TaskAttachmentDTO
-import com.synchtask.entities.TaskAttachment
+import com.synchtask.task.application.dto.TaskAttachmentDTO
+import com.synchtask.task.domain.entity.TaskAttachment
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.exception.UnauthorizedAccessException
-import com.synchtask.repositories.TaskAttachmentRepository
-import com.synchtask.repositories.TaskRepository
+import com.synchtask.task.domain.repository.TaskAttachmentRepository
+import com.synchtask.task.domain.repository.TaskRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

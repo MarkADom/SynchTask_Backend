@@ -1,4 +1,4 @@
-package com.synchtask.entities
+package com.synchtask.task.domain.entity
 
 import jakarta.persistence.*
 import java.time.LocalDateTime

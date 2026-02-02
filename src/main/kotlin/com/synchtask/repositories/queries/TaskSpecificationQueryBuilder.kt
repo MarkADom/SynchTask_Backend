@@ -1,7 +1,7 @@
 package com.synchtask.repositories.queries
 
-import com.synchtask.entities.Task
-import com.synchtask.entities.TaskStatus
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.entities.User
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.JoinType

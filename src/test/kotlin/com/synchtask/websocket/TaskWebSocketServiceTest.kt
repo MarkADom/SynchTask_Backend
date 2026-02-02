@@ -1,8 +1,8 @@
 package com.synchtask.websocket
 
-import com.synchtask.dtos.task.TaskResponseDTO
-import com.synchtask.entities.TaskPriority
-import com.synchtask.entities.TaskStatus
+import com.synchtask.task.application.dto.TaskResponseDTO
+import com.synchtask.task.domain.entity.TaskPriority
+import com.synchtask.task.domain.entity.TaskStatus
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach

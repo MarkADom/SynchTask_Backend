@@ -1,7 +1,7 @@
-package com.synchtask.repositories
+package com.synchtask.task.domain.repository
 
-import com.synchtask.entities.Task
-import com.synchtask.entities.TaskComment
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskComment
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository

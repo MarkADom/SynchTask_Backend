@@ -1,7 +1,7 @@
-package com.synchtask.dtos.task
+package com.synchtask.task.application.dto
 
-import com.synchtask.entities.TaskPriority
-import com.synchtask.entities.TaskStatus
+import com.synchtask.task.domain.entity.TaskPriority
+import com.synchtask.task.domain.entity.TaskStatus
 
 data class TaskUpdateDTO(
     val title: String? = null,
