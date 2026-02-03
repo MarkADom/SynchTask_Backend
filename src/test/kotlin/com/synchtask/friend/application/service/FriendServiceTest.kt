@@ -1,18 +1,23 @@
-package com.synchtask.services.friend
+package com.synchtask.friend.application.service
 
 import com.synchtask.friend.domain.entity.Friend
 import com.synchtask.friend.domain.entity.FriendshipStatus
+import com.synchtask.friend.domain.exception.FriendRequestAlreadySentException
+import com.synchtask.friend.domain.repository.FriendRepository
+import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.friend.domain.exception.FriendRequestAlreadySentException
-import com.synchtask.friend.application.service.FriendService
-import com.synchtask.friend.domain.repository.FriendRepository
 import com.synchtask.user.domain.repository.UserRepository
-import com.synchtask.notification.application.service.NotificationService
-import io.mockk.*
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
-import java.util.*
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.util.Optional
 
 class FriendServiceTest {
 
@@ -54,9 +59,9 @@ class FriendServiceTest {
 
         val result = service.sendFriendRequest(alice.email, bob.email)
 
-        assertEquals(alice, result.requester)
-        assertEquals(bob, result.friend)
-        assertEquals(FriendshipStatus.PENDING, result.status)
+        Assertions.assertEquals(alice, result.requester)
+        Assertions.assertEquals(bob, result.friend)
+        Assertions.assertEquals(FriendshipStatus.PENDING, result.status)
 
         verify { notificationService.sendNotification(any(), any(), any(), any()) }
     }
@@ -73,7 +78,7 @@ class FriendServiceTest {
             service.sendFriendRequest(alice.email, bob.email)
         }
 
-        assertEquals("Friend request already exists!", ex.message)
+        Assertions.assertEquals("Friend request already exists!", ex.message)
     }
 
     @Test
@@ -90,7 +95,7 @@ class FriendServiceTest {
 
         val result = service.acceptFriendRequest(1L, bob.email)
 
-        assertEquals(FriendshipStatus.ACCEPTED, result.status)
+        Assertions.assertEquals(FriendshipStatus.ACCEPTED, result.status)
         verify { notificationService.sendNotification(any(), any(), any(), any()) }
     }
 
@@ -115,8 +120,8 @@ class FriendServiceTest {
 
         val result = service.listFriends(alice.email)
 
-        assertEquals(1, result.size)
-        assertEquals(bob, result.first().friend)
+        Assertions.assertEquals(1, result.size)
+        Assertions.assertEquals(bob, result.first().friend)
     }
 
     @Test
@@ -132,7 +137,7 @@ class FriendServiceTest {
 
         val users = service.listFriendUsers(alice.email)
 
-        assertEquals(1, users.size)
-        assertEquals(bob, users.first())
+        Assertions.assertEquals(1, users.size)
+        Assertions.assertEquals(bob, users.first())
     }
 }

@@ -1,15 +1,20 @@
-package com.synchtask.controllers
+package com.synchtask.friend.presentation.controller
 
 import com.synchtask.friend.application.dto.FriendRequestDTO
+import com.synchtask.friend.application.service.FriendService
 import com.synchtask.friend.domain.entity.Friend
 import com.synchtask.friend.domain.entity.FriendshipStatus
-import com.synchtask.user.domain.entity.User
-import com.synchtask.friend.application.service.FriendService
-import com.synchtask.friend.presentation.controller.FriendController
-import io.mockk.*
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.springframework.security.core.Authentication
+import org.springframework.security.core.userdetails.User
 import java.time.LocalDateTime
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -19,7 +24,7 @@ class FriendControllerTest {
     private lateinit var controller: FriendController
     private lateinit var authentication: Authentication
 
-    private val testUSer = org.springframework.security.core.userdetails.User(
+    private val testUSer = User(
         "user@email.com",
         "password",
         emptyList()
@@ -40,8 +45,8 @@ class FriendControllerTest {
 
         val response = controller.sendFriendRequest(request, testUSer)
 
-        assertEquals("Friend request sent successfully!", response.body)
-        assertEquals(200, response.statusCode.value())
+        Assertions.assertEquals("Friend request sent successfully!", response.body)
+        Assertions.assertEquals(200, response.statusCode.value())
         verify { friendService.sendFriendRequest("user@email.com", "friend@email.com") }
     }
 
@@ -53,8 +58,8 @@ class FriendControllerTest {
 
         val response = controller.acceptFriendRequest(requestId, testUSer)
 
-        assertEquals("Friend request accepted!", response.body)
-        assertEquals(200, response.statusCode.value())
+        Assertions.assertEquals("Friend request accepted!", response.body)
+        Assertions.assertEquals(200, response.statusCode.value())
         verify { friendService.acceptFriendRequest(requestId, "user@email.com") }
     }
 
@@ -66,15 +71,25 @@ class FriendControllerTest {
 
         val response = controller.removeFriend(friendId, testUSer)
 
-        assertEquals("Friend removed!", response.body)
-        assertEquals(200, response.statusCode.value())
+        Assertions.assertEquals("Friend removed!", response.body)
+        Assertions.assertEquals(200, response.statusCode.value())
         verify { friendService.removeFriend(friendId, "user@email.com") }
     }
 
     @Test
     fun `should list friends of current user`() {
-        val user = User(id = 1L, email = "user@email.com", name = "User", passwordHash = "hash")
-        val friend = User(id = 2L, email = "friend@email.com", name = "Friend", passwordHash = "hash2")
+        val user = com.synchtask.user.domain.entity.User(
+            id = 1L,
+            email = "user@email.com",
+            name = "User",
+            passwordHash = "hash"
+        )
+        val friend = com.synchtask.user.domain.entity.User(
+            id = 2L,
+            email = "friend@email.com",
+            name = "Friend",
+            passwordHash = "hash2"
+        )
 
         val friendEntity = Friend(
             id = 100L,
@@ -88,13 +103,13 @@ class FriendControllerTest {
 
         val response = controller.listFriends(testUSer)
 
-        assertEquals(200, response.statusCode.value())
-        assertEquals(1, response.body?.size)
+        Assertions.assertEquals(200, response.statusCode.value())
+        Assertions.assertEquals(1, response.body?.size)
         val friendDto = response.body?.first()
 
-        assertNotEquals("user@email.com", friendDto?.friendEmail)
-        assertEquals("friend@email.com", friendDto?.friendEmail)
-        assertEquals("ACCEPTED", friendDto?.status)
+        Assertions.assertNotEquals("user@email.com", friendDto?.friendEmail)
+        Assertions.assertEquals("friend@email.com", friendDto?.friendEmail)
+        Assertions.assertEquals("ACCEPTED", friendDto?.status)
 
 
         verify { friendService.listFriends("user@email.com") }
