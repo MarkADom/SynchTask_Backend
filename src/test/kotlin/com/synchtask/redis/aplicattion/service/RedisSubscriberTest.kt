@@ -1,4 +1,4 @@
-package com.synchtask.services.redis
+package com.synchtask.redis.aplicattion.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.synchtask.chat.application.dto.ChatMessageDTO

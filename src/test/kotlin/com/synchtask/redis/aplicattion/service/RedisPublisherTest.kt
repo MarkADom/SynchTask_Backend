@@ -1,4 +1,4 @@
-package com.synchtask.services.redis
+package com.synchtask.redis.aplicattion.service
 
 import com.synchtask.redis.application.service.RedisPublisher
 import io.lettuce.core.RedisCommandTimeoutException

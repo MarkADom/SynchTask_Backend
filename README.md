@@ -133,7 +133,7 @@ Then run the analysis:
     ./gradlew test                # Run tests
     ./gradlew detekt              # Static analysis
     ./gradlew jacocoTestReport    # Coverage report
-    ./gradlew sonarqube           # SonarQube analysis
+    ./gradlew sonar               # SonarQube analysis
 ```
 
 - **SonarQube UI:**      

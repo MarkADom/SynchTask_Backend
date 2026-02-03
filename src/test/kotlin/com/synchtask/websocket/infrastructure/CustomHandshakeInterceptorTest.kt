@@ -1,8 +1,9 @@
-package com.synchtask.websocket
+package com.synchtask.websocket.infrastructure
 
 import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
-import com.synchtask.websocket.infrastructure.CustomHandshakeInterceptor
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
@@ -10,6 +11,7 @@ import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.socket.WebSocketHandler
+import java.net.URI
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -44,7 +46,7 @@ class CustomHandshakeInterceptorTest {
             every { headers } returns HttpHeaders().apply {
                 set("Authorization", "Bearer $headerToken")
             }
-            every { uri } returns java.net.URI("ws://localhost:8080/ws?token=$queryToken")
+            every { uri } returns URI("ws://localhost:8080/ws?token=$queryToken")
         }
 
         every { jwtTokenProvider.validateAndExtractUser(headerToken) } returns userDetails
@@ -73,7 +75,7 @@ class CustomHandshakeInterceptorTest {
 
         request = mockk {
             every { headers } returns HttpHeaders().apply { set("Authorization", "Bearer $token") }
-            every { uri } returns java.net.URI("ws://localhost:8080/ws")
+            every { uri } returns URI("ws://localhost:8080/ws")
         }
 
         every { jwtTokenProvider.validateAndExtractUser(token) } returns userDetails
@@ -93,7 +95,7 @@ class CustomHandshakeInterceptorTest {
 
         request = mockk {
             every { headers } returns HttpHeaders()
-            every { uri } returns java.net.URI("ws://localhost:8080/ws?token=$token")
+            every { uri } returns URI("ws://localhost:8080/ws?token=$token")
         }
 
         every { jwtTokenProvider.validateAndExtractUser(token) } returns userDetails
@@ -108,7 +110,7 @@ class CustomHandshakeInterceptorTest {
     fun `should reject connection when no token is provided`() {
         request = mockk {
             every { headers } returns HttpHeaders()
-            every { uri } returns java.net.URI("ws://localhost:8080/ws")
+            every { uri } returns URI("ws://localhost:8080/ws")
         }
 
         val result = interceptor.beforeHandshake(request, response, wsHandler, attributes)
@@ -122,7 +124,7 @@ class CustomHandshakeInterceptorTest {
 
         request = mockk {
             every { headers } returns HttpHeaders().apply { set("Authorization", "Bearer $token") }
-            every { uri } returns java.net.URI("ws://localhost:8080/ws")
+            every { uri } returns URI("ws://localhost:8080/ws")
         }
 
         every { jwtTokenProvider.validateAndExtractUser(token) } returns null

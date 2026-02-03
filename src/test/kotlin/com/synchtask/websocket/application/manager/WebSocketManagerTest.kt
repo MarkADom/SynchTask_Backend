@@ -1,7 +1,8 @@
-package com.synchtask.managers
+package com.synchtask.websocket.application.manager
 
-import com.synchtask.websocket.application.manager.WebSocketManager
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.redis.core.RedisTemplate

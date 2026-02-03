@@ -1,9 +1,10 @@
-package com.synchtask.websocket
+package com.synchtask.websocket.application.event
 
-import com.synchtask.websocket.application.handler.WebSocketReconnectionHandler
 import com.synchtask.user.application.service.UserService
-import com.synchtask.websocket.application.event.WebSocketEventListener
-import io.mockk.*
+import com.synchtask.websocket.application.handler.WebSocketReconnectionHandler
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.messaging.support.MessageBuilder

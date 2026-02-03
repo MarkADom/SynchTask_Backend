@@ -1,9 +1,9 @@
-package com.synchtask.websocket
+package com.synchtask.websocket.application.handler
 
 import com.synchtask.chat.application.dto.WebSocketMessageDTO
 import com.synchtask.chat.application.service.ChatWebSocketService
-import com.synchtask.websocket.application.handler.ChatWebSocketHandler
-import io.mockk.*
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.messaging.simp.SimpMessagingTemplate

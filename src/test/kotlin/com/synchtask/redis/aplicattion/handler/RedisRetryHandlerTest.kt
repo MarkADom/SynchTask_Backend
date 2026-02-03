@@ -1,7 +1,11 @@
-package com.synchtask.handlers
+package com.synchtask.redis.aplicattion.handler
 
 import com.synchtask.shared.application.handler.RedisRetryHandler
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.redis.RedisConnectionFailureException
@@ -51,7 +55,12 @@ class RedisRetryHandlerTest {
 
     @Test
     fun `should retry message on redis connection failure`() {
-        every { redisTemplate.convertAndSend("test-channel", "fail") } throws RedisConnectionFailureException("Simulated")
+        every {
+            redisTemplate.convertAndSend(
+                "test-channel",
+                "fail"
+            )
+        } throws RedisConnectionFailureException("Simulated")
 
         handler.retryMessagePublishing("test-channel", "fail", 1)
 
@@ -62,7 +71,12 @@ class RedisRetryHandlerTest {
 
     @Test
     fun `should stop retrying after max attempts`() {
-        every { redisTemplate.convertAndSend("test-channel", "fail") } throws RedisConnectionFailureException("Simulated")
+        every {
+            redisTemplate.convertAndSend(
+                "test-channel",
+                "fail"
+            )
+        } throws RedisConnectionFailureException("Simulated")
 
         handler.retryMessagePublishing("test-channel", "fail", 5)
 
