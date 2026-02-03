@@ -1,6 +1,5 @@
-package com.synchtask.services.chat
+package com.synchtask.chat.application.service
 
-import com.synchtask.chat.application.service.KeyExchangeService
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserEncryptionKeys
 import com.synchtask.shared.exception.ResourceNotFoundException

@@ -1,8 +1,7 @@
-package com.synchtask.services.chat
+package com.synchtask.chat.application.service
 
 import com.synchtask.chat.application.dto.ChatMessageDTO
 import com.synchtask.chat.application.dto.ChatRoomDTO
-import com.synchtask.chat.application.service.ChatService
 import com.synchtask.chat.domain.entity.ChatMessage
 import com.synchtask.chat.domain.entity.ChatRoom
 import com.synchtask.user.domain.entity.User

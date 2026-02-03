@@ -1,9 +1,8 @@
-package com.synchtask.services.chat
+package com.synchtask.chat.application.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.synchtask.chat.application.context.ChatServiceContext
 import com.synchtask.chat.application.dto.WebSocketMessageDTO
-import com.synchtask.chat.application.service.ChatWebSocketService
 import com.synchtask.chat.domain.entity.ChatMessage
 import com.synchtask.chat.domain.entity.ChatRoom
 import com.synchtask.user.domain.entity.User

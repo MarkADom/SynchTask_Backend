@@ -1,12 +1,11 @@
-package com.synchtask.mappers
+package com.synchtask.chat.presentation.mapper
 
 import com.synchtask.chat.application.dto.ChatMessageDTO
 import com.synchtask.chat.application.dto.ChatRoomDTO
 import com.synchtask.chat.domain.entity.ChatMessage
 import com.synchtask.chat.domain.entity.ChatRoom
-import com.synchtask.chat.presentation.mapper.ChatMapper
 import com.synchtask.user.domain.entity.User
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -33,8 +32,8 @@ class ChatMapperTest {
 
         val dto: ChatRoomDTO = ChatMapper.toChatRoomDTO(chatRoom)
 
-        assertEquals(100L, dto.id)
-        assertTrue(dto.participants.containsAll(listOf("alice@example.com", "bob@example.com")))
+        Assertions.assertEquals(100L, dto.id)
+        Assertions.assertTrue(dto.participants.containsAll(listOf("alice@example.com", "bob@example.com")))
     }
 
     @Test
@@ -59,11 +58,11 @@ class ChatMapperTest {
 
         val dto: ChatMessageDTO = ChatMapper.toChatMessageDTO(chatMessage)
 
-        assertEquals(300L, dto.id)
-        assertEquals(200L, dto.chatRoomId)
-        assertEquals("charlie@example.com", dto.senderEmail)
-        assertEquals("Encrypted Hello", dto.message)
-        assertNotNull(dto.timestamp)
+        Assertions.assertEquals(300L, dto.id)
+        Assertions.assertEquals(200L, dto.chatRoomId)
+        Assertions.assertEquals("charlie@example.com", dto.senderEmail)
+        Assertions.assertEquals("Encrypted Hello", dto.message)
+        Assertions.assertNotNull(dto.timestamp)
     }
 
     @Test
@@ -76,7 +75,7 @@ class ChatMapperTest {
         )
         val chatRoom = ChatRoom(id = null, participants = mutableSetOf(user))
 
-        assertThrows(NullPointerException::class.java) {
+        Assertions.assertThrows(NullPointerException::class.java) {
             ChatMapper.toChatRoomDTO(chatRoom)
         }
     }
@@ -98,7 +97,7 @@ class ChatMapperTest {
             timestamp = LocalDateTime.now()
         )
 
-        assertThrows(NullPointerException::class.java) {
+        Assertions.assertThrows(NullPointerException::class.java) {
             ChatMapper.toChatMessageDTO(message)
         }
     }
