@@ -1,10 +1,8 @@
-package com.synchtask.services.notification
+package com.synchtask.notification.application.service
 
 import com.synchtask.notification.application.dto.NotificationDTO
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.websocket.application.manager.WebSocketManager
-import com.synchtask.notification.application.service.NotificationStorageService
-import com.synchtask.notification.application.service.NotificationWebSocketService
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

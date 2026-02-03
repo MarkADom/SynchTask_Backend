@@ -1,14 +1,14 @@
-package com.synchtask.controllers
+package com.synchtask.chat.presentation.contoller
 
 import com.synchtask.chat.application.dto.ChatMessageDTO
 import com.synchtask.chat.application.dto.ChatRoomDTO
 import com.synchtask.chat.application.service.ChatService
 import com.synchtask.chat.application.service.KeyExchangeService
 import com.synchtask.chat.presentation.controller.ChatController
+import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.Runs
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

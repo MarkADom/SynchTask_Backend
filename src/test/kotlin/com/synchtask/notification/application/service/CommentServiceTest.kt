@@ -1,8 +1,7 @@
-package com.synchtask.services.notification
+package com.synchtask.notification.application.service
 
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.shared.exception.ResourceNotFoundException
-import com.synchtask.notification.application.service.CommentService
 import com.synchtask.task.domain.repository.TaskCommentRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.repository.UserRepository

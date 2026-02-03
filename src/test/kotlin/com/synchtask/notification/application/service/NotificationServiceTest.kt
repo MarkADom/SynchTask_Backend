@@ -1,4 +1,4 @@
-package com.synchtask.services.notification
+package com.synchtask.notification.application.service
 
 import com.synchtask.notification.application.dto.NotificationRedisDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
@@ -6,9 +6,6 @@ import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.user.domain.entity.User
 import com.synchtask.notification.presentation.mapper.NotificationMapper
-import com.synchtask.notification.application.service.NotificationService
-import com.synchtask.notification.application.service.NotificationStorageService
-import com.synchtask.notification.application.service.NotificationWebSocketService
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

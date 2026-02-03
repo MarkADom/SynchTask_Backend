@@ -1,10 +1,9 @@
-package com.synchtask.controllers
+package com.synchtask.notification.presentation.controller
 
 import com.synchtask.notification.application.dto.NotificationRequestDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.notification.application.service.NotificationService
-import com.synchtask.notification.presentation.controller.NotificationController
 import com.synchtask.redis.application.service.NotificationRedisCleanupService
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach

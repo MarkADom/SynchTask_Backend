@@ -1,8 +1,7 @@
-package com.synchtask.controllers
+package com.synchtask.notification.presentation.controller
 
 import com.synchtask.notification.application.dto.NotificationDTO
 import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.notification.presentation.controller.NotificationWebSocketController
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

@@ -1,11 +1,10 @@
-package com.synchtask.mappers
+package com.synchtask.notification.presentation.mapper
 
 import com.synchtask.notification.application.dto.NotificationRedisDTO
 import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.notification.presentation.mapper.NotificationMapper
 import com.synchtask.user.domain.entity.User
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -38,13 +37,13 @@ class NotificationMapperTest {
 
         val dto = NotificationMapper.toResponseDTO(notification)
 
-        assertEquals(42L, dto.id)
-        assertEquals("test@example.com", dto.recipientEmail)
-        assertEquals("Test notification", dto.message)
-        assertFalse(dto.isRead)
-        assertEquals(now, dto.createdAt)
-        assertEquals(NotificationType.TASK_UPDATE, dto.type)
-        assertEquals(99L, dto.groupId)
+        Assertions.assertEquals(42L, dto.id)
+        Assertions.assertEquals("test@example.com", dto.recipientEmail)
+        Assertions.assertEquals("Test notification", dto.message)
+        Assertions.assertFalse(dto.isRead)
+        Assertions.assertEquals(now, dto.createdAt)
+        Assertions.assertEquals(NotificationType.TASK_UPDATE, dto.type)
+        Assertions.assertEquals(99L, dto.groupId)
     }
 
     @Test
@@ -53,11 +52,11 @@ class NotificationMapperTest {
 
         val dto = NotificationMapper.toWebSocketDTO(notification)
 
-        assertEquals(42L, dto.id)
-        assertEquals("test@example.com", dto.recipientEmail)
-        assertEquals("Test notification", dto.message)
-        assertEquals(now, dto.timestamp)
-        assertEquals(NotificationType.TASK_UPDATE, dto.type)
+        Assertions.assertEquals(42L, dto.id)
+        Assertions.assertEquals("test@example.com", dto.recipientEmail)
+        Assertions.assertEquals("Test notification", dto.message)
+        Assertions.assertEquals(now, dto.timestamp)
+        Assertions.assertEquals(NotificationType.TASK_UPDATE, dto.type)
     }
 
     @Test
@@ -66,11 +65,11 @@ class NotificationMapperTest {
 
         val dto = NotificationMapper.toRedisDTO(notification)
 
-        assertEquals(42L, dto.id)
-        assertEquals("test@example.com", dto.recipientEmail)
-        assertEquals("Test notification", dto.message)
-        assertEquals(now, dto.createdAt)
-        assertEquals(NotificationType.TASK_UPDATE, dto.type)
+        Assertions.assertEquals(42L, dto.id)
+        Assertions.assertEquals("test@example.com", dto.recipientEmail)
+        Assertions.assertEquals("Test notification", dto.message)
+        Assertions.assertEquals(now, dto.createdAt)
+        Assertions.assertEquals(NotificationType.TASK_UPDATE, dto.type)
     }
 
     @Test
@@ -85,23 +84,23 @@ class NotificationMapperTest {
 
         val responseDto = NotificationMapper.fromRedisDTO(redisDto)
 
-        assertEquals(42L, responseDto.id)
-        assertEquals("test@example.com", responseDto.recipientEmail)
-        assertEquals("Test notification", responseDto.message)
-        assertEquals(now, responseDto.createdAt)
-        assertEquals(NotificationType.TASK_UPDATE, responseDto.type)
-        assertFalse(responseDto.isRead)
-        assertNull(responseDto.groupId)
+        Assertions.assertEquals(42L, responseDto.id)
+        Assertions.assertEquals("test@example.com", responseDto.recipientEmail)
+        Assertions.assertEquals("Test notification", responseDto.message)
+        Assertions.assertEquals(now, responseDto.createdAt)
+        Assertions.assertEquals(NotificationType.TASK_UPDATE, responseDto.type)
+        Assertions.assertFalse(responseDto.isRead)
+        Assertions.assertNull(responseDto.groupId)
     }
 
     @Test
     fun `should throw when notification id is null`() {
         val notification = buildNotification().copy(id = null)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
+        val exception = Assertions.assertThrows(IllegalArgumentException::class.java) {
             NotificationMapper.toResponseDTO(notification)
         }
 
-        assertEquals("Notification ID cannot be null", exception.message)
+        Assertions.assertEquals("Notification ID cannot be null", exception.message)
     }
 }

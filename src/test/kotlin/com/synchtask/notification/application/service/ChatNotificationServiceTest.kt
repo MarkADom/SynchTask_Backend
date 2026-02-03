@@ -1,7 +1,6 @@
-package com.synchtask.services.notification
+package com.synchtask.notification.application.service
 
 import com.synchtask.chat.application.dto.ChatNotificationDTO
-import com.synchtask.notification.application.service.ChatNotificationService
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
