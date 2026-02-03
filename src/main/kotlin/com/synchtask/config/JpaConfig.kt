@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
         "com.synchtask.project.domain.repository",
         "com.synchtask.notification.domain.repository",
         "com.synchtask.chat.domain.repository",
+        "com.synchtask.friend.domain.repository",
         "com.synchtask.repositories" // TODO: Legacy, Remove later
     ]
 )
@@ -32,6 +33,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
         "com.synchtask.project.domain.entity",
         "com.synchtask.notification.domain.entity",
         "com.synchtask.chat.domain.entity",
+        "com.synchtask.friend.domain.entity",
         "com.synchtask.entities" // TODO: legacy, remove later
     ]
 )

@@ -1,6 +1,6 @@
-package com.synchtask.dtos.friend
+package com.synchtask.friend.application.dto
 
-import com.synchtask.entities.Friend
+import com.synchtask.friend.domain.entity.Friend
 
 data class FriendResponseDTO(
     val id: Long,

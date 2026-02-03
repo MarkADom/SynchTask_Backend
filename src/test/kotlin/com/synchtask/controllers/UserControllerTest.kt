@@ -4,7 +4,7 @@ import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.exception.UnauthorizedAccessException
-import com.synchtask.services.friend.FriendService
+import com.synchtask.friend.application.service.FriendService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.user.application.dto.UpdateUserDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO

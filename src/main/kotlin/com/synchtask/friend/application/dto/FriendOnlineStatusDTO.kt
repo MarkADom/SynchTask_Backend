@@ -1,4 +1,4 @@
-package com.synchtask.dtos.friend
+package com.synchtask.friend.application.dto
 
 import java.time.LocalDateTime
 

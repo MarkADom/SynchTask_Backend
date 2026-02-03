@@ -1,11 +1,12 @@
 package com.synchtask.services.friend
 
-import com.synchtask.entities.Friend
-import com.synchtask.entities.FriendshipStatus
+import com.synchtask.friend.domain.entity.Friend
+import com.synchtask.friend.domain.entity.FriendshipStatus
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.exception.FriendRequestAlreadySentException
-import com.synchtask.repositories.FriendRepository
+import com.synchtask.friend.application.service.FriendService
+import com.synchtask.friend.domain.repository.FriendRepository
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.notification.application.service.NotificationService
 import io.mockk.*

@@ -1,10 +1,11 @@
 package com.synchtask.controllers
 
-import com.synchtask.dtos.friend.FriendRequestDTO
-import com.synchtask.entities.Friend
-import com.synchtask.entities.FriendshipStatus
+import com.synchtask.friend.application.dto.FriendRequestDTO
+import com.synchtask.friend.domain.entity.Friend
+import com.synchtask.friend.domain.entity.FriendshipStatus
 import com.synchtask.user.domain.entity.User
-import com.synchtask.services.friend.FriendService
+import com.synchtask.friend.application.service.FriendService
+import com.synchtask.friend.presentation.controller.FriendController
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*

@@ -2,7 +2,7 @@ package com.synchtask.user.domain.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.synchtask.chat.domain.entity.ChatRoom
-import com.synchtask.entities.Friend
+import com.synchtask.friend.domain.entity.Friend
 import com.synchtask.notification.domain.entity.Notification
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column

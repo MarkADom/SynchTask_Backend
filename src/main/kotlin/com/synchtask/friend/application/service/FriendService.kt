@@ -1,10 +1,13 @@
-package com.synchtask.services.friend
+package com.synchtask.friend.application.service
 
-import com.synchtask.entities.*
-import com.synchtask.exception.*
-import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.repositories.*
+import com.synchtask.exception.FriendRequestAlreadySentException
+import com.synchtask.exception.ResourceNotFoundException
+import com.synchtask.exception.UnauthorizedAccessException
+import com.synchtask.friend.domain.entity.Friend
+import com.synchtask.friend.domain.entity.FriendshipStatus
+import com.synchtask.friend.domain.repository.FriendRepository
 import com.synchtask.notification.application.service.NotificationService
+import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory

@@ -3,7 +3,7 @@ package com.synchtask.task.application.service
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
-import com.synchtask.entities.FriendshipStatus
+import com.synchtask.friend.domain.entity.FriendshipStatus
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskStatus
@@ -12,7 +12,7 @@ import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.exception.ResourceNotFoundException
 import com.synchtask.exception.UnauthorizedAccessException
 import com.synchtask.board.domain.repository.BoardRepository
-import com.synchtask.repositories.FriendRepository
+import com.synchtask.friend.domain.repository.FriendRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.notification.application.service.NotificationService

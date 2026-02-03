@@ -1,7 +1,7 @@
-package com.synchtask.repositories
+package com.synchtask.friend.domain.repository
 
-import com.synchtask.entities.Friend
-import com.synchtask.entities.FriendshipStatus
+import com.synchtask.friend.domain.entity.Friend
+import com.synchtask.friend.domain.entity.FriendshipStatus
 import com.synchtask.user.domain.entity.User
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
