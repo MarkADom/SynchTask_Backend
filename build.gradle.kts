@@ -98,11 +98,12 @@ dependencies {
     // ───── Testing ─────
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation(platform("org.junit:junit-bom:5.10.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("io.mockk:mockk:1.13.10")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 }
 
 // ───── Kotlin Compiler ─────
@@ -143,7 +144,12 @@ tasks.jacocoTestReport {
     )
 
     sourceDirectories.setFrom(files("src/main/kotlin"))
-    executionData.setFrom(layout.buildDirectory.file("jacoco/test.exec"))
+
+    executionData.setFrom(
+        fileTree(layout.buildDirectory) {
+            include("jacoco/test.exec")
+        }
+    )
 }
 
 tasks.jacocoTestCoverageVerification {
@@ -168,16 +174,8 @@ tasks.withType<Jar> {
 }
 
 // ───── SonarQube ─────
-val sonarToken = System.getenv("SONAR_TOKEN")
-val sonarHost = System.getenv("SONAR_HOST_URL")
-
-tasks.named("sonarqube") {
-    dependsOn("jacocoTestReport", "detekt")
-}
-
-// ───── SonarQube ─────
-val sonarTokenEnv: String? = System.getenv("SONAR_TOKEN")
-val sonarHostEnv: String? = System.getenv("SONAR_HOST_URL")
+val sonarToken: String? = System.getenv("SONAR_TOKEN")
+val sonarHost: String? = System.getenv("SONAR_HOST_URL")
 
 tasks.named("sonarqube") {
     dependsOn("jacocoTestReport", "detekt")

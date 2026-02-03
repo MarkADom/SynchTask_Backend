@@ -1,6 +1,6 @@
 package com.synchtask.config
 
-import com.synchtask.controllers.CorsTestController
+import com.synchtask.shared.presentation.controllers.CorsTestController
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
