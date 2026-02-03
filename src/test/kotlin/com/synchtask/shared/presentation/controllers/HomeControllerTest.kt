@@ -1,4 +1,4 @@
-package com.synchtask.controllers
+package com.synchtask.shared.presentation.controllers
 
 import com.synchtask.shared.presentation.controller.HomeController
 import org.junit.jupiter.api.Test

@@ -1,4 +1,4 @@
-package com.synchtask.controllers
+package com.synchtask.shared.presentation.controllers
 
 import com.synchtask.shared.presentation.controller.TestController
 import io.mockk.junit5.MockKExtension
@@ -11,7 +11,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 /**
- * Unit test for [com.synchtask.shared.presentation.controller.TestController].
+ * Unit test for [TestController].
  */
 @ExtendWith(MockKExtension::class)
 class TestControllerTest {
