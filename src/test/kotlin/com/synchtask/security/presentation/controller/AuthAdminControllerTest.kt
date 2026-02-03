@@ -1,7 +1,6 @@
-package com.synchtask.controllers
+package com.synchtask.security.presentation.controller
 
 import com.synchtask.security.infrastructure.jwt.JwtKeyManager
-import com.synchtask.security.presentation.controller.AuthAdminController
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals

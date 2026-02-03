@@ -1,4 +1,4 @@
-package com.synchtask.controllers
+package com.synchtask.security.presentation.controller
 
 import com.synchtask.user.application.dto.UserLoginDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
@@ -9,7 +9,6 @@ import com.synchtask.security.application.manager.AuthManager
 import com.synchtask.security.infrastructure.jwt.JwtKeyManager
 import com.synchtask.security.application.service.AuthService
 import com.synchtask.security.application.service.RefreshTokenService
-import com.synchtask.security.presentation.controller.AuthController
 import com.synchtask.user.application.service.UserService
 import io.mockk.*
 import org.junit.jupiter.api.*

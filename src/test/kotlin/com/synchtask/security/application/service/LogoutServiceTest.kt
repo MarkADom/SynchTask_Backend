@@ -1,7 +1,5 @@
+package com.synchtask.security.application.service
 
-package com.synchtask.services.auth
-
-import com.synchtask.security.application.service.LogoutService
 import com.synchtask.security.domain.entity.RefreshToken
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole

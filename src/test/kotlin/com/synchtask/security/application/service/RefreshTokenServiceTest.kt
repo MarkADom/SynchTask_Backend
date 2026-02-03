@@ -1,13 +1,13 @@
-package com.synchtask.services.auth
+package com.synchtask.security.application.service
 
 import com.synchtask.security.domain.entity.RefreshToken
 import com.synchtask.user.domain.entity.User
 import com.synchtask.shared.exception.ResourceNotFoundException
-import com.synchtask.security.application.service.RefreshTokenService
 import com.synchtask.security.domain.repository.RefreshTokenRepository
 import io.mockk.*
 import org.junit.jupiter.api.*
 import java.time.LocalDateTime
+import java.util.Optional
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -54,7 +54,7 @@ class RefreshTokenServiceTest {
             isRevoked = false
         )
 
-        every { refreshTokenRepository.findByToken("valid-token") } returns java.util.Optional.of(token)
+        every { refreshTokenRepository.findByToken("valid-token") } returns Optional.of(token)
 
         val result = refreshTokenService.validateRefreshToken("valid-token")
 
@@ -70,7 +70,7 @@ class RefreshTokenServiceTest {
             isRevoked = true
         )
 
-        every { refreshTokenRepository.findByToken("revoked-token") } returns java.util.Optional.of(token)
+        every { refreshTokenRepository.findByToken("revoked-token") } returns Optional.of(token)
 
         val exception = assertFailsWith<IllegalArgumentException> {
             refreshTokenService.validateRefreshToken("revoked-token")
@@ -88,7 +88,7 @@ class RefreshTokenServiceTest {
             isRevoked = false
         )
 
-        every { refreshTokenRepository.findByToken("expired-token") } returns java.util.Optional.of(token)
+        every { refreshTokenRepository.findByToken("expired-token") } returns Optional.of(token)
 
         val exception = assertFailsWith<IllegalArgumentException> {
             refreshTokenService.validateRefreshToken("expired-token")
@@ -106,7 +106,7 @@ class RefreshTokenServiceTest {
             isRevoked = false
         )
 
-        every { refreshTokenRepository.findByToken("to-revoke") } returns java.util.Optional.of(token)
+        every { refreshTokenRepository.findByToken("to-revoke") } returns Optional.of(token)
         every { refreshTokenRepository.save(any()) } returns token
 
         refreshTokenService.revokeToken("to-revoke")
@@ -147,7 +147,7 @@ class RefreshTokenServiceTest {
 
     @Test
     fun `should throw if token not found during revoke`() {
-        every { refreshTokenRepository.findByToken("missing-token") } returns java.util.Optional.empty()
+        every { refreshTokenRepository.findByToken("missing-token") } returns Optional.empty()
 
         assertFailsWith<ResourceNotFoundException> {
             refreshTokenService.revokeToken("missing-token")
@@ -156,7 +156,7 @@ class RefreshTokenServiceTest {
 
     @Test
     fun `should throw if token not found during validate`() {
-        every { refreshTokenRepository.findByToken("missing-token") } returns java.util.Optional.empty()
+        every { refreshTokenRepository.findByToken("missing-token") } returns Optional.empty()
 
         assertFailsWith<ResourceNotFoundException> {
             refreshTokenService.validateRefreshToken("missing-token")
