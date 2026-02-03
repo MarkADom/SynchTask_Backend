@@ -24,7 +24,7 @@ import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class UserControllerTest {
 
     private lateinit var userService: UserService
@@ -36,9 +36,12 @@ class UserControllerTest {
 
     @BeforeEach
     fun setup() {
+        io.mockk.clearAllMocks()
+
         userService = mockk()
         passwordEncoder = mockk()
         friendService = mockk()
+
         controller = UserController(userService, passwordEncoder, friendService)
     }
 
@@ -47,7 +50,7 @@ class UserControllerTest {
         val dto = UserRegistrationDTO("John", "john@email.com", "password", null)
         val encoded = "encoded-password"
 
-        val user = User(
+        val createdUser = User(
             id = 1L,
             name = "John",
             email = dto.email,
@@ -56,7 +59,7 @@ class UserControllerTest {
         )
 
         every { passwordEncoder.encode(dto.password) } returns encoded
-        every { userService.createUser(any()) } returns user
+        every { userService.createUser(any()) } returns createdUser
 
         val response = controller.createUser(dto)
 
@@ -111,9 +114,8 @@ class UserControllerTest {
     @Test
     fun `should update user when authorized`() {
         val id = 1L
-        val authUser: UserDetails = org.springframework.security.core.userdetails.User(
-            "admin@email.com", "pw", emptyList()
-        )
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("admin@email.com", "pw", emptyList())
 
         val existing = User(
             id = id,
@@ -123,14 +125,23 @@ class UserControllerTest {
             role = UserRole.USER
         )
 
-        val updateDTO = UpdateUserDTO("New", "new@email.com", null, null)
-        val updated = updateDTO.toUser(existing)
+        val updatedUser = User(
+            id = id,
+            name = "New",
+            email = "new@email.com",
+            passwordHash = "pw",
+            role = UserRole.USER
+        )
 
         every { userService.getUserById(id) } returns existing
         every { userService.isAuthorized(authUser.username, existing.email) } returns true
-        every { userService.updateUser(id, any()) } returns updated
+        every { userService.updateUser(id, any()) } returns updatedUser
 
-        val response = controller.updateUser(id, updateDTO, authUser)
+        val response = controller.updateUser(
+            id,
+            UpdateUserDTO("New", "new@email.com", null, null),
+            authUser
+        )
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals("new@email.com", response.body!!.email)
@@ -138,9 +149,8 @@ class UserControllerTest {
 
     @Test
     fun `should forbid update if unauthorized`() {
-        val authUser: UserDetails = org.springframework.security.core.userdetails.User(
-            "attacker@email.com", "pw", emptyList()
-        )
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("attacker@email.com", "pw", emptyList())
 
         val existing = User(
             id = 1L,
@@ -163,9 +173,8 @@ class UserControllerTest {
 
     @Test
     fun `should delete user if authorized`() {
-        val authUser: UserDetails = org.springframework.security.core.userdetails.User(
-            "user@email.com", "pw", emptyList()
-        )
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("user@email.com", "pw", emptyList())
 
         val user = User(
             id = 3L,
@@ -185,9 +194,8 @@ class UserControllerTest {
 
     @Test
     fun `should throw if delete unauthorized`() {
-        val authUser: UserDetails = org.springframework.security.core.userdetails.User(
-            "hacker@email.com", "pw", emptyList()
-        )
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("hacker@email.com", "pw", emptyList())
 
         val user = User(
             id = 10L,
