@@ -1,4 +1,4 @@
-package com.synchtask.services.user
+package com.synchtask.user.application.service
 
 import com.synchtask.user.application.dto.UserResponseDTO
 import com.synchtask.user.application.dto.UserStatusDTO
@@ -6,7 +6,6 @@ import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.exception.UserAlreadyExistsException
 import com.synchtask.user.presentation.mapper.UserMapper
-import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.*

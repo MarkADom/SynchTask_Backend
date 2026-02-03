@@ -1,6 +1,5 @@
-package com.synchtask.services.user
+package com.synchtask.user.application.service
 
-import com.synchtask.user.application.service.CustomUserDetailsService
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.every

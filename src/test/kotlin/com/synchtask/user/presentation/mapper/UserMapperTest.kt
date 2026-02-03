@@ -1,8 +1,7 @@
-package com.synchtask.mappers
+package com.synchtask.user.presentation.mapper
 
 import com.synchtask.user.domain.entity.User
-import com.synchtask.user.presentation.mapper.UserMapper
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class UserMapperTest {
@@ -19,10 +18,10 @@ class UserMapperTest {
 
         val dto = UserMapper.toResponseDTO(user)
 
-        assertEquals(1L, dto.id)
-        assertEquals("Jane Doe", dto.name)
-        assertEquals("jane@example.com", dto.email)
-        assertEquals("http://example.com/profile.jpg", dto.profilePictureUrl)
+        Assertions.assertEquals(1L, dto.id)
+        Assertions.assertEquals("Jane Doe", dto.name)
+        Assertions.assertEquals("jane@example.com", dto.email)
+        Assertions.assertEquals("http://example.com/profile.jpg", dto.profilePictureUrl)
     }
 
     @Test
@@ -37,7 +36,7 @@ class UserMapperTest {
 
         val dto = UserMapper.toResponseDTO(user)
 
-        assertEquals("N/A", dto.profilePictureUrl)
+        Assertions.assertEquals("N/A", dto.profilePictureUrl)
     }
 
     @Test
@@ -59,9 +58,9 @@ class UserMapperTest {
 
         val dtos = UserMapper.toResponseDTOList(users)
 
-        assertEquals(2, dtos.size)
-        assertEquals("Alice", dtos[0].name)
-        assertEquals("Bob", dtos[1].name)
+        Assertions.assertEquals(2, dtos.size)
+        Assertions.assertEquals("Alice", dtos[0].name)
+        Assertions.assertEquals("Bob", dtos[1].name)
     }
 
     @Test
@@ -73,10 +72,10 @@ class UserMapperTest {
             passwordHash = "bad"
         )
 
-        val ex = assertThrows(IllegalArgumentException::class.java) {
+        val ex = Assertions.assertThrows(IllegalArgumentException::class.java) {
             UserMapper.toResponseDTO(user)
         }
 
-        assertEquals("User ID cannot be null", ex.message)
+        Assertions.assertEquals("User ID cannot be null", ex.message)
     }
 }
