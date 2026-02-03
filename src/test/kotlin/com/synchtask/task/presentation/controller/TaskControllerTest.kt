@@ -1,4 +1,4 @@
-package com.synchtask.controllers
+package com.synchtask.task.presentation.controller
 
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.task.application.dto.TaskCreateDTO
@@ -8,7 +8,6 @@ import com.synchtask.user.application.service.UserService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
-import com.synchtask.task.presentation.controller.TaskController
 import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach

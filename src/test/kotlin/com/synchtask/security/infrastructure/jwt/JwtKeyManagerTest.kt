@@ -1,11 +1,11 @@
-package com.synchtask.security
+package com.synchtask.security.infrastructure.jwt
 
-import com.synchtask.security.infrastructure.jwt.JwtKeyManager
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.interfaces.RSAPublicKey
+import kotlin.collections.get
 
 class JwtKeyManagerTest {
 

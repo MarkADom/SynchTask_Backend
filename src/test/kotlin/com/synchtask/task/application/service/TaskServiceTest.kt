@@ -1,4 +1,4 @@
-package com.synchtask.services.task
+package com.synchtask.task.application.service
 
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardRepository
@@ -6,8 +6,6 @@ import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.friend.domain.repository.FriendRepository
 import com.synchtask.notification.application.service.NotificationService
-import com.synchtask.task.application.service.TaskService
-import com.synchtask.task.application.service.TaskSpecificationService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User

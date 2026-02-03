@@ -1,4 +1,4 @@
-package com.synchtask.services.task
+package com.synchtask.task.application.service
 
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.task.application.dto.TaskCommentCreateDTO
@@ -9,7 +9,6 @@ import com.synchtask.task.domain.repository.TaskCommentRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.notification.application.service.NotificationService
-import com.synchtask.task.application.service.TaskCommentService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.task.domain.entity.TaskStatus

@@ -1,4 +1,4 @@
-package com.synchtask.mappers
+package com.synchtask.task.presentation.mapper
 
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.project.domain.entity.Project
@@ -6,9 +6,8 @@ import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
-import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -64,26 +63,26 @@ class TaskMapperTest {
     fun `should map Task to TaskResponseDTO correctly`() {
         val dto = TaskMapper.toTaskResponseDTO(task)
 
-        assertEquals(100L, dto.id)
-        assertEquals("Test Task", dto.title)
-        assertEquals("This is a test task", dto.description)
+        Assertions.assertEquals(100L, dto.id)
+        Assertions.assertEquals("Test Task", dto.title)
+        Assertions.assertEquals("This is a test task", dto.description)
 
-        assertEquals(1L, dto.creatorId)
-        assertEquals("Owner User", dto.creatorName)
+        Assertions.assertEquals(1L, dto.creatorId)
+        Assertions.assertEquals("Owner User", dto.creatorName)
 
-        assertEquals(listOf(2L), dto.assignees)
+        Assertions.assertEquals(listOf(2L), dto.assignees)
 
-        assertEquals(TaskStatus.TODO, dto.status)
-        assertEquals(TaskPriority.MID, dto.priority)
+        Assertions.assertEquals(TaskStatus.TODO, dto.status)
+        Assertions.assertEquals(TaskPriority.MID, dto.priority)
 
-        assertEquals(setOf("urgent", "backend"), dto.labels.toSet())
+        Assertions.assertEquals(setOf("urgent", "backend"), dto.labels.toSet())
 
-        assertEquals(now, dto.createdAt)
-        assertEquals(now, dto.updatedAt)
+        Assertions.assertEquals(now, dto.createdAt)
+        Assertions.assertEquals(now, dto.updatedAt)
 
-        assertEquals(20L, dto.boardId)
-        assertEquals("Main Board", dto.boardName)
-        assertEquals("Test Project", dto.projectName)
+        Assertions.assertEquals(20L, dto.boardId)
+        Assertions.assertEquals("Main Board", dto.boardName)
+        Assertions.assertEquals("Test Project", dto.projectName)
     }
 
     @Test
@@ -98,22 +97,22 @@ class TaskMapperTest {
 
         val dto = TaskMapper.toTaskCommentResponseDTO(comment)
 
-        assertEquals(500L, dto.id)
-        assertEquals(100L, dto.taskId)
-        assertEquals(2L, dto.userId)
-        assertEquals("Looks good!", dto.content)
-        assertEquals(now, dto.createdAt)
+        Assertions.assertEquals(500L, dto.id)
+        Assertions.assertEquals(100L, dto.taskId)
+        Assertions.assertEquals(2L, dto.userId)
+        Assertions.assertEquals("Looks good!", dto.content)
+        Assertions.assertEquals(now, dto.createdAt)
     }
 
     @Test
     fun `should throw when Task id is null`() {
         val invalidTask = task.copy(id = null)
 
-        val ex = assertThrows(IllegalArgumentException::class.java) {
+        val ex = Assertions.assertThrows(IllegalArgumentException::class.java) {
             TaskMapper.toTaskResponseDTO(invalidTask)
         }
 
-        assertEquals("Task ID cannot be null", ex.message)
+        Assertions.assertEquals("Task ID cannot be null", ex.message)
     }
 
     @Test
@@ -126,7 +125,7 @@ class TaskMapperTest {
             createdAt = now
         )
 
-        assertThrows(NullPointerException::class.java) {
+        Assertions.assertThrows(NullPointerException::class.java) {
             TaskMapper.toTaskCommentResponseDTO(comment)
         }
     }

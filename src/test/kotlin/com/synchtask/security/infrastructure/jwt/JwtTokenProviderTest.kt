@@ -1,7 +1,5 @@
-package com.synchtask.security
+package com.synchtask.security.infrastructure.jwt
 
-import com.synchtask.security.infrastructure.jwt.JwtKeyManager
-import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository

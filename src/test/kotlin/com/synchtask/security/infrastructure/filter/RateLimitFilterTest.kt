@@ -1,7 +1,6 @@
-package com.synchtask.security
+package com.synchtask.security.infrastructure.filter
 
 import com.synchtask.config.RateLimitConfig
-import com.synchtask.security.infrastructure.filter.RateLimitFilter
 import io.github.bucket4j.Bucket
 import io.mockk.*
 import jakarta.servlet.FilterChain

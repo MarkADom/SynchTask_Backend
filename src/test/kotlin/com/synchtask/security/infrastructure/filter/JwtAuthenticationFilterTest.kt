@@ -1,12 +1,12 @@
-package com.synchtask.security
+package com.synchtask.security.infrastructure.filter
 
-import com.synchtask.security.infrastructure.filter.JwtAuthenticationFilter
 import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
 import io.mockk.*
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.junit.jupiter.api.*
+import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import kotlin.test.assertEquals
@@ -108,7 +108,7 @@ class JwtAuthenticationFilterTest {
     // Realistic implementation of UserDetails for isolated test
     class FakeUserDetails(private val username: String) : UserDetails {
         override fun getUsername() = username
-        override fun getAuthorities() = emptyList<org.springframework.security.core.GrantedAuthority>()
+        override fun getAuthorities() = emptyList<GrantedAuthority>()
         override fun getPassword() = null
         override fun isAccountNonExpired() = true
         override fun isAccountNonLocked() = true
