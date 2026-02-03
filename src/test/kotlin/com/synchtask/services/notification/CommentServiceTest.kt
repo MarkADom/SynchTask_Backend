@@ -1,10 +1,15 @@
 package com.synchtask.services.notification
 
-import com.synchtask.entities.*
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.repositories.TaskCommentRepository
-import com.synchtask.repositories.TaskRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.board.domain.entity.Board
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.notification.application.service.CommentService
+import com.synchtask.task.domain.repository.TaskCommentRepository
+import com.synchtask.task.domain.repository.TaskRepository
+import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskComment
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

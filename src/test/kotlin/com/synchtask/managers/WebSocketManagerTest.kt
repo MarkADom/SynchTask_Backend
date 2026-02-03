@@ -1,5 +1,6 @@
 package com.synchtask.managers
 
+import com.synchtask.websocket.application.manager.WebSocketManager
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

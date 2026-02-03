@@ -1,9 +1,10 @@
 package com.synchtask.controllers
 
-import com.synchtask.dtos.chat.ChatMessageDTO
-import com.synchtask.dtos.chat.ChatRoomDTO
-import com.synchtask.services.chat.ChatService
-import com.synchtask.services.chat.KeyExchangeService
+import com.synchtask.chat.application.dto.ChatMessageDTO
+import com.synchtask.chat.application.dto.ChatRoomDTO
+import com.synchtask.chat.application.service.ChatService
+import com.synchtask.chat.application.service.KeyExchangeService
+import com.synchtask.chat.presentation.controller.ChatController
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk

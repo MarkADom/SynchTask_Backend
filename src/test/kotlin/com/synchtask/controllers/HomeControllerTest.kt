@@ -1,5 +1,6 @@
 package com.synchtask.controllers
 
+import com.synchtask.shared.presentation.controller.HomeController
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

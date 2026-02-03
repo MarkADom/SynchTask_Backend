@@ -1,7 +1,8 @@
 package com.synchtask.services.user
 
-import com.synchtask.entities.UserRole
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.application.service.CustomUserDetailsService
+import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*
@@ -11,7 +12,7 @@ import org.springframework.security.authentication.DisabledException
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import java.util.*
-import com.synchtask.entities.User as AppUser
+import com.synchtask.user.domain.entity.User as AppUser
 
 class UserDetailsServiceTest {
 

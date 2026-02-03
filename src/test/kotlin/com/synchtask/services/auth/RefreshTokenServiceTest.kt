@@ -1,9 +1,10 @@
 package com.synchtask.services.auth
 
-import com.synchtask.entities.RefreshToken
-import com.synchtask.entities.User
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.repositories.RefreshTokenRepository
+import com.synchtask.security.domain.entity.RefreshToken
+import com.synchtask.user.domain.entity.User
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.security.application.service.RefreshTokenService
+import com.synchtask.security.domain.repository.RefreshTokenRepository
 import io.mockk.*
 import org.junit.jupiter.api.*
 import java.time.LocalDateTime

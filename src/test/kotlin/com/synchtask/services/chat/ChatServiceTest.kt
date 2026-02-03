@@ -1,15 +1,16 @@
 package com.synchtask.services.chat
 
-import com.synchtask.dtos.chat.ChatMessageDTO
-import com.synchtask.dtos.chat.ChatRoomDTO
-import com.synchtask.entities.ChatMessage
-import com.synchtask.entities.ChatRoom
-import com.synchtask.entities.User
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UnauthorizedAccessException
-import com.synchtask.repositories.ChatMessageRepository
-import com.synchtask.repositories.ChatRoomRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.chat.application.dto.ChatMessageDTO
+import com.synchtask.chat.application.dto.ChatRoomDTO
+import com.synchtask.chat.application.service.ChatService
+import com.synchtask.chat.domain.entity.ChatMessage
+import com.synchtask.chat.domain.entity.ChatRoom
+import com.synchtask.user.domain.entity.User
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.chat.domain.repository.ChatMessageRepository
+import com.synchtask.chat.domain.repository.ChatRoomRepository
+import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -31,7 +32,7 @@ class ChatServiceTest {
         email = "marco@example.com",
         passwordHash = "hashed",
         profilePictureUrl = "",
-        role = com.synchtask.entities.UserRole.USER,
+        role = UserRole.USER,
         isActive = true
     )
 
@@ -41,7 +42,7 @@ class ChatServiceTest {
         email = "ana@example.com",
         passwordHash = "hashed2",
         profilePictureUrl = "",
-        role = com.synchtask.entities.UserRole.USER,
+        role = UserRole.USER,
         isActive = true
     )
 

@@ -1,15 +1,16 @@
 package com.synchtask.controllers
 
-import com.synchtask.dtos.user.UserLoginDTO
-import com.synchtask.dtos.user.UserRegistrationDTO
-import com.synchtask.dtos.user.UserResponseDTO
-import com.synchtask.entities.User
-import com.synchtask.entities.UserRole
-import com.synchtask.managers.AuthManager
-import com.synchtask.security.JwtKeyManager
-import com.synchtask.services.auth.AuthService
-import com.synchtask.services.auth.RefreshTokenService
-import com.synchtask.services.user.UserService
+import com.synchtask.user.application.dto.UserLoginDTO
+import com.synchtask.user.application.dto.UserRegistrationDTO
+import com.synchtask.user.application.dto.UserResponseDTO
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.security.application.manager.AuthManager
+import com.synchtask.security.infrastructure.jwt.JwtKeyManager
+import com.synchtask.security.application.service.AuthService
+import com.synchtask.security.application.service.RefreshTokenService
+import com.synchtask.security.presentation.controller.AuthController
+import com.synchtask.user.application.service.UserService
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
@@ -93,9 +94,9 @@ class AuthControllerTest {
 
         val body = response.body!!
         assertEquals("jwt-access-token", body["accessToken"])
-        assertNotNull(body["user"])
+        assertNotNull(body["com/synchtask/user"])
 
-        val userDto = body["user"] as UserResponseDTO
+        val userDto = body["com/synchtask/user"] as UserResponseDTO
         assertEquals(user.email, userDto.email)
         assertEquals(user.name, userDto.name)
 

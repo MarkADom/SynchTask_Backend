@@ -1,5 +1,7 @@
 package com.synchtask.security
 
+import com.synchtask.security.infrastructure.filter.JwtAuthenticationFilter
+import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
 import io.mockk.*
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest

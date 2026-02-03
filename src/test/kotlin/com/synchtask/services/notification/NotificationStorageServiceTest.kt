@@ -1,12 +1,13 @@
 package com.synchtask.services.notification
 
-import com.synchtask.dtos.notification.NotificationRedisDTO
-import com.synchtask.entities.Notification
-import com.synchtask.entities.NotificationType
-import com.synchtask.entities.User
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.repositories.NotificationRepository
-import com.synchtask.repositories.UserRepository
+import com.synchtask.notification.application.dto.NotificationRedisDTO
+import com.synchtask.notification.domain.entity.Notification
+import com.synchtask.notification.domain.entity.NotificationType
+import com.synchtask.user.domain.entity.User
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.notification.application.service.NotificationStorageService
+import com.synchtask.notification.domain.repository.NotificationRepository
+import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach

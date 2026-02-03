@@ -1,10 +1,11 @@
 package com.synchtask.controllers
 
-import com.synchtask.dtos.notification.NotificationRequestDTO
-import com.synchtask.dtos.notification.NotificationResponseDTO
-import com.synchtask.entities.NotificationType
-import com.synchtask.services.notification.NotificationService
-import com.synchtask.services.redis.NotificationRedisCleanupService
+import com.synchtask.notification.application.dto.NotificationRequestDTO
+import com.synchtask.notification.application.dto.NotificationResponseDTO
+import com.synchtask.notification.domain.entity.NotificationType
+import com.synchtask.notification.application.service.NotificationService
+import com.synchtask.notification.presentation.controller.NotificationController
+import com.synchtask.redis.application.service.NotificationRedisCleanupService
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

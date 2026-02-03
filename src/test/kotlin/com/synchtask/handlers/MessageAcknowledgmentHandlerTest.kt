@@ -1,5 +1,6 @@
 package com.synchtask.handlers
 
+import com.synchtask.websocket.application.handler.MessageAcknowledgmentHandler
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

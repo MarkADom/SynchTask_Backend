@@ -1,8 +1,10 @@
 package com.synchtask.security
 
-import com.synchtask.entities.User
-import com.synchtask.entities.UserRole
-import com.synchtask.repositories.UserRepository
+import com.synchtask.security.infrastructure.jwt.JwtKeyManager
+import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach

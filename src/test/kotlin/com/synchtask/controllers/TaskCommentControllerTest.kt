@@ -1,8 +1,9 @@
 package com.synchtask.controllers
 
-import com.synchtask.dtos.task.TaskCommentCreateDTO
-import com.synchtask.dtos.task.TaskCommentResponseDTO
-import com.synchtask.services.task.TaskCommentService
+import com.synchtask.task.application.dto.TaskCommentCreateDTO
+import com.synchtask.task.application.dto.TaskCommentResponseDTO
+import com.synchtask.task.application.service.TaskCommentService
+import com.synchtask.task.presentation.controller.TaskCommentController
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

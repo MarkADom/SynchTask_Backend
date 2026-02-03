@@ -1,6 +1,7 @@
 package com.synchtask.mappers
 
-import com.synchtask.entities.User
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.presentation.mapper.UserMapper
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

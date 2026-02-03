@@ -1,12 +1,14 @@
 package com.synchtask.services.auth
 
-import com.synchtask.entities.RefreshToken
-import com.synchtask.entities.User
-import com.synchtask.entities.UserRole
-import com.synchtask.exception.InvalidCredentialsException
-import com.synchtask.managers.NotificationManager
-import com.synchtask.repositories.UserRepository
-import com.synchtask.security.JwtTokenProvider
+import com.synchtask.security.domain.entity.RefreshToken
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.security.domain.exception.InvalidCredentialsException
+import com.synchtask.notification.application.manager.NotificationManager
+import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
+import com.synchtask.security.application.service.AuthService
+import com.synchtask.security.application.service.RefreshTokenService
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*

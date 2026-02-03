@@ -1,7 +1,7 @@
 package com.synchtask.config
 
-import com.synchtask.security.JwtTokenProvider
-import com.synchtask.websocket.CustomHandshakeInterceptor
+import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
+import com.synchtask.websocket.infrastructure.CustomHandshakeInterceptor
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -59,7 +59,7 @@ class WebSocketSecurityConfig(
         logger.info("Configuring STOMP broker prefixes")
         registry.enableSimpleBroker("/topic", "/queue")
         registry.setApplicationDestinationPrefixes("/app")
-        registry.setUserDestinationPrefix("/user")
+        registry.setUserDestinationPrefix("/com/synchtask/user")
     }
 
     @Bean
@@ -78,7 +78,7 @@ class WebSocketSecurityConfig(
         return MessageMatcherDelegatingAuthorizationManager.builder()
             .simpTypeMatchers(SimpMessageType.CONNECT).permitAll() // TODO: change to authenticated() in production
             .simpDestMatchers("/ws/**", "/ws-notifications/**").authenticated()
-            .simpDestMatchers("/user/queue/**").authenticated()
+            .simpDestMatchers("/com/synchtask/user/queue/**").authenticated()
             .simpDestMatchers("/topic/**").permitAll()
             .anyMessage().denyAll()
             .build()

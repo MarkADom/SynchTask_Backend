@@ -1,12 +1,13 @@
 package com.synchtask.services.user
 
-import com.synchtask.dtos.user.UserResponseDTO
-import com.synchtask.dtos.user.UserStatusDTO
-import com.synchtask.entities.User
-import com.synchtask.entities.UserRole
-import com.synchtask.exception.UserAlreadyExistsException
-import com.synchtask.mappers.UserMapper
-import com.synchtask.repositories.UserRepository
+import com.synchtask.user.application.dto.UserResponseDTO
+import com.synchtask.user.application.dto.UserStatusDTO
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.user.domain.exception.UserAlreadyExistsException
+import com.synchtask.user.presentation.mapper.UserMapper
+import com.synchtask.user.application.service.UserService
+import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
