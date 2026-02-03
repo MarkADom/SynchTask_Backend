@@ -1,6 +1,7 @@
 package com.synchtask.websocket
 
-import com.synchtask.security.JwtTokenProvider
+import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
+import com.synchtask.websocket.infrastructure.CustomHandshakeInterceptor
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

@@ -2,7 +2,7 @@ package com.synchtask.services.notification
 
 import com.synchtask.notification.application.dto.NotificationDTO
 import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.managers.WebSocketManager
+import com.synchtask.websocket.application.manager.WebSocketManager
 import com.synchtask.notification.application.service.NotificationStorageService
 import com.synchtask.notification.application.service.NotificationWebSocketService
 import io.mockk.*

@@ -1,8 +1,8 @@
 package com.synchtask.friend.application.service
 
-import com.synchtask.exception.FriendRequestAlreadySentException
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UnauthorizedAccessException
+import com.synchtask.friend.domain.exception.FriendRequestAlreadySentException
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.friend.domain.entity.Friend
 import com.synchtask.friend.domain.entity.FriendshipStatus
 import com.synchtask.friend.domain.repository.FriendRepository

@@ -1,7 +1,7 @@
 package com.synchtask.chat.application.service
 
 import com.synchtask.user.domain.entity.UserEncryptionKeys
-import com.synchtask.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.domain.repository.UserEncryptionKeysRepository
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory

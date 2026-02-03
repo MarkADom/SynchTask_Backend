@@ -1,6 +1,7 @@
 package com.synchtask.controllers
 
-import com.synchtask.security.JwtKeyManager
+import com.synchtask.security.infrastructure.jwt.JwtKeyManager
+import com.synchtask.security.presentation.controller.JwksController
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

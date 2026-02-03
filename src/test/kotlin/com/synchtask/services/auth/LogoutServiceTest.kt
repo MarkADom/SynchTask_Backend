@@ -1,10 +1,11 @@
 
 package com.synchtask.services.auth
 
-import com.synchtask.entities.RefreshToken
+import com.synchtask.security.application.service.LogoutService
+import com.synchtask.security.domain.entity.RefreshToken
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.repositories.RefreshTokenRepository
+import com.synchtask.security.domain.repository.RefreshTokenRepository
 import io.mockk.*
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

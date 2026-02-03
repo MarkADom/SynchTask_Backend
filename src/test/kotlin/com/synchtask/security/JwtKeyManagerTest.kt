@@ -1,5 +1,6 @@
 package com.synchtask.security
 
+import com.synchtask.security.infrastructure.jwt.JwtKeyManager
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.security.PrivateKey

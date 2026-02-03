@@ -2,7 +2,7 @@ package com.synchtask.notification.presentation.controller
 
 import com.synchtask.notification.application.dto.NotificationRequestDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
-import com.synchtask.services.redis.NotificationRedisCleanupService
+import com.synchtask.redis.application.service.NotificationRedisCleanupService
 import com.synchtask.notification.application.service.NotificationService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize

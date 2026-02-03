@@ -1,8 +1,8 @@
 package com.synchtask.task.presentation.controller
 
 import com.synchtask.task.domain.entity.TaskStatus
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UnauthorizedAccessException
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.service.TaskService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO

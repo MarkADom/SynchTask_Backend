@@ -1,7 +1,6 @@
 package com.synchtask.mappers
 
 import com.synchtask.board.domain.entity.Board
-import com.synchtask.entities.*
 import com.synchtask.project.domain.entity.Project
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment

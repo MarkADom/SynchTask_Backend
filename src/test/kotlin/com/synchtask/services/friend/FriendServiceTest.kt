@@ -4,7 +4,7 @@ import com.synchtask.friend.domain.entity.Friend
 import com.synchtask.friend.domain.entity.FriendshipStatus
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.exception.FriendRequestAlreadySentException
+import com.synchtask.friend.domain.exception.FriendRequestAlreadySentException
 import com.synchtask.friend.application.service.FriendService
 import com.synchtask.friend.domain.repository.FriendRepository
 import com.synchtask.user.domain.repository.UserRepository

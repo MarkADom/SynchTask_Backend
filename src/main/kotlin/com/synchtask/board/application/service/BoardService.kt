@@ -6,8 +6,8 @@ import com.synchtask.board.application.dto.BoardResponseDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardRepository
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UnauthorizedAccessException
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.board.presentation.mapper.BoardMapper
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory

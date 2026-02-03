@@ -1,5 +1,6 @@
 package com.synchtask.controllers
 
+import com.synchtask.security.presentation.controller.OpenIdConfigurationController
 import io.mockk.every
 import io.mockk.mockk
 import jakarta.servlet.http.HttpServletRequest

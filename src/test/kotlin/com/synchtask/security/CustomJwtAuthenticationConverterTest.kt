@@ -1,5 +1,6 @@
 package com.synchtask.security
 
+import com.synchtask.security.infrastructure.jwt.CustomJwtAuthenticationConverter
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*

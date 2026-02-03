@@ -1,6 +1,6 @@
 package com.synchtask.config
 
-import com.synchtask.services.redis.RedisSubscriber
+import com.synchtask.redis.application.service.RedisSubscriber
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.data.redis.connection.RedisConnectionFactory

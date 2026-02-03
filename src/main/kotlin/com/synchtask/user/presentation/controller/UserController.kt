@@ -1,7 +1,7 @@
 package com.synchtask.user.presentation.controller
 
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UnauthorizedAccessException
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.presentation.mapper.UserMapper
 import com.synchtask.friend.application.service.FriendService
 import com.synchtask.user.application.dto.UpdateUserDTO

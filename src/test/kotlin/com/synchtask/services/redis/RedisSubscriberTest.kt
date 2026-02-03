@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.synchtask.chat.application.dto.ChatMessageDTO
 import com.synchtask.notification.application.dto.NotificationDTO
 import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.managers.WebSocketManager
+import com.synchtask.websocket.application.manager.WebSocketManager
+import com.synchtask.redis.application.service.RedisSubscriber
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

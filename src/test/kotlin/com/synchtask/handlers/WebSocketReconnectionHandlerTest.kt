@@ -1,6 +1,7 @@
 package com.synchtask.handlers
 
-import com.synchtask.managers.WebSocketManager
+import com.synchtask.websocket.application.manager.WebSocketManager
+import com.synchtask.websocket.application.handler.WebSocketReconnectionHandler
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

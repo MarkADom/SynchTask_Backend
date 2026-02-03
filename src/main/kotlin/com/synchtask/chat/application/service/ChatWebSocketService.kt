@@ -1,10 +1,10 @@
 package com.synchtask.chat.application.service
 
-import com.synchtask.context.ChatServiceContext
+import com.synchtask.chat.application.context.ChatServiceContext
 import com.synchtask.chat.application.dto.WebSocketMessageDTO
 import com.synchtask.chat.domain.entity.ChatMessage
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UnauthorizedAccessException
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

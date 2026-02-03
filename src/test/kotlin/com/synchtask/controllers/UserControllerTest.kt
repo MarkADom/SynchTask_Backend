@@ -2,8 +2,8 @@ package com.synchtask.controllers
 
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UnauthorizedAccessException
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.friend.application.service.FriendService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.user.application.dto.UpdateUserDTO

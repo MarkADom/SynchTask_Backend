@@ -4,8 +4,8 @@ import com.synchtask.user.application.dto.UserResponseDTO
 import com.synchtask.user.application.dto.UserStatusDTO
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UserAlreadyExistsException
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.user.domain.exception.UserAlreadyExistsException
 import com.synchtask.user.presentation.mapper.UserMapper
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory

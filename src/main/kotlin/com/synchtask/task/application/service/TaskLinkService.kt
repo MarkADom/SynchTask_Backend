@@ -2,8 +2,8 @@ package com.synchtask.task.application.service
 
 import com.synchtask.task.application.dto.TaskLinkDTO
 import com.synchtask.task.domain.entity.TaskLink
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UnauthorizedAccessException
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.domain.repository.TaskLinkRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import org.slf4j.LoggerFactory

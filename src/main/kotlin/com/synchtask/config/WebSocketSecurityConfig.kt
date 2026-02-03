@@ -1,7 +1,7 @@
 package com.synchtask.config
 
-import com.synchtask.security.JwtTokenProvider
-import com.synchtask.websocket.CustomHandshakeInterceptor
+import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
+import com.synchtask.websocket.infrastructure.CustomHandshakeInterceptor
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean

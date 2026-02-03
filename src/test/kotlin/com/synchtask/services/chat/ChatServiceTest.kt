@@ -6,7 +6,7 @@ import com.synchtask.chat.application.service.ChatService
 import com.synchtask.chat.domain.entity.ChatMessage
 import com.synchtask.chat.domain.entity.ChatRoom
 import com.synchtask.user.domain.entity.User
-import com.synchtask.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.chat.domain.repository.ChatMessageRepository
 import com.synchtask.chat.domain.repository.ChatRoomRepository
 import com.synchtask.user.domain.repository.UserRepository

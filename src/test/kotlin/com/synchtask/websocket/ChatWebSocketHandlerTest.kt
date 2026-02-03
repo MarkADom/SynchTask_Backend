@@ -2,6 +2,7 @@ package com.synchtask.websocket
 
 import com.synchtask.chat.application.dto.WebSocketMessageDTO
 import com.synchtask.chat.application.service.ChatWebSocketService
+import com.synchtask.websocket.application.handler.ChatWebSocketHandler
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

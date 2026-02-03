@@ -4,8 +4,8 @@ import com.synchtask.chat.application.dto.ChatMessageDTO
 import com.synchtask.chat.application.dto.ChatRoomDTO
 import com.synchtask.chat.domain.entity.ChatMessage
 import com.synchtask.chat.domain.entity.ChatRoom
-import com.synchtask.exception.ResourceNotFoundException
-import com.synchtask.exception.UnauthorizedAccessException
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.chat.domain.repository.ChatMessageRepository
 import com.synchtask.chat.domain.repository.ChatRoomRepository
 import com.synchtask.user.domain.repository.UserRepository

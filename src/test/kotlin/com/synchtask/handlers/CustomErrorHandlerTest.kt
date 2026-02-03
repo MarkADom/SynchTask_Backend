@@ -1,7 +1,11 @@
 package com.synchtask.handlers
 
-import com.synchtask.dtos.ErrorResponseDTO
-import com.synchtask.exception.*
+import com.synchtask.shared.dto.ErrorResponseDTO
+import com.synchtask.security.domain.exception.InvalidCredentialsException
+import com.synchtask.shared.application.handler.CustomErrorHandler
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.user.domain.exception.UserAlreadyExistsException
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.JwtException
 import org.junit.jupiter.api.Assertions.assertEquals
