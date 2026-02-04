@@ -116,7 +116,16 @@ project directory.
 ```
 
 ## Testing & Quality
-The application will start and expose the API locally.
+This project enforces strict quality standards:
+
+- Minimum code coverage: **80% on new code**
+- Continuous inspection via **SonarQube**
+- Quality Gates enforced at build level
+- Builds fail automatically if quality standards are not met
+
+The testing strategy focuses on business logic (application layer),
+prioritizing meaningful coverage over artificial metrics.
+
 
 ### Code Quality (SonarQube)
 
