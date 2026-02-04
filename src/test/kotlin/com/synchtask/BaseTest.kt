@@ -7,13 +7,12 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
 /**
- * **BaseTest**
- * - Standardized configuration for all tests.
- * - Uses `"test"` profile to isolate settings from production.
- * - Automatically configures MockMvc for API tests.
+ * Base class for integration tests.
+ *
+ * - Loads full Spring context.
+ * - Uses the "test" profile.
+ * - Should be extended only by tests that require real infrastructure.
  */
-@ExtendWith(SpringExtension::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
-abstract class BaseTest
+abstract class BaseIntegrationTest

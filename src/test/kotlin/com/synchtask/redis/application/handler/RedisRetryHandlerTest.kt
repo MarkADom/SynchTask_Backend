@@ -1,4 +1,4 @@
-package com.synchtask.redis.aplicattion.handler
+package com.synchtask.redis.application.handler
 
 import com.synchtask.shared.application.handler.RedisRetryHandler
 import io.mockk.every

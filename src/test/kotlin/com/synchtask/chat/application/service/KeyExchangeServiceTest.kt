@@ -1,108 +1,167 @@
 package com.synchtask.chat.application.service
 
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserEncryptionKeys
-import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.domain.repository.UserEncryptionKeysRepository
 import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
-import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.*
-import java.util.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import java.util.Optional
+import kotlin.test.*
 
 class KeyExchangeServiceTest {
 
-    private val userRepository: UserRepository = mockk()
-    private val userEncryptionKeysRepository: UserEncryptionKeysRepository = mockk()
-    private lateinit var keyExchangeService: KeyExchangeService
+    private lateinit var keysRepository: UserEncryptionKeysRepository
+    private lateinit var userRepository: UserRepository
+    private lateinit var service: KeyExchangeService
 
+    private val userEmail = "user@test.com"
     private val user = User(
         id = 1L,
-        name = "Alice",
-        email = "alice@example.com",
-        passwordHash = "hash",
-        profilePictureUrl = null
+        name = "Test User",
+        email = userEmail,
+        passwordHash = "pw"
     )
 
     @BeforeEach
-    fun setUp() {
+    fun setup() {
         clearAllMocks()
-        keyExchangeService = KeyExchangeService(userEncryptionKeysRepository, userRepository)
+        keysRepository = mockk()
+        userRepository = mockk()
+        service = KeyExchangeService(keysRepository, userRepository)
     }
 
     @Test
-    fun `should save new user public key`() {
-        every { userRepository.findByEmail("alice@example.com") } returns Optional.of(user)
-        every { userEncryptionKeysRepository.findByUser(user) } returns Optional.empty()
-        every { userEncryptionKeysRepository.save(any()) } returnsArgument 0
+    fun `should save new public key when none exists`() {
+        every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
+        every { keysRepository.findByUser(user) } returns Optional.empty()
+        every { keysRepository.save(any()) } answers { firstArg() }
 
-        keyExchangeService.saveUserPublicKey("alice@example.com", "public-key-123")
+        service.saveUserPublicKey(userEmail, "public-key")
 
-        verify { userEncryptionKeysRepository.save(match {
-            it.user == user && it.publicKey == "public-key-123"
-        }) }
+        verify(exactly = 1) {
+            keysRepository.save(
+                match { it.user == user && it.publicKey == "public-key" }
+            )
+        }
     }
 
     @Test
-    fun `should update existing user public key`() {
-        val existingKey = UserEncryptionKeys(id = 10L, user = user, publicKey = "old-key")
-        every { userRepository.findByEmail("alice@example.com") } returns Optional.of(user)
-        every { userEncryptionKeysRepository.findByUser(user) } returns Optional.of(existingKey)
-        every { userEncryptionKeysRepository.save(existingKey) } returns existingKey
+    fun `should update existing public key`() {
+        val existingKey = UserEncryptionKeys(user = user, publicKey = "old-key")
 
-        keyExchangeService.saveUserPublicKey("alice@example.com", "new-key")
+        every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
+        every { keysRepository.findByUser(user) } returns Optional.of(existingKey)
+        every { keysRepository.save(existingKey) } returns existingKey
+
+        service.saveUserPublicKey(userEmail, "new-key")
 
         assertEquals("new-key", existingKey.publicKey)
-        verify { userEncryptionKeysRepository.save(existingKey) }
+        verify(exactly = 1) { keysRepository.save(existingKey) }
     }
 
     @Test
-    fun `should return user public key`() {
-        val key = UserEncryptionKeys(user = user, publicKey = "retrieved-key")
-        every { userRepository.findByEmail("alice@example.com") } returns Optional.of(user)
-        every { userEncryptionKeysRepository.findByUser(user) } returns Optional.of(key)
+    fun `should throw when saving key for non existing user`() {
+        every { userRepository.findByEmail(userEmail) } returns Optional.empty()
 
-        val result = keyExchangeService.getUserPublicKey("alice@example.com")
-
-        assertEquals("retrieved-key", result)
+        assertFailsWith<ResourceNotFoundException> {
+            service.saveUserPublicKey(userEmail, "key")
+        }
     }
 
     @Test
-    fun `should return null if key not found`() {
-        every { userRepository.findByEmail("alice@example.com") } returns Optional.of(user)
-        every { userEncryptionKeysRepository.findByUser(user) } returns Optional.empty()
+    fun `should return public key when exists`() {
+        val key = UserEncryptionKeys(user = user, publicKey = "public-key")
 
-        val result = keyExchangeService.getUserPublicKey("alice@example.com")
+        every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
+        every { keysRepository.findByUser(user) } returns Optional.of(key)
+
+        val result = service.getUserPublicKey(userEmail)
+
+        assertEquals("public-key", result)
+    }
+
+    @Test
+    fun `should return null when public key does not exist`() {
+        every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
+        every { keysRepository.findByUser(user) } returns Optional.empty()
+
+        val result = service.getUserPublicKey(userEmail)
 
         assertNull(result)
     }
 
     @Test
-    fun `should throw exception if user not found when saving key`() {
-        every { userRepository.findByEmail("ghost@example.com") } returns Optional.empty()
+    fun `should revoke public key when key exists`() {
+        val key = UserEncryptionKeys(user = user, publicKey = "key")
 
-        val exception = assertThrows<ResourceNotFoundException> {
-            keyExchangeService.saveUserPublicKey("ghost@example.com", "key")
-        }
+        every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
+        every { keysRepository.findByUser(user) } returns Optional.of(key)
+        every { keysRepository.delete(key) } just Runs
 
-        assertEquals(
-            "User not found: ghost@example.com",
-            exception.message
-        )
+        val result = service.revokeUserPublicKey(userEmail)
+
+        assertTrue(result)
+        verify(exactly = 1) { keysRepository.delete(key) }
     }
 
+    @Test
+    fun `should return false when no public key exists to revoke`() {
+        every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
+        every { keysRepository.findByUser(user) } returns Optional.empty()
+
+        val result = service.revokeUserPublicKey(userEmail)
+
+        assertFalse(result)
+        verify(exactly = 0) { keysRepository.delete(any()) }
+    }
 
     @Test
-    fun `should throw exception if user not found when retrieving key`() {
-        every { userRepository.findByEmail("ghost@example.com") } returns Optional.empty()
+    fun `should throw when revoking key for non existing user`() {
+        every { userRepository.findByEmail(userEmail) } returns Optional.empty()
 
-        val exception = assertThrows<ResourceNotFoundException> {
-            keyExchangeService.getUserPublicKey("ghost@example.com")
+        assertFailsWith<ResourceNotFoundException> {
+            service.revokeUserPublicKey(userEmail)
         }
+    }
 
-        assertEquals(
-            "User not found: ghost@example.com",
-            exception.message
-        )
+    @Test
+    fun `should rotate existing public key`() {
+        val existingKey = UserEncryptionKeys(user = user, publicKey = "old-key")
+
+        every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
+        every { keysRepository.findByUser(user) } returns Optional.of(existingKey)
+        every { keysRepository.save(existingKey) } returns existingKey
+
+        service.rotateUserPublicKey(userEmail, "new-key")
+
+        assertEquals("new-key", existingKey.publicKey)
+        verify(exactly = 1) { keysRepository.save(existingKey) }
+    }
+
+    @Test
+    fun `should create new public key when rotating without existing key`() {
+        every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
+        every { keysRepository.findByUser(user) } returns Optional.empty()
+        every { keysRepository.save(any()) } answers { firstArg() }
+
+        service.rotateUserPublicKey(userEmail, "new-key")
+
+        verify(exactly = 1) {
+            keysRepository.save(
+                match { it.user == user && it.publicKey == "new-key" }
+            )
+        }
+    }
+
+    @Test
+    fun `should throw when rotating key for non existing user`() {
+        every { userRepository.findByEmail(userEmail) } returns Optional.empty()
+
+        assertFailsWith<ResourceNotFoundException> {
+            service.rotateUserPublicKey(userEmail, "new-key")
+        }
     }
 }

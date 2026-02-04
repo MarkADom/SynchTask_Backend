@@ -172,6 +172,4 @@ class TaskController(
             return ResponseEntity.ok("Cache cleared")
         }
     }
-
-
 }

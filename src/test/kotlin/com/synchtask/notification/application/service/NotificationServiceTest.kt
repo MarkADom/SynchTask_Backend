@@ -65,6 +65,50 @@ class NotificationServiceTest {
     }
 
     @Test
+    fun `should mark all notifications as read`() {
+        every { storageService.markAllAsRead("user@example.com") } just Runs
+
+        notificationService.markAllAsRead("user@example.com")
+
+        verify(exactly = 1) {
+            storageService.markAllAsRead("user@example.com")
+        }
+    }
+
+    @Test
+    fun `should send onboarding notifications`() {
+        val user = User(
+            id = 1L,
+            name = "Test",
+            email = "test@example.com",
+            passwordHash = "pw"
+        )
+
+        every {
+            storageService.storeNotification(any(), any(), any(), any())
+        } returns Notification(
+            id = 1L,
+            recipient = user,
+            message = "msg",
+            type = NotificationType.SYSTEM
+        )
+
+        every { webSocketService.sendNotification(any(), any()) } just Runs
+        every { storageService.updateDeliveryStatus(any()) } just Runs
+
+        notificationService.sendFirstLoginNotifications(user)
+
+        verify(exactly = 4) {
+            storageService.storeNotification(
+                user.email,
+                any(),
+                NotificationType.SYSTEM,
+                null
+            )
+        }
+    }
+
+    @Test
     fun `should get unread notifications`() {
         val redisNotification = NotificationRedisDTO(
             id = 200L,
@@ -92,5 +136,37 @@ class NotificationServiceTest {
         }
 
         verify(exactly = 1) { storageService.markAsRead(42L) }
+    }
+
+    @Test
+    fun `should clear redis cache when keys exist`() {
+        val keys = setOf("k1", "k2", "k3")
+
+        every {
+            storageService.getRedisKeys("notifications:user@example.com:*")
+        } returns keys
+
+        every { storageService.deleteRedisKeys(keys) } just Runs
+
+        val deleted = notificationService.clearRedisCacheForUser("user@example.com")
+
+        assertEquals(3, deleted)
+
+        verify { storageService.deleteRedisKeys(keys) }
+    }
+
+    @Test
+    fun `should return zero when no redis keys exist`() {
+        every {
+            storageService.getRedisKeys("notifications:user@example.com:*")
+        } returns emptySet()
+
+        val deleted = notificationService.clearRedisCacheForUser("user@example.com")
+
+        assertEquals(0, deleted)
+
+        verify(exactly = 0) {
+            storageService.deleteRedisKeys(any())
+        }
     }
 }
