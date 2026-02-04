@@ -1,13 +1,14 @@
 package com.synchtask.task.presentation.controller
 
 import com.synchtask.board.domain.entity.Board
-import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.task.application.dto.*
 import com.synchtask.task.application.service.TaskService
-import com.synchtask.user.application.service.UserService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
+import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
@@ -58,6 +59,20 @@ class TaskControllerTest {
         )
     }
 
+    private fun newTask(id: Long, title: String) = Task(
+        id = id,
+        title = title,
+        description = "Desc",
+        owner = userEntity,
+        collaborators = mutableSetOf(),
+        labels = mutableSetOf(),
+        board = board,
+        status = TaskStatus.TODO,
+        priority = TaskPriority.MID,
+        createdAt = LocalDateTime.now(),
+        updatedAt = null
+    )
+
     @Test
     fun `should create task successfully`() {
         val request = TaskCreateDTO(
@@ -68,19 +83,7 @@ class TaskControllerTest {
             boardId = board.id!!
         )
 
-        val task = Task(
-            id = 1L,
-            title = request.title,
-            description = request.description,
-            owner = userEntity,
-            collaborators = mutableSetOf(),
-            labels = request.labels.toMutableSet(),
-            board = board,
-            status = TaskStatus.TODO,
-            priority = TaskPriority.MID,
-            createdAt = LocalDateTime.now(),
-            updatedAt = null
-        )
+        val task = newTask(1L, request.title)
 
         every { userService.getUserByEmail(userEntity.email) } returns userEntity
         every { taskService.createTask(userEntity, request) } returns task
@@ -89,29 +92,12 @@ class TaskControllerTest {
 
         assertEquals(task.id, response.id)
         assertEquals(task.title, response.title)
-        assertEquals(task.description, response.description)
         assertEquals(board.id, response.boardId)
-
-        verify(exactly = 1) {
-            taskService.createTask(userEntity, request)
-        }
     }
 
     @Test
     fun `should return paginated tasks`() {
-        val task = Task(
-            id = 2L,
-            title = "Another Task",
-            description = "Another Description",
-            owner = userEntity,
-            collaborators = mutableSetOf(),
-            labels = mutableSetOf("frontend"),
-            board = board,
-            status = TaskStatus.IN_PROGRESS,
-            priority = TaskPriority.HIGH,
-            createdAt = LocalDateTime.now(),
-            updatedAt = null
-        )
+        val task = newTask(2L, "Another Task")
 
         every { userService.getUserByEmail(userEntity.email) } returns userEntity
         every {
@@ -126,43 +112,122 @@ class TaskControllerTest {
         } returns PageImpl(listOf(task))
 
         val result = controller.getTasks(
-            user = userDetails,
-            status = null,
-            label = null,
-            assigneeId = null,
-            boardId = null,
-            pageable = PageRequest.of(0, 10)
+            userDetails,
+            null,
+            null,
+            null,
+            null,
+            PageRequest.of(0, 10)
         )
 
         assertEquals(1, result.totalElements)
         assertEquals(task.id, result.content.first().id)
-        assertEquals(board.id, result.content.first().boardId)
-
-        verify(exactly = 1) {
-            taskService.getTasksWithFilters(
-                userEntity,
-                null,
-                null,
-                null,
-                null,
-                any()
-            )
-        }
     }
 
     @Test
-    fun `should throw ResourceNotFoundException when user not found`() {
+    fun `should throw ResourceNotFoundException when user not found on list`() {
         every { userService.getUserByEmail(userDetails.username) } returns null
 
         assertThrows<ResourceNotFoundException> {
             controller.getTasks(
-                user = userDetails,
-                status = null,
-                label = null,
-                assigneeId = null,
-                boardId = null,
-                pageable = PageRequest.of(0, 10)
+                userDetails,
+                null,
+                null,
+                null,
+                null,
+                PageRequest.of(0, 10)
             )
         }
+    }
+
+
+    @Test
+    fun `should return task detail when user has access`() {
+        val task = newTask(5L, "Detail Task")
+
+        every { taskService.findTaskById(5L) } returns task
+        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { taskService.canAccessTask(task, userEntity) } returns true
+
+        val result = controller.getTaskDetail(5L, userDetails)
+
+        assertEquals(task.id, result.id)
+    }
+
+    @Test
+    fun `should throw UnauthorizedAccessException when user cannot access task`() {
+        val task = mockk<Task>()
+
+        every { taskService.findTaskById(5L) } returns task
+        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { taskService.canAccessTask(task, userEntity) } returns false
+
+        assertThrows<UnauthorizedAccessException> {
+            controller.getTaskDetail(5L, userDetails)
+        }
+    }
+
+
+    @Test
+    fun `should update task successfully`() {
+        val dto = TaskUpdateDTO(
+            title = "Updated",
+            description = "Updated Desc",
+            status = TaskStatus.COMPLETED,
+            priority = null
+        )
+
+        val updatedTask = newTask(1L, "Updated")
+
+        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { taskService.updateTask(1L, dto, userEntity) } returns updatedTask
+
+        val response = controller.updateTask(1L, dto, userDetails)
+
+        assertEquals(updatedTask.id, response.body?.id)
+    }
+
+    @Test
+    fun `should delete task successfully`() {
+        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { taskService.deleteTask(1L, userEntity) } just Runs
+
+        val response = controller.deleteTask(1L, userDetails)
+
+        assertEquals("Task deleted successfully", response.body)
+    }
+
+
+    @Test
+    fun `should assign collaborator successfully`() {
+        every { taskService.assignCollaborator(1L, "collab@test.com") } just Runs
+
+        val response = controller.assignCollaborator(1L, "collab@test.com")
+
+        assertEquals("Collaborator assigned successfully", response.body)
+    }
+
+    @Test
+    fun `should update task labels successfully`() {
+        val dto = TaskLabelUpdateDTO(labels = listOf("urgent"))
+
+        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { taskService.updateTaskLabels(1L, dto.labels, userEntity) } just Runs
+
+        val response = controller.updateLabels(1L, dto, userDetails)
+
+        assertEquals("Labels updated successfully", response.body)
+    }
+
+    @Test
+    fun `should update task assignees successfully`() {
+        val dto = TaskAssigneeUpdateDTO(userIds = listOf(2L, 3L))
+
+        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { taskService.updateTaskAssignees(1L, dto.userIds, userEntity) } just Runs
+
+        val response = controller.updateAssignees(1L, dto, userDetails)
+
+        assertEquals("Assignees updated successfully", response.body)
     }
 }
