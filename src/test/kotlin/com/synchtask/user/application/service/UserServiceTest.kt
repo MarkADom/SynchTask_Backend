@@ -212,6 +212,103 @@ class UserServiceTest {
     }
 
     @Test
+    fun `should return assignable users`() {
+        val users = listOf(
+            buildUser(role = UserRole.ADMIN),
+            buildUser(id = 2L, role = UserRole.USER),
+            buildUser(id = 3L, role = UserRole.COLLABORATOR)
+        )
+
+        every { userRepository.findAll() } returns users
+
+        val result = userService.getAssignableUsers()
+
+        assertEquals(3, result.size)
+    }
+
+    @Test
+    fun `should find public users`() {
+        val pageable = mockk<org.springframework.data.domain.Pageable>()
+        val page = mockk<org.springframework.data.domain.Page<User>>()
+
+        every {
+            userRepository.findUsersByFilters("a", true, pageable)
+        } returns page
+
+        val result = userService.findPublicUsers("a", true, pageable)
+
+        assertEquals(page, result)
+    }
+
+    @Test
+    fun `should return all users if current user is admin`() {
+        val admin = buildUser(role = UserRole.ADMIN)
+        val users = listOf(buildUser(id = 2L), buildUser(id = 3L))
+
+        every { userRepository.findAll() } returns users
+        mockkObject(UserMapper)
+        every { UserMapper.toResponseDTO(any()) } answers {
+            val u = firstArg<User>()
+            UserResponseDTO(u.id!!, u.name, u.email, null)
+        }
+
+        val result = userService.getVisibleUsers(admin, emptyList())
+
+        assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `should return friends and assignable users for normal user`() {
+        val current = buildUser(role = UserRole.USER)
+        val friend = buildUser(id = 2L)
+        val assignable = buildUser(id = 3L)
+
+        every { userRepository.findAll() } returns listOf(assignable)
+        mockkObject(UserMapper)
+        every { UserMapper.toResponseDTO(any()) } answers {
+            val u = firstArg<User>()
+            UserResponseDTO(u.id!!, u.name, u.email, null)
+        }
+
+        val result = userService.getVisibleUsers(current, listOf(friend))
+
+        assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `should update profile picture`() {
+        val user = buildUser(id = 1L)
+        val file = mockk<org.springframework.web.multipart.MultipartFile>()
+
+        every { userRepository.findByEmail(user.email) } returns Optional.of(user)
+        every { file.originalFilename } returns "pic.png"
+        every { file.inputStream } returns java.io.ByteArrayInputStream(ByteArray(10))
+        every { userRepository.save(any()) } answers { firstArg() }
+
+        val result = userService.updateProfilePicture(user.email, file)
+
+        assertTrue(result.profilePictureUrl!!.contains("profile-pictures"))
+    }
+
+    @Test
+    fun `should throw if setting online status for missing user`() {
+        every { userRepository.findByEmail(any()) } returns Optional.empty()
+
+        assertFailsWith<IllegalArgumentException> {
+            userService.setUserOnlineStatus("ghost@email.com", true)
+        }
+    }
+
+    @Test
+    fun `should throw if updating activity for missing user`() {
+        every { userRepository.findByEmail(any()) } returns Optional.empty()
+
+        assertFailsWith<IllegalArgumentException> {
+            userService.updateLastActivity("ghost@email.com")
+        }
+    }
+
+    @Test
     fun `should return all users as UserResponseDTO`() {
         val user = buildUser()
         every { userRepository.findAll() } returns listOf(user)
