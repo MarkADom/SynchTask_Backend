@@ -1,6 +1,5 @@
-package com.synchtask.redis.aplicattion.service
+package com.synchtask.redis.application.service
 
-import com.synchtask.redis.application.service.RedisPublisher
 import io.lettuce.core.RedisCommandTimeoutException
 import io.lettuce.core.RedisConnectionException
 import io.mockk.*
