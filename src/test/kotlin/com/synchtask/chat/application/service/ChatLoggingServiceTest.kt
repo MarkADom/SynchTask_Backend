@@ -10,10 +10,12 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.verify
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
+import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
 class ChatLoggingServiceTest {
@@ -56,5 +58,42 @@ class ChatLoggingServiceTest {
         chatLoggingService.logMessage(chatMessage)
 
         verify(exactly = 1) { chatMessageRepository.save(chatMessage) }
+    }
+
+    @Test
+    fun `should throw exception when repository fails`() {
+        every { chatMessageRepository.save(chatMessage) } throws RuntimeException("DB down")
+
+        val ex = org.junit.jupiter.api.assertThrows<IllegalStateException> {
+            chatLoggingService.logMessage(chatMessage)
+        }
+
+        assertEquals("Unable to persist chat message.", ex.message)
+
+        verify(exactly = 1) { chatMessageRepository.save(chatMessage) }
+    }
+
+    @Test
+    fun `should count messages`() {
+        every { chatMessageRepository.count() } returns 42L
+
+        val result = chatLoggingService.countMessages()
+
+        assertEquals(42L, result)
+        verify(exactly = 1) { chatMessageRepository.count() }
+    }
+
+    @Test
+    fun `should clear all logs and return deleted count`() {
+        every { chatMessageRepository.count() } returns 10L
+        every { chatMessageRepository.deleteAll() } returns Unit
+
+        val result = chatLoggingService.clearAllLogs()
+
+        assertEquals(10L, result)
+        verifyOrder {
+            chatMessageRepository.count()
+            chatMessageRepository.deleteAll()
+        }
     }
 }
