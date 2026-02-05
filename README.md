@@ -1,63 +1,74 @@
 # SynchTask Backend
 
-Backend service for the **SynchTask** platform, focused on authentication,
-task management, and real-time collaboration.
+Backend service for **SynchTask**, a collaborative task management platform
+designed with a strong focus on **clean architecture, security, and code quality**.
 
 This repository contains **only the backend application**, exposed as a REST API
-and documented via OpenAPI / Swagger.  
-The frontend is developed separately and will be integrated at a later stage.
+and supporting real-time features via WebSockets.  
+The frontend is developed separately and will be integrated in a later phase.
 
 ---
 
 ## Overview
 
-The SynchTask Backend is built with **Kotlin** and **Spring Boot**, providing a
-robust foundation for collaborative, real-time applications.
+The **SynchTask Backend** is built with **Kotlin** and **Spring Boot**, following
+modern backend engineering practices and an **API-first** approach.
 
 It is responsible for:
 
 - authentication and authorization
-- core business logic
+- core domain and business logic
 - real-time communication via WebSockets
-- exposing a stable and well-documented API for frontend clients
+- exposing a stable, well-documented REST API
+- enforcing strict quality and security standards
 
-The project follows an **API-first** approach and is designed to be consumed by
-web or mobile clients.
+This project is intentionally structured as a **portfolio-grade backend**, aiming
+to demonstrate production-level practices rather than a minimal demo.
 
 ---
 
 ## Project Status
 
-SynchTask is an ongoing project.
+✅ **Backend stable and feature-complete**  
+✅ **Quality Gate passed (SonarQube)**  
+✅ **83% test coverage on overall codebase**
 
-At this stage, the **backend is considered feature-complete and stable** and is
-presented as a standalone **portfolio project**, showcasing backend engineering,
-security, and quality practices.
+The backend is currently frozen as a **quality baseline milestone**
+(`v0.1-backend-quality`) and considered ready for real-world integration.
 
-The **frontend is still under active development** and will be integrated once
-its implementation is finalized.
+The frontend is under active development and will be integrated once finalized.
+
+---
+
+## Architecture & Principles
+
+- Clean Architecture (clear separation of concerns)
+- Application / Domain / Infrastructure layers
+- API-first design
+- Explicit boundaries between business logic and frameworks
+- Test-driven mindset focused on meaningful coverage
 
 ---
 
 ## Tech Stack
 
-- Kotlin
-- Spring Boot 3.x
-- MySQL
-- Redis
-- JWT & OAuth2 (Google)
-- WebSockets
-- OpenAPI 3 / Swagger
-- Gradle
-- Detekt
-- JaCoCo
-- SonarQube
+- **Language:** Kotlin
+- **Framework:** Spring Boot 3.x
+- **Database:** MySQL
+- **Cache / Messaging:** Redis
+- **Security:** JWT, OAuth2 (Google)
+- **Real-time:** WebSockets
+- **API Docs:** OpenAPI 3 / Swagger
+- **Build Tool:** Gradle
+- **Static Analysis:** Detekt
+- **Coverage:** JaCoCo
+- **Quality Gate:** SonarQube
 
 ---
 
 ## API Documentation
 
-The API is fully documented using OpenAPI 3.
+The API is fully documented using **OpenAPI 3**.
 
 - **Swagger UI**  
   http://localhost:8081/swagger-ui/index.html
@@ -75,98 +86,123 @@ The API is fully documented using OpenAPI 3.
 - Gradle 8+
 - MySQL
 - Redis
-- `direnv` (recommended for local environment management)
+- Docker (for SonarQube)
+- `direnv` (recommended)
 
 ---
 
-### Configuration
+### Configuration & Secrets
 
-Sensitive configuration and secrets are **not committed** to the repository.
+Sensitive configuration is **never committed**.
 
 All environment-specific values (database credentials, Redis, OAuth, JWT,
-SonarQube, etc.) are loaded via **environment variables**.
+SonarQube, etc.) are provided via **environment variables**.
 
 For local development, the project uses **direnv** with a `.envrc` file
-(ignored by Git). This ensures:
+(ignored by Git), ensuring:
 
-- no secrets are committed
+- no secrets in the repository
 - consistent behavior across CLI, IDE, and CI
 - clean separation between code and configuration
 
-#### Installing direnv (Linux)
+#### Install direnv (Linux)
 
 ```bash
-    sudo apt install direnv
+  sudo apt install direnv
 ```
 
-After installing, make sure direnv is hooked into your shell (for example zsh)
-and allow the project environment:
+Enable it in your shell and allow the project environment:
 
 ```bash
-    direnv allow
+  direnv allow
 ```
 
-Environment variables will then be automatically loaded when entering the
-project directory.
+---
 
 ### Run Locally
 
-```bash 
-    ./gradlew bootRun
+```bash
+  ./gradlew bootRun
 ```
 
+---
+
 ## Testing & Quality
-This project enforces strict quality standards:
 
-- Minimum code coverage: **80% on new code**
-- Continuous inspection via **SonarQube**
-- Quality Gates enforced at build level
-- Builds fail automatically if quality standards are not met
+This project enforces **strict quality standards**.
 
-The testing strategy focuses on business logic (application layer),
-prioritizing meaningful coverage over artificial metrics.
+- ✅ **83% overall test coverage**
+- ✅ Minimum **80% coverage on new code**
+- ✅ SonarQube Quality Gate enforced
+- ✅ Zero known bugs or vulnerabilities
 
+Tests focus primarily on:
+- application services
+- domain logic
+- critical integration paths
+
+The goal is **meaningful coverage**, not artificial metrics.
+
+---
 
 ### Code Quality (SonarQube)
 
 Start SonarQube locally:
 
 ```bash
-    docker compose -f docker/docker-compose.sonar.yml up -d
+  docker compose -f docker/docker-compose.sonar.yml up -d
 ```
 
-Then run the analysis:
+Run the full quality pipeline:
 
 ```bash
-
-    ./gradlew test                # Run tests
-    ./gradlew detekt              # Static analysis
-    ./gradlew jacocoTestReport    # Coverage report
-    ./gradlew sonar               # SonarQube analysis
+  ./gradlew test                # Run tests
+  ./gradlew detekt              # Static analysis
+  ./gradlew jacocoTestReport    # Coverage report
+  ./gradlew sonar               # SonarQube analysis
 ```
 
-- **SonarQube UI:**      
-http://localhost:9001
+- **SonarQube UI:**  
+  http://localhost:9001
 
-
-Stop SonarQube when done:
+Stop SonarQube when finished:
 
 ```bash
-    docker compose -f docker/docker-compose.sonar.yml down
+  docker compose -f docker/docker-compose.sonar.yml down
 ```
 
-- Minimum code coverage threshold: 80%
-- Continuous inspection via SonarQube
-- Quality gates enforced at build level
+---
 
+## Versioning & Milestones
 
-### Contributing
+- **v0.1-backend-quality**
+    - Backend feature-complete
+    - Quality Gate passed
+    - Coverage baseline frozen
+    - Production-ready testing discipline
+
+Future versions will focus on:
+- frontend integration
+- performance tuning
+- deployment & CI/CD automation
+
+---
+
+## Contributing
 
 Contributions are welcome.
 
 Please follow these guidelines:
 
 - write clean, readable, and secure code
+- respect architectural boundaries
 - keep public APIs documented
 - avoid deprecated APIs
 - preserve existing behavior unless explicitly changing it
+
+---
+
+## Why This Project Exists
+
+SynchTask Backend exists to demonstrate **real-world backend engineering**:
+not just features, but **quality, structure, and long-term maintainability**.
