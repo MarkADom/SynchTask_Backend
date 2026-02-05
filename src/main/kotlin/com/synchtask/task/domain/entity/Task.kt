@@ -20,10 +20,15 @@ import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import org.hibernate.annotations.Fetch
-import org.hibernate.annotations.FetchMode
+import jakarta.persistence.UniqueConstraint
 import java.time.LocalDateTime
 
+/**
+ * Task aggregate root.
+ *
+ * Represents a single task inside a board.
+ * The database schema is intentionally derived from this entity (ddl-auto: update).
+ */
 @Entity
 @Table(
     name = "tasks",
@@ -33,6 +38,7 @@ import java.time.LocalDateTime
     ]
 )
 data class Task(
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
@@ -47,44 +53,72 @@ data class Task(
     @JoinColumn(name = "owner_id", nullable = false)
     val owner: User,
 
+    /**
+     * Users collaborating on this task.
+     * A unique constraint prevents duplicated (task_id, user_id) pairs.
+     */
     @ManyToMany(fetch = FetchType.LAZY)
-    @Fetch(FetchMode.JOIN)
     @JoinTable(
         name = "task_collaborators",
         joinColumns = [JoinColumn(name = "task_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")]
+        inverseJoinColumns = [JoinColumn(name = "user_id")],
+        uniqueConstraints = [
+            UniqueConstraint(
+                name = "uk_task_collaborators_task_user",
+                columnNames = ["task_id", "user_id"]
+            )
+        ]
     )
     val collaborators: MutableSet<User> = mutableSetOf(),
 
-    @ElementCollection  // Allows you to store a simple list within the entity
-    @CollectionTable(name = "task_labels", joinColumns = [JoinColumn(name = "task_id")])
-    @Column(name = "label")
+    /**
+     * Simple labels associated with the task.
+     * Stored as an element collection with a unique constraint per task.
+     */
+    @ElementCollection
+    @CollectionTable(
+        name = "task_labels",
+        joinColumns = [JoinColumn(name = "task_id")],
+        uniqueConstraints = [
+            UniqueConstraint(
+                name = "uk_task_labels_task_label",
+                columnNames = ["task_id", "label"]
+            )
+        ]
+    )
+    @Column(name = "label", nullable = false, length = 100)
     var labels: MutableSet<String> = mutableSetOf(),
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     var status: TaskStatus = TaskStatus.TODO,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var priority: TaskPriority = TaskPriority.MID,
 
-    @OneToMany(mappedBy = "task", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    @Fetch(FetchMode.SUBSELECT)
+    @OneToMany(
+        mappedBy = "task",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
     val comments: MutableSet<TaskComment> = mutableSetOf(),
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
-    @Column(nullable = true)
+    @Column(name = "updated_at", nullable = true)
     var updatedAt: LocalDateTime? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
-    var board: Board,
+    var board: Board
+)
 
-    )
-
+/**
+ * Task lifecycle status.
+ */
 enum class TaskStatus {
     TODO,
     IN_PROGRESS,
@@ -93,8 +127,11 @@ enum class TaskStatus {
     BLOCKED
 }
 
+/**
+ * Task priority level.
+ */
 enum class TaskPriority {
     LOW,
     MID,
-    HIGH,
+    HIGH
 }

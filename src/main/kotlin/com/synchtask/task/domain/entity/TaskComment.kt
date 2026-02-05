@@ -13,14 +13,23 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import java.time.LocalDateTime
 
+/**
+ * Task comment entity.
+ *
+ * Represents a comment added by a user to a task.
+ */
 @Entity
 @Table(
     name = "task_comments",
     indexes = [
-        Index(name = "idx_comment_created_at", columnList = "created_at")
+        Index(
+            name = "idx_task_comment_task_created",
+            columnList = "task_id, created_at"
+        )
     ]
 )
 data class TaskComment(
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
@@ -36,6 +45,6 @@ data class TaskComment(
     @Column(nullable = false, length = 1000)
     val content: String,
 
-    @Column(nullable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now(),
+    @Column(name = "created_at", nullable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now()
 )

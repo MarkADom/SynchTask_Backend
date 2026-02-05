@@ -7,19 +7,32 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Lob
 import jakarta.persistence.Table
+import jakarta.persistence.Index
 import java.time.LocalDateTime
 
+/**
+ * JWT signing key entity.
+ *
+ * Stores private keys used to sign JWT tokens.
+ * Keys are immutable and ordered by creation time.
+ */
 @Entity
-@Table(name = "jwt_keys")
+@Table(
+    name = "jwt_keys",
+    indexes = [
+        Index(name = "idx_jwt_keys_created_at", columnList = "created_at")
+    ]
+)
 data class JwtKeyEntity(
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    val id: Long? = null,
 
     @Lob
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     val privateKey: String,
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 )
