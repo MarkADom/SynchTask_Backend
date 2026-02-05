@@ -1,5 +1,6 @@
 package com.synchtask.board.domain.entity
 
+import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.project.domain.entity.Project
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.user.domain.entity.User
@@ -96,6 +97,12 @@ class Board(
     @JoinColumn(name = "project_id", nullable = true)
     var project: Project? = null
 ) {
+    fun updateFrom(dto: BoardUpdateDTO) {
+        dto.name?.let { name = it }
+        dto.color?.let { color = it }
+        dto.description?.let { description = it }
+        updatedAt = LocalDateTime.now()
+    }
 
     fun isOwnedBy(user: User): Boolean =
         owner.id == user.id

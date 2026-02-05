@@ -28,8 +28,8 @@ class BoardService(
         val user = getUser(userEmail)
         val board = Board(
             name = dto.name,
-            color = dto.color,
-            description = dto.description,
+            color = dto.color ?: "#605FA",
+            description = dto.description ?: "",
             owner = user
         )
         val saved = boardRepository.save(board)
@@ -63,10 +63,7 @@ class BoardService(
             throw UnauthorizedAccessException("Only the board owner can update it.")
         }
 
-        board.name = dto.name
-        board.color = dto.color
-        board.description = dto.description
-        board.updatedAt = LocalDateTime.now()
+        board.updateFrom(dto)
 
         val updated = boardRepository.save(board)
         logger.info("Board ID $id updated by $userEmail")
