@@ -29,14 +29,32 @@ to demonstrate production-level practices rather than a minimal demo.
 
 ## Project Status
 
-✅ **Backend stable and feature-complete**  
-✅ **Quality Gate passed (SonarQube)**  
-✅ **83% test coverage on overall codebase**
+ **Backend stable and feature-complete**  
+ **Quality Gate passed (SonarQube)**  
+ **83% test coverage on overall codebase**
 
 The backend is currently frozen as a **quality baseline milestone**
 (`v0.1-backend-quality`) and considered ready for real-world integration.
 
 The frontend is under active development and will be integrated once finalized.
+
+---
+
+## Data Model & Architecture
+
+SynchTask uses a relational database (MySQL/PostgreSQL) with a domain-driven design.
+
+The data model is structured around clear Aggregate Roots:
+- User
+- Board
+- Project
+- ChatRoom
+
+Each aggregate defines a strict consistency boundary and is primarily accessed via its own repository.
+
+Detailed ER diagram and aggregate documentation are available in the `/docs` directory.
+
+Cross-aggregate access is intentionally avoided at the repository level to preserve domain integrity.
 
 ---
 
@@ -121,6 +139,8 @@ Enable it in your shell and allow the project environment:
 
 ### Run Locally
 
+Ensure the database schema is created automatically on startup via JPA/Hibernate.
+
 ```bash
   ./gradlew bootRun
 ```
@@ -131,10 +151,10 @@ Enable it in your shell and allow the project environment:
 
 This project enforces **strict quality standards**.
 
-- ✅ **83% overall test coverage**
-- ✅ Minimum **80% coverage on new code**
-- ✅ SonarQube Quality Gate enforced
-- ✅ Zero known bugs or vulnerabilities
+- **83% overall test coverage**
+- Minimum **80% coverage on new code**
+- SonarQube Quality Gate enforced
+- Zero known bugs or vulnerabilities
 
 Tests focus primarily on:
 - application services
