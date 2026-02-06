@@ -181,22 +181,7 @@ class TaskService(
         val collaborator = userRepository.findByEmail(collaboratorEmail)
             .orElseThrow { ResourceNotFoundException("User not found: $collaboratorEmail") }
 
-        // Verifies friendship
-        val friendships = friendRepository.findFriendsByRequesterEmailOrFriendEmailAndStatus(
-            requesterEmail = task.owner.email,
-            friendEmail = task.owner.email,
-            status = FriendshipStatus.ACCEPTED
-        )
-
-        val isFriend = friendships.any {
-            (it.requester.email == task.owner.email && it.friend.email == collaborator.email) ||
-                    (it.friend.email == task.owner.email && it.requester.email == collaborator.email)
-        }
-
-        if (!isFriend) {
-            logger.warn("User ${task.owner.email} attempted to assign non-friend ${collaborator.email}")
-            throw UnauthorizedAccessException("You can only assign friends as collaborators.")
-        }
+        // TODO: Friendship validation will be reintroduced in Task refactor phase
 
         if (task.collaborators.contains(collaborator)) {
             logger.warn("User ${collaborator.email} is already assigned to task '${task.title}'.")

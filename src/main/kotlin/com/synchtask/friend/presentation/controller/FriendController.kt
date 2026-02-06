@@ -62,7 +62,6 @@ class FriendController(
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<List<FriendResponseDTO>> {
         val friends = friendService.listFriends(user.username)
-            .map { FriendResponseDTO.Companion.fromEntityForUser(it, user.username) }
         return ResponseEntity.ok(friends)
     }
 }
