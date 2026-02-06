@@ -1,27 +1,22 @@
 package com.synchtask.user.domain.entity
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.synchtask.chat.domain.entity.ChatRoom
-import com.synchtask.friend.domain.entity.Friend
-import com.synchtask.notification.domain.entity.Notification
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
-import jakarta.persistence.ManyToMany
-import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import java.time.LocalDateTime
 
 /**
  * User aggregate root.
  *
- * Represents a platform user with authentication, profile and relationships.
+ * Represents a platform user with authentication, profile and status information.
+ * This aggregate does not reference other domain aggregates directly.
  */
 @Entity
 @Table(
@@ -72,19 +67,7 @@ data class User(
     var isOnline: Boolean = false,
 
     @Column(name = "onboarding_notified", nullable = false)
-    var onboardingNotified: Boolean = false,
-
-    @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
-    val notifications: MutableSet<Notification> = mutableSetOf(),
-
-    @OneToMany(mappedBy = "requester", fetch = FetchType.LAZY)
-    val sentFriendRequests: MutableSet<Friend> = mutableSetOf(),
-
-    @OneToMany(mappedBy = "friend", fetch = FetchType.LAZY)
-    val receivedFriendRequests: MutableSet<Friend> = mutableSetOf(),
-
-    @ManyToMany(mappedBy = "participants", fetch = FetchType.LAZY)
-    val chatRooms: MutableSet<ChatRoom> = mutableSetOf()
+    var onboardingNotified: Boolean = false
 ) {
 
     override fun equals(other: Any?): Boolean {
