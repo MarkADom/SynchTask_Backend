@@ -1,25 +1,22 @@
 package com.synchtask.friend.domain.entity
 
-import com.synchtask.user.domain.entity.User
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import java.time.LocalDateTime
 
 /**
- * Friend relationship entity.
+ * Friend relationship aggregate root.
  *
  * Represents a friendship request and its lifecycle between two users.
+ * This aggregate references users by identifier only.
  */
 @Entity
 @Table(
@@ -43,13 +40,11 @@ data class Friend(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requester_id", nullable = false)
-    val requester: User,
+    @Column(name = "requester_id", nullable = false)
+    val requesterId: Long,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "friend_id", nullable = false)
-    val friend: User,
+    @Column(name = "friend_id", nullable = false)
+    val friendId: Long,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

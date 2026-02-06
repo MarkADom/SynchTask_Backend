@@ -187,9 +187,8 @@ class UserController(
         val currentUser = userService.getUserByEmail(user.username)
             ?: throw ResourceNotFoundException("Authenticated user not found")
 
-        val friends = friendService.listFriendUsers(user.username)
+        val visibleUsers = userService.getVisibleUsers(currentUser, emptyList())
 
-        val visibleUsers = userService.getVisibleUsers(currentUser, friends)
         return ResponseEntity.ok(visibleUsers)
     }
 }
