@@ -16,9 +16,15 @@ import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+/**
+ * Project aggregate root.
+ *
+ * A project groups multiple boards and members under a single owner.
+ */
 @Entity
 @Table(
     name = "projects",
@@ -37,13 +43,13 @@ class Project(
     @Column(nullable = false)
     var name: String,
 
-    @Column(columnDefinition = "TEXT")
-    var description: String,
+    @Column(nullable = false, columnDefinition = "TEXT")
+    var description: String = "",
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     var tag: String = "",
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     var color: String = "#60A5FA",
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -53,22 +59,41 @@ class Project(
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = true)
     var updatedAt: LocalDateTime? = null,
 
-    @Column(nullable = false)
+    @Column(name = "due_date", nullable = false)
     var dueDate: LocalDate,
 
+    /**
+     * Users that are members of this project.
+     * A unique constraint prevents duplicated (project_id, user_id) pairs.
+     */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "project_members",
         joinColumns = [JoinColumn(name = "project_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")]
+        inverseJoinColumns = [JoinColumn(name = "user_id")],
+        uniqueConstraints = [
+            UniqueConstraint(
+                name = "uk_project_members_project_user",
+                columnNames = ["project_id", "user_id"]
+            )
+        ]
     )
     val members: MutableSet<User> = mutableSetOf(),
 
-    @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
-    val boards: MutableSet<Board> = mutableSetOf(),
+    /**
+     * Boards that belong to this project.
+     * Orphan removal ensures consistency when boards are removed.
+     */
+    @OneToMany(
+        mappedBy = "project",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    val boards: MutableSet<Board> = mutableSetOf()
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -77,7 +102,6 @@ class Project(
         return id == other.id
     }
 
-    override fun hashCode(): Int {
-        return id?.hashCode() ?: 0
-    }
+    override fun hashCode(): Int =
+        id?.hashCode() ?: 0
 }

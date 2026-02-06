@@ -13,39 +13,54 @@ import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.Fetch
-import org.hibernate.annotations.FetchMode
 import java.time.LocalDateTime
 
+/**
+ * Notification entity.
+ *
+ * Represents a notification delivered to a specific user.
+ */
 @Entity
 @Table(
     name = "notifications",
-    indexes = [Index(name = "idx_notification_created_at", columnList = "recipient_id, created_at")]
+    indexes = [
+        Index(
+            name = "idx_notification_recipient_created",
+            columnList = "recipient_id, created_at"
+        ),
+        Index(
+            name = "idx_notification_recipient_read",
+            columnList = "recipient_id, is_read"
+        )
+    ]
 )
 data class Notification(
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "recipient_id", nullable = false)
     val recipient: User,
 
     @Column(nullable = false, length = 500)
     val message: String,
 
-    @Column(nullable = false)
+    @Column(name = "is_read", nullable = false)
     var isRead: Boolean = false,
 
-    @Column(nullable = false)
+    @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val type: NotificationType,
 
-    @Column(name = "group_id")
+    /**
+     * Optional grouping identifier (e.g. multiple notifications for the same event).
+     */
+    @Column(name = "group_id", nullable = true)
     val groupId: Long? = null,
 
     @Column(name = "delivered", nullable = false)

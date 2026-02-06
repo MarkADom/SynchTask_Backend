@@ -146,12 +146,19 @@ class BoardServiceTest {
         every { userRepository.findByEmail(owner.email) } returns Optional.of(owner)
         every { boardRepository.save(any()) } answers { firstArg() }
 
-        val dto = BoardUpdateDTO("New", "#111", "Updated")
+        val dto = BoardUpdateDTO(
+            name = "New",
+            color = "#111",
+            description = "Updated"
+        )
 
         val result = service.updateBoard(board.id!!, dto, owner.email)
 
         assertEquals("New", result.name)
-        verify { boardRepository.save(board) }
+        assertEquals("#111", result.color)
+        assertEquals("Updated", result.description)
+
+        verify(exactly = 1) { boardRepository.save(board) }
     }
 
     @Test

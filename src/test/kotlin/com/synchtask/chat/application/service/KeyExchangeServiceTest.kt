@@ -31,6 +31,8 @@ class KeyExchangeServiceTest {
         keysRepository = mockk()
         userRepository = mockk()
         service = KeyExchangeService(keysRepository, userRepository)
+
+        every { keysRepository.delete(any()) } just Runs
     }
 
     @Test
@@ -49,17 +51,23 @@ class KeyExchangeServiceTest {
     }
 
     @Test
-    fun `should update existing public key`() {
+    fun `should replace existing public key when saving`() {
         val existingKey = UserEncryptionKeys(user = user, publicKey = "old-key")
 
         every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
         every { keysRepository.findByUser(user) } returns Optional.of(existingKey)
-        every { keysRepository.save(existingKey) } returns existingKey
+        every { keysRepository.save(any()) } answers { firstArg() }
 
         service.saveUserPublicKey(userEmail, "new-key")
 
-        assertEquals("new-key", existingKey.publicKey)
-        verify(exactly = 1) { keysRepository.save(existingKey) }
+        verifyOrder {
+            keysRepository.delete(existingKey)
+            keysRepository.save(
+                match {
+                    it.user == user && it.publicKey == "new-key"
+                }
+            )
+        }
     }
 
     @Test
@@ -128,17 +136,23 @@ class KeyExchangeServiceTest {
     }
 
     @Test
-    fun `should rotate existing public key`() {
+    fun `should rotate existing public key by replacing it`() {
         val existingKey = UserEncryptionKeys(user = user, publicKey = "old-key")
 
         every { userRepository.findByEmail(userEmail) } returns Optional.of(user)
         every { keysRepository.findByUser(user) } returns Optional.of(existingKey)
-        every { keysRepository.save(existingKey) } returns existingKey
+        every { keysRepository.save(any()) } answers { firstArg() }
 
         service.rotateUserPublicKey(userEmail, "new-key")
 
-        assertEquals("new-key", existingKey.publicKey)
-        verify(exactly = 1) { keysRepository.save(existingKey) }
+        verifyOrder {
+            keysRepository.delete(existingKey)
+            keysRepository.save(
+                match {
+                    it.user == user && it.publicKey == "new-key"
+                }
+            )
+        }
     }
 
     @Test

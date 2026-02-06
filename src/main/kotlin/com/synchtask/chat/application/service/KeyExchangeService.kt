@@ -21,18 +21,16 @@ class KeyExchangeService(
         val user = userRepository.findByEmail(userEmail)
             .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
 
-        val existingKey = userEncryptionKeysRepository.findByUser(user)
+        userEncryptionKeysRepository.findByUser(user)
+            .ifPresent { userEncryptionKeysRepository.delete(it) }
 
-        if (existingKey.isPresent) {
-            val keyEntry = existingKey.get()
-            keyEntry.publicKey = publicKey
-            userEncryptionKeysRepository.save(keyEntry)
-            logger.info("Updated public key for user: $userEmail")
-        } else {
-            val newKeyEntry = UserEncryptionKeys(user = user, publicKey = publicKey)
-            userEncryptionKeysRepository.save(newKeyEntry)
-            logger.info("Saved new public key for user: $userEmail")
-        }
+        val newKeyEntry = UserEncryptionKeys(
+            user = user,
+            publicKey = publicKey
+        )
+
+        userEncryptionKeysRepository.save(newKeyEntry)
+        logger.info("Saved public key for user: $userEmail")
     }
 
     fun getUserPublicKey(userEmail: String): String? {
@@ -65,16 +63,15 @@ class KeyExchangeService(
         val user = userRepository.findByEmail(userEmail)
             .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
 
-        val keyEntry = userEncryptionKeysRepository.findByUser(user)
-        if (keyEntry.isPresent) {
-            val existing = keyEntry.get()
-            existing.publicKey = newPublicKey
-            userEncryptionKeysRepository.save(existing)
-            logger.info("Rotated public key for user: $userEmail")
-        } else {
-            val newEntry = UserEncryptionKeys(user = user, publicKey = newPublicKey)
-            userEncryptionKeysRepository.save(newEntry)
-            logger.info("Saved new public key during rotation for user: $userEmail")
-        }
+        userEncryptionKeysRepository.findByUser(user)
+            .ifPresent { userEncryptionKeysRepository.delete(it) }
+
+        val newEntry = UserEncryptionKeys(
+            user = user,
+            publicKey = newPublicKey
+        )
+
+        userEncryptionKeysRepository.save(newEntry)
+        logger.info("Rotated public key for user: $userEmail")
     }
 }
