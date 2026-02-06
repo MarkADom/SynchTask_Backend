@@ -2,6 +2,7 @@ package com.synchtask.task.domain.entity
 
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import jakarta.persistence.CascadeType
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
@@ -113,8 +114,47 @@ data class Task(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
-    var board: Board
-)
+    var board: Board,
+) {
+    /**
+     * Domain invariants
+     */
+    fun canBeEditedBy(user: User): Boolean {
+        return owner.id == user.id || user.role == UserRole.ADMIN
+    }
+
+    fun canBeAccessedBy(user: User): Boolean {
+        return owner.id == user.id || collaborators.any { it.id == user.id }
+    }
+
+    fun canAddCollaborator(requester: User): Boolean {
+        return owner.id == requester.id
+    }
+
+    fun addCollaborator(user: User): Boolean {
+        if (collaborators.any { it.id == user.id }) {
+            return false
+        }
+        collaborators.add(user)
+        updatedAt = LocalDateTime.now()
+        return true
+    }
+
+    fun updateDetails(
+        title: String?,
+        description: String?,
+        labels: Set<String>?,
+        status: TaskStatus?,
+        priority: TaskPriority?,
+    ) {
+        title?.let { this.title = it }
+        description?.let { this.description = it }
+        labels?.let { this.labels = it.toMutableSet() }
+        status?.let { this.status = it }
+        priority?.let { this.priority = it }
+        updatedAt = LocalDateTime.now()
+    }
+}
 
 /**
  * Task lifecycle status.

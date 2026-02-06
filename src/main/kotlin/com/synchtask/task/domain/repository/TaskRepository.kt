@@ -6,3 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface TaskRepository : JpaRepository<Task, Long>
+
+// TODO: If in the future create domain-specific methods (e.g. existsByBoardAndId) here

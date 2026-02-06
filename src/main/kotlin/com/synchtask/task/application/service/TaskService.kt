@@ -12,6 +12,7 @@ import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.board.domain.repository.BoardRepository
+import com.synchtask.friend.application.port.FriendshipChecker
 import com.synchtask.friend.domain.repository.FriendRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.repository.UserRepository
@@ -32,7 +33,7 @@ class TaskService(
     private val taskWebSocketService: TaskWebSocketService,
     private val boardRepository: BoardRepository,
     private val taskSpecificationService: TaskSpecificationService,
-    private val friendRepository: FriendRepository,
+    private val friendshipChecker: FriendshipChecker,
 ) {
 
     private val logger = LoggerFactory.getLogger(TaskService::class.java)
@@ -181,7 +182,14 @@ class TaskService(
         val collaborator = userRepository.findByEmail(collaboratorEmail)
             .orElseThrow { ResourceNotFoundException("User not found: $collaboratorEmail") }
 
-        // TODO: Friendship validation will be reintroduced in Task refactor phase
+        val ownerId = task.owner.id!!
+        val collaboratorId = collaborator.id!!
+
+        if (!friendshipChecker.areFriends(ownerId, collaboratorId)) {
+            throw UnauthorizedAccessException("You can only assign friends as collaborators.")
+        }
+
+        if (task.collaborators.contains(collaborator)) return
 
         if (task.collaborators.contains(collaborator)) {
             logger.warn("User ${collaborator.email} is already assigned to task '${task.title}'.")
@@ -223,6 +231,7 @@ class TaskService(
 
         return isSystemAdmin || isSystemOwner || isTaskOwner || isTaskCollaborator || isBoardOwner || isBoardCollaborator
     }
+
 
     private fun canEditTask(task: Task, user: User): Boolean {
         return user.role == UserRole.ADMIN || task.owner.id == user.id
