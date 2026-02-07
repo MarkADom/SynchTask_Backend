@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
         "com.synchtask.chat.domain.repository",
         "com.synchtask.friend.domain.repository",
         "com.synchtask.security.domain.repository",
-        "com.synchtask.repositories" // TODO: Legacy, Remove later
+        "com.synchtask.activity.domain.repository",
     ]
 )
 @EntityScan(
@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
         "com.synchtask.chat.domain.entity",
         "com.synchtask.friend.domain.entity",
         "com.synchtask.security.domain.entity",
-        "com.synchtask.entities" // TODO: legacy, remove later
+        "com.synchtask.activity.domain.entity",
     ]
 )
 
