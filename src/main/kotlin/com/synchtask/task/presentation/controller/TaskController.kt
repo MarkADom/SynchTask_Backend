@@ -85,7 +85,7 @@ class TaskController(
         val userEntity = userService.getUserByEmail(user.username)
             ?: throw ResourceNotFoundException("User not found.")
 
-        if (!taskService.canAccessTask(task, userEntity)) {
+        if (!task.canBeAccessedBy(userEntity)) {
             throw UnauthorizedAccessException("You do not have access to this task.")
         }
 
