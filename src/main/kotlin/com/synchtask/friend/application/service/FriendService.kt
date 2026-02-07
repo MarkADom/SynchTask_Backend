@@ -2,7 +2,6 @@ package com.synchtask.friend.application.service
 
 import com.synchtask.friend.application.dto.FriendResponseDTO
 import com.synchtask.friend.application.mapper.FriendMapper
-import com.synchtask.friend.application.port.FriendshipChecker
 import com.synchtask.friend.domain.entity.Friend
 import com.synchtask.friend.domain.entity.FriendshipStatus
 import com.synchtask.friend.domain.exception.FriendRequestAlreadySentException
@@ -21,7 +20,7 @@ class FriendService(
     private val friendRepository: FriendRepository,
     private val userRepository: UserRepository,
     private val notificationService: NotificationService,
-) : FriendshipChecker {
+) {
 
     private val logger = LoggerFactory.getLogger(FriendService::class.java)
     private val mapper = FriendMapper(userRepository)
@@ -105,9 +104,4 @@ class FriendService(
 
         friendRepository.delete(friendRequest)
     }
-
-    override fun areFriends(userId: Long, otherUserId: Long): Boolean {
-        return friendRepository.existsAcceptedFriendship(userId, otherUserId)
-    }
-
 }

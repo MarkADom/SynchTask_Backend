@@ -1,6 +1,7 @@
 package com.synchtask.task.domain.entity
 
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.task.domain.exception.InvalidTaskStatusTransitionException
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import jakarta.persistence.CascadeType
@@ -150,9 +151,33 @@ data class Task(
         title?.let { this.title = it }
         description?.let { this.description = it }
         labels?.let { this.labels = it.toMutableSet() }
-        status?.let { this.status = it }
+        status?.let { changeStatus(it) }
         priority?.let { this.priority = it }
         updatedAt = LocalDateTime.now()
+    }
+
+    fun changeStatus(newStatus: TaskStatus) {
+        if (!canTransitionTo(newStatus)) {
+            throw InvalidTaskStatusTransitionException(
+                from = this.status,
+                to = newStatus
+            )
+        }
+
+        this.status = newStatus
+        this.updatedAt = LocalDateTime.now()
+    }
+
+    private fun canTransitionTo(target: TaskStatus): Boolean {
+        val allowedTransitions = mapOf(
+            TaskStatus.TODO to setOf(TaskStatus.IN_PROGRESS),
+            TaskStatus.IN_PROGRESS to setOf(TaskStatus.REVIEW),
+            TaskStatus.REVIEW to setOf(TaskStatus.COMPLETED, TaskStatus.BLOCKED),
+            TaskStatus.BLOCKED to setOf(TaskStatus.IN_PROGRESS),
+            TaskStatus.COMPLETED to emptySet()
+        )
+
+        return allowedTransitions[this.status]?.contains(target) ?: false
     }
 }
 

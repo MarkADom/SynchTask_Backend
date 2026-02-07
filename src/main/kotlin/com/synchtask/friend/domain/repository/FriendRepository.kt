@@ -12,38 +12,39 @@ interface FriendRepository : JpaRepository<Friend, Long> {
 
     fun findByRequesterIdAndFriendId(
         requesterId: Long,
-        friendId: Long
+        friendId: Long,
     ): Friend?
 
     fun findAllByRequesterIdOrFriendId(
         requesterId: Long,
-        friendId: Long
+        friendId: Long,
     ): List<Friend>
 
     fun findByRequesterIdAndStatus(
         requesterId: Long,
-        status: FriendshipStatus
+        status: FriendshipStatus,
     ): List<Friend>
 
     fun findByFriendIdAndStatus(
         friendId: Long,
-        status: FriendshipStatus
+        status: FriendshipStatus,
     ): List<Friend>
 
     @Query(
         """
-        select count(f) > 0
-        from Friend f
-        where f.status = 'ACCEPTED'
-          and (
-            (f.requester.id = :userId and f.friend.id = :otherUserId)
-            or
-            (f.requester.id = :otherUserId and f.friend.id = :userId)
-          )
-        """
+    select count(f) > 0
+    from Friend f
+    where f.status = :status
+      and (
+        (f.requesterId = :userId and f.friendId = :otherUserId)
+        or
+        (f.requesterId = :otherUserId and f.friendId = :userId)
+      )
+    """
     )
-    fun existsAcceptedFriendship(
+    fun existsFriendshipBetween(
         @Param("userId") userId: Long,
-        @Param("otherUserId") otherUserId: Long
+        @Param("otherUserId") otherUserId: Long,
+        @Param("status") status: FriendshipStatus = FriendshipStatus.ACCEPTED,
     ): Boolean
 }

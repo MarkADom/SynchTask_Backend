@@ -54,6 +54,8 @@ data class Friend(
     val createdAt: LocalDateTime = LocalDateTime.now()
 )
 
+
+
 /**
  * Friendship lifecycle states.
  */
