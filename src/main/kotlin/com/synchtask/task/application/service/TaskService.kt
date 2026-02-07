@@ -1,5 +1,7 @@
 package com.synchtask.task.application.service
 
+import com.synchtask.activity.application.service.ActivityService
+import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
@@ -34,6 +36,7 @@ class TaskService(
     private val boardRepository: BoardRepository,
     private val taskSpecificationService: TaskSpecificationService,
     private val friendshipChecker: FriendshipChecker,
+    private val activityService: ActivityService,
 ) {
 
     private val logger = LoggerFactory.getLogger(TaskService::class.java)
@@ -58,6 +61,15 @@ class TaskService(
         )
 
         val savedTask = taskRepository.save(newTask)
+
+        activityService.record(
+            actor = owner,
+            type = ActivityType.TASK_CREATED,
+            referenceId = savedTask.id,
+            description = "Task '${savedTask.title}' criada"
+        )
+
+
         logger.info("Task '${newTask.title}' created by ${owner.email}")
         return savedTask
     }
@@ -109,6 +121,14 @@ class TaskService(
         }
 
         val updated = taskRepository.save(task)
+
+        activityService.record(
+            actor = user,
+            type = ActivityType.TASK_UPDATED,
+            referenceId = updated.id,
+            description = "Task '${updated.title}' atualizada"
+        )
+
         taskWebSocketService.sendTaskUpdate(TaskResponseDTO.fromEntity(updated))
         return updated
     }
@@ -148,12 +168,26 @@ class TaskService(
     }
 
     @Transactional
-    fun updateTaskStatus(taskId: Long, newStatus: TaskStatus) {
+    fun updateTaskStatus(
+        taskId: Long,
+        newStatus: TaskStatus,
+        actor: User
+    ) {
         val task = findTaskById(taskId)
 
-        task.changeStatus(newStatus)
+        if (!task.canBeEditedBy(actor)) {
+            throw UnauthorizedAccessException("Not allowed to change task status")
+        }
 
+        task.changeStatus(newStatus)
         taskRepository.save(task)
+
+        activityService.record(
+            actor = actor,
+            type = ActivityType.TASK_STATUS_CHANGED,
+            referenceId = task.id,
+            description = "Status alterado para ${task.status}"
+        )
 
         task.collaborators.forEach {
             notificationService.sendNotification(
@@ -168,7 +202,7 @@ class TaskService(
     }
 
     @Transactional
-    fun assignCollaborator(taskId: Long, collaboratorEmail: String) {
+    fun assignCollaborator(taskId: Long, collaboratorEmail: String, actor: User) {
         val task = findTaskById(taskId)
         val collaborator = userRepository.findByEmail(collaboratorEmail)
             .orElseThrow { ResourceNotFoundException("User not found: $collaboratorEmail") }
@@ -178,10 +212,18 @@ class TaskService(
         }
 
         if (!task.addCollaborator(collaborator)) {
+            logger.info("Collaborator already assigned to task ${task.id}")
             return
         }
 
         taskRepository.save(task)
+
+        activityService.record(
+            actor = actor,
+            type = ActivityType.TASK_ASSIGNED,
+            referenceId = task.id,
+            description = "Colaborador ${collaborator.email} atribuído"
+        )
 
         notificationService.sendNotification(
             userEmail = collaborator.email,

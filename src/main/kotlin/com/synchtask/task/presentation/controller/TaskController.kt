@@ -93,16 +93,38 @@ class TaskController(
     }
 
     @PutMapping("/{taskId}")
+    @PreAuthorize("isAuthenticated()")
     fun updateTask(
         @PathVariable taskId: Long,
-        @Valid @RequestBody updatedTask: TaskUpdateDTO,
-        @AuthenticationPrincipal user: UserDetails,
+        @RequestBody updatedTask: TaskUpdateDTO,
+        @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<TaskResponseDTO> {
-        val userEntity = userService.getUserByEmail(user.username)
+
+        val actor = userService.getUserByEmail(user.username)
             ?: throw ResourceNotFoundException("User not found.")
 
-        val updated = taskService.updateTask(taskId, updatedTask, userEntity)
+        val updated = taskService.updateTask(taskId, updatedTask, actor)
         return ResponseEntity.ok(TaskResponseDTO.fromEntity(updated))
+    }
+
+    @PutMapping("/{taskId}/status")
+    @PreAuthorize("isAuthenticated()")
+    fun updateStatus(
+        @PathVariable taskId: Long,
+        @RequestParam status: TaskStatus,
+        @AuthenticationPrincipal user: UserDetails
+    ): ResponseEntity<String> {
+
+        val actor = userService.getUserByEmail(user.username)
+            ?: throw ResourceNotFoundException("User not found.")
+
+        taskService.updateTaskStatus(
+            taskId = taskId,
+            newStatus = status,
+            actor = actor
+        )
+
+        return ResponseEntity.ok("Task status updated successfully")
     }
 
     @DeleteMapping("/{taskId}")
@@ -123,8 +145,12 @@ class TaskController(
     fun assignCollaborator(
         @PathVariable taskId: Long,
         @RequestParam email: String,
+        @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<String> {
-        taskService.assignCollaborator(taskId, email)
+        val actor = userService.getUserByEmail(user.username)
+            ?: throw ResourceNotFoundException("User not found.")
+
+        taskService.assignCollaborator(taskId, email, actor)
         return ResponseEntity.ok("Collaborator assigned successfully")
     }
 
