@@ -5,17 +5,14 @@ import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
-import com.synchtask.friend.domain.entity.FriendshipStatus
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.user.domain.entity.User
-import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.friend.application.port.FriendshipChecker
-import com.synchtask.friend.domain.repository.FriendRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.notification.application.service.NotificationService
@@ -25,7 +22,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 
 @Service
 class TaskService(
@@ -69,20 +65,13 @@ class TaskService(
             description = "Task '${savedTask.title}' criada"
         )
 
-
-        logger.info("Task '${newTask.title}' created by ${owner.email}")
+        logger.info("Task '${savedTask.title}' created by ${owner.email}")
         return savedTask
     }
 
     fun findTaskById(taskId: Long): Task =
         taskRepository.findById(taskId)
             .orElseThrow { ResourceNotFoundException("Task not found with ID: $taskId") }
-
-    fun getTaskDetail(taskId: Long): Task = findTaskById(taskId)
-
-    fun getTasksForUser(user: User, pageable: Pageable): Page<Task> {
-        return taskSpecificationService.findTasksByFilters(user, null, null, null, null, pageable)
-    }
 
     fun getTasksWithFilters(
         user: User,
@@ -91,9 +80,8 @@ class TaskService(
         assigneeId: Long?,
         boardId: Long?,
         pageable: Pageable,
-    ): Page<Task> {
-        return taskSpecificationService.findTasksByFilters(user, status, label, assigneeId, boardId, pageable)
-    }
+    ): Page<Task> =
+        taskSpecificationService.findTasksByFilters(user, status, label, assigneeId, boardId, pageable)
 
     @Transactional
     fun updateTask(taskId: Long, request: TaskUpdateDTO, user: User): Task {
@@ -136,6 +124,7 @@ class TaskService(
     @Transactional
     fun updateTaskLabels(taskId: Long, labels: List<String>, user: User) {
         val task = findTaskById(taskId)
+
         if (!task.canBeEditedBy(user)) {
             throw UnauthorizedAccessException("You are not authorized to update labels on this task.")
         }
@@ -143,36 +132,41 @@ class TaskService(
         task.labels = labels.toMutableSet()
         taskRepository.save(task)
 
-        logger.info("Updated labels for task '${task.title}': $labels")
+        activityService.record(
+            actor = user,
+            type = ActivityType.TASK_UPDATED,
+            referenceId = task.id,
+            description = "Labels updated"
+        )
     }
 
     @Transactional
     fun updateTaskAssignees(taskId: Long, userIds: List<Long>, user: User) {
         val task = findTaskById(taskId)
+
         if (!task.canBeEditedBy(user)) {
             throw UnauthorizedAccessException("You are not authorized to update assignees on this task.")
         }
 
         val assignees = userRepository.findAllById(userIds).toMutableSet()
         if (assignees.size != userIds.size) {
-            val foundIds = assignees.map { it.id }.toSet()
-            val missing = userIds.filter { it !in foundIds }
-            throw ResourceNotFoundException("Some users not found: $missing")
+            throw ResourceNotFoundException("Some users not found")
         }
 
         task.collaborators.clear()
         task.collaborators.addAll(assignees)
-
         taskRepository.save(task)
-        logger.info("Updated assignees for task '${task.title}': ${userIds.joinToString()}")
+
+        activityService.record(
+            actor = user,
+            type = ActivityType.TASK_ASSIGNED,
+            referenceId = task.id,
+            description = "Assignees updated"
+        )
     }
 
     @Transactional
-    fun updateTaskStatus(
-        taskId: Long,
-        newStatus: TaskStatus,
-        actor: User
-    ) {
+    fun updateTaskStatus(taskId: Long, newStatus: TaskStatus, actor: User) {
         val task = findTaskById(taskId)
 
         if (!task.canBeEditedBy(actor)) {
@@ -186,7 +180,7 @@ class TaskService(
             actor = actor,
             type = ActivityType.TASK_STATUS_CHANGED,
             referenceId = task.id,
-            description = "Status alterado para ${task.status}"
+            description = "Status alterado para $newStatus"
         )
 
         task.collaborators.forEach {
@@ -204,6 +198,11 @@ class TaskService(
     @Transactional
     fun assignCollaborator(taskId: Long, collaboratorEmail: String, actor: User) {
         val task = findTaskById(taskId)
+
+        if (!task.canBeEditedBy(actor)) {
+            throw UnauthorizedAccessException("Not allowed to assign collaborators")
+        }
+
         val collaborator = userRepository.findByEmail(collaboratorEmail)
             .orElseThrow { ResourceNotFoundException("User not found: $collaboratorEmail") }
 
@@ -212,7 +211,6 @@ class TaskService(
         }
 
         if (!task.addCollaborator(collaborator)) {
-            logger.info("Collaborator already assigned to task ${task.id}")
             return
         }
 
@@ -236,11 +234,12 @@ class TaskService(
     @Transactional
     fun deleteTask(taskId: Long, user: User) {
         val task = findTaskById(taskId)
+
         if (!task.canBeEditedBy(user)) {
             throw UnauthorizedAccessException("User ${user.email} is not authorized to delete this task.")
         }
 
         taskRepository.delete(task)
-        logger.info("Task '${task.title}' (ID: ${task.id}) deleted by ${user.email}")
+        logger.info("Task '${task.title}' deleted by ${user.email}")
     }
 }
