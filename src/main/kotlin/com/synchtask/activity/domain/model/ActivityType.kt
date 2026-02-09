@@ -13,12 +13,15 @@ enum class ActivityType {
     TASK_STATUS_CHANGED,
     TASK_ASSIGNED,
     TASK_COMMENTED,
+    TASK_ATTACHMENT_ADDED,
+    TASK_ATTACHMENT_REMOVED,
 
-    // Board related (future)
+
+    // Board related
     BOARD_CREATED,
     BOARD_UPDATED,
 
-    // Project related (future)
+    // Project related
     PROJECT_CREATED,
     PROJECT_UPDATED
 }
