@@ -16,10 +16,11 @@ enum class ActivityType {
     TASK_ATTACHMENT_ADDED,
     TASK_ATTACHMENT_REMOVED,
 
-
     // Board related
     BOARD_CREATED,
     BOARD_UPDATED,
+    BOARD_DELETED,
+    BOARD_COLLABORATORS_UPDATED,
 
     // Project related
     PROJECT_CREATED,
