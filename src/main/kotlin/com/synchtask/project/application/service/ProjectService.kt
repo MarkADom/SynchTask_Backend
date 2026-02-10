@@ -1,5 +1,6 @@
 package com.synchtask.project.application.service
 
+import com.synchtask.activity.application.event.ActivityContextSnapshot
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.board.domain.entity.Board
@@ -20,7 +21,7 @@ import java.time.LocalDateTime
 class ProjectService(
     private val projectRepository: ProjectRepository,
     private val boardRepository: BoardRepository,
-    private val activityService: ActivityService
+    private val activityService: ActivityService,
 ) {
 
     @Transactional
@@ -117,15 +118,22 @@ class ProjectService(
             .filter { it.owner.id == owner.id }
             .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
 
+        val snapshot = ActivityContextSnapshot(
+            ownerEmail = project.owner.email,
+            memberEmails = project.members.map { it.email }.toSet()
+        )
+
         projectRepository.delete(project)
 
         activityService.record(
             actor = owner,
             type = ActivityType.PROJECT_DELETED,
             referenceId = id,
-            description = "Project '${project.name}' removido"
+            description = "Project '${project.name}' removido",
+            contextSnapshot = snapshot
         )
     }
+
 
     private fun validateBoardsExist(expectedIds: List<Long>, actualBoards: List<Board>) {
         if (actualBoards.size != expectedIds.size) {
