@@ -15,11 +15,11 @@ class ActivityNotificationService(
         notificationPolicies
             .filter { it.supports(activity) }
             .forEach { policy ->
-                val recipients = policy.resolveRecipients(activity, contextSnapshot)
+                val recipientEmails = policy.resolveRecipients(activity, contextSnapshot)
 
-                recipients.forEach { user ->
+                recipientEmails.forEach { email ->
                     notificationService.sendNotification(
-                        userEmail = user.email,
+                        userEmail = email,
                         message = policy.buildMessage(activity),
                         type = policy.notificationType(),
                         groupId = activity.referenceId

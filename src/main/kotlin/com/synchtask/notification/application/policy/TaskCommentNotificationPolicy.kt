@@ -5,7 +5,6 @@ import com.synchtask.activity.domain.entity.Activity
 import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.task.domain.repository.TaskRepository
-import com.synchtask.user.domain.entity.User
 import org.springframework.stereotype.Component
 
 @Component
@@ -19,13 +18,12 @@ class TaskCommentNotificationPolicy(
     override fun resolveRecipients(
         activity: Activity,
         contextSnapshot: ActivityContextSnapshot?
-    ): Set<User> {
-
+    ): Set<String> {
         val taskId = activity.referenceId ?: return emptySet()
         val task = taskRepository.findById(taskId).orElse(null) ?: return emptySet()
 
-        return (task.collaborators + task.owner)
-            .filter { it.id != activity.actor.id }
+        return (task.collaborators.map { it.email } + task.owner.email)
+            .filter { it != activity.actor.email }
             .toSet()
     }
 
