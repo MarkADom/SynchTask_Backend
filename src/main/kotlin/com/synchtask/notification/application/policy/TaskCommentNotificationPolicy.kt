@@ -1,5 +1,6 @@
 package com.synchtask.notification.application.policy
 
+import com.synchtask.activity.application.event.ActivityContextSnapshot
 import com.synchtask.activity.domain.entity.Activity
 import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.notification.domain.entity.NotificationType
@@ -15,7 +16,11 @@ class TaskCommentNotificationPolicy(
     override fun supports(activity: Activity): Boolean =
         activity.type == ActivityType.TASK_COMMENTED
 
-    override fun resolveRecipients(activity: Activity): Set<User> {
+    override fun resolveRecipients(
+        activity: Activity,
+        contextSnapshot: ActivityContextSnapshot?
+    ): Set<User> {
+
         val taskId = activity.referenceId ?: return emptySet()
         val task = taskRepository.findById(taskId).orElse(null) ?: return emptySet()
 

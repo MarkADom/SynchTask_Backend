@@ -1,5 +1,6 @@
 package com.synchtask.board.application.service
 
+import com.synchtask.activity.application.event.ActivityContextSnapshot
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.board.application.dto.BoardCollaboratorUpdateDTO
@@ -100,17 +101,24 @@ class BoardService(
             throw UnauthorizedAccessException("You are not authorized to delete this board.")
         }
 
+        val snapshot = ActivityContextSnapshot(
+            ownerEmail = board.owner.email,
+            collaboratorEmails = board.collaborators.map { it.email }.toSet()
+        )
+
         boardRepository.delete(board)
 
         activityService.record(
             actor = actor,
             type = ActivityType.BOARD_DELETED,
             referenceId = board.id,
-            description = "Board '${board.name}' removida"
+            description = "Board '${board.name}' removida",
+            contextSnapshot = snapshot
         )
 
         logger.info("Board ID $boardId deleted by ${actor.email}")
     }
+
 
     @Transactional(readOnly = true)
     fun getBoardsSharedWithUser(actor: User): List<BoardResponseDTO> =

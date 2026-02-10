@@ -1,17 +1,19 @@
 package com.synchtask.activity.application.service
 
+import com.synchtask.activity.application.event.ActivityContextSnapshot
+import com.synchtask.activity.application.event.ActivityRecordedEvent
 import com.synchtask.activity.domain.entity.Activity
 import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.activity.domain.repository.ActivityRepository
-import com.synchtask.notification.application.service.ActivityNotificationService
 import com.synchtask.user.domain.entity.User
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ActivityService(
     private val activityRepository: ActivityRepository,
-    private val activityNotificationService: ActivityNotificationService,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
 
     @Transactional
@@ -20,6 +22,7 @@ class ActivityService(
         type: ActivityType,
         referenceId: Long? = null,
         description: String? = null,
+        contextSnapshot: ActivityContextSnapshot? = null,
     ): Activity {
         val activity = activityRepository.save(
             Activity(
@@ -29,7 +32,13 @@ class ActivityService(
                 description = description
             )
         )
-        activityNotificationService.handle(activity)
+
+        eventPublisher.publishEvent(
+            ActivityRecordedEvent(
+                activity = activity,
+                contextSnapshot = contextSnapshot
+            )
+        )
 
         return activity
     }

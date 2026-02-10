@@ -1,5 +1,6 @@
 package com.synchtask.notification.application.policy
 
+import com.synchtask.activity.application.event.ActivityContextSnapshot
 import com.synchtask.activity.domain.entity.Activity
 import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.board.domain.repository.BoardRepository
@@ -20,7 +21,23 @@ class BoardNotificationPolicy(
             ActivityType.BOARD_COLLABORATORS_UPDATED
         )
 
-    override fun resolveRecipients(activity: Activity): Set<User> {
+    override fun resolveRecipients(
+        activity: Activity,
+        contextSnapshot: ActivityContextSnapshot?
+    ): Set<User> {
+        if (activity.type == ActivityType.BOARD_DELETED) {
+            val emails = buildSet {
+                contextSnapshot?.ownerEmail?.let(::add)
+                addAll(contextSnapshot?.collaboratorEmails ?: emptySet())
+            }.filter { it != activity.actor.email }.toSet()
+
+            // User to keep current contract
+            return boardRepository.findAll().asSequence() // simple fallback
+                .flatMap { sequenceOf(it.owner) + it.collaborators.asSequence() }
+                .filter { it.email in emails }
+                .toSet()
+        }
+
         val boardId = activity.referenceId ?: return emptySet()
         val board = boardRepository.findById(boardId).orElse(null) ?: return emptySet()
 
@@ -34,7 +51,7 @@ class BoardNotificationPolicy(
                     .toSet()
 
             ActivityType.BOARD_DELETED ->
-                setOf(board.owner)
+                emptySet()
 
             else -> emptySet()
         }

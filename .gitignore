@@ -1,5 +1,6 @@
 # Build & Gradle
 /build
+/bin
 /.gradle
 
 # IntelliJ / IDE
@@ -19,3 +20,5 @@ config/keys/
 *.pem
 *.key
 *.jks
+
+
