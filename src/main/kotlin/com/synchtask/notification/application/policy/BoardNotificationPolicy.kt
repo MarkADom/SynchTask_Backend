@@ -16,6 +16,7 @@ class BoardNotificationPolicy(
         activity.type in setOf(
             ActivityType.BOARD_CREATED,
             ActivityType.BOARD_UPDATED,
+            ActivityType.BOARD_DELETED,
             ActivityType.BOARD_COLLABORATORS_UPDATED
         )
 
@@ -23,18 +24,24 @@ class BoardNotificationPolicy(
         val boardId = activity.referenceId ?: return emptySet()
         val board = boardRepository.findById(boardId).orElse(null) ?: return emptySet()
 
-        return (board.collaborators + board.owner)
-            .filter { it.id != activity.actor.id }
-            .toSet()
+        return when (activity.type) {
+            ActivityType.BOARD_CREATED -> setOf(board.owner)
+
+            ActivityType.BOARD_UPDATED,
+            ActivityType.BOARD_COLLABORATORS_UPDATED ->
+                (board.collaborators + board.owner)
+                    .filter { it.id != activity.actor.id }
+                    .toSet()
+
+            ActivityType.BOARD_DELETED ->
+                setOf(board.owner)
+
+            else -> emptySet()
+        }
     }
 
     override fun buildMessage(activity: Activity): String =
-        activity.description ?: when (activity.type) {
-            ActivityType.BOARD_CREATED -> "New board created"
-            ActivityType.BOARD_UPDATED -> "Board updated"
-            ActivityType.BOARD_COLLABORATORS_UPDATED -> "Board collaborators updated"
-            else -> "Board activity"
-        }
+        activity.description ?: "Board updated"
 
     override fun notificationType(): NotificationType =
         NotificationType.GROUP

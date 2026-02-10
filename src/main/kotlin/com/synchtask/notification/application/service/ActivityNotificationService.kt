@@ -1,7 +1,6 @@
 package com.synchtask.notification.application.service
 
 import com.synchtask.activity.domain.entity.Activity
-import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.notification.application.policy.NotificationPolicy
 import org.springframework.stereotype.Service
 

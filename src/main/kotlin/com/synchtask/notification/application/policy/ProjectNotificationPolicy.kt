@@ -23,22 +23,25 @@ class ProjectNotificationPolicy(
         val projectId = activity.referenceId ?: return emptySet()
         val project = projectRepository.findById(projectId).orElse(null) ?: return emptySet()
 
-        val boardUsers = project.boards
-            .flatMap { it.collaborators + it.owner }
+        return when (activity.type) {
+            ActivityType.PROJECT_CREATED ->
+                setOf(project.owner)
 
-        return (boardUsers + project.owner)
-            .filter { it.id != activity.actor.id }
-            .toSet()
+            ActivityType.PROJECT_UPDATED ->
+                (project.members + project.owner)
+                    .filter { it.id != activity.actor.id }
+                    .toSet()
+
+            ActivityType.PROJECT_DELETED ->
+                setOf(project.owner)
+
+            else -> emptySet()
+        }
     }
 
     override fun buildMessage(activity: Activity): String =
-        activity.description ?: when (activity.type) {
-            ActivityType.PROJECT_CREATED -> "New project created"
-            ActivityType.PROJECT_UPDATED -> "Project updated"
-            ActivityType.PROJECT_DELETED -> "Project deleted"
-            else -> "Project activity"
-        }
+        activity.description ?: "Project updated"
 
     override fun notificationType(): NotificationType =
-        NotificationType.SYSTEM
+        NotificationType.GROUP
 }

@@ -1,5 +1,7 @@
 package com.synchtask.project.application.service
 
+import com.synchtask.activity.application.service.ActivityService
+import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.project.application.dto.ProjectCreateDTO
@@ -17,7 +19,8 @@ import java.time.LocalDateTime
 @Service
 class ProjectService(
     private val projectRepository: ProjectRepository,
-    private val boardRepository: BoardRepository
+    private val boardRepository: BoardRepository,
+    private val activityService: ActivityService
 ) {
 
     @Transactional
@@ -41,14 +44,20 @@ class ProjectService(
             boardRepository.save(board)
         }
 
+        activityService.record(
+            actor = owner,
+            type = ActivityType.PROJECT_CREATED,
+            referenceId = savedProject.id,
+            description = "Project '${savedProject.name}' criado"
+        )
+
         return savedProject.toResponseDTO()
     }
 
     @Transactional(readOnly = true)
-    fun listAll(owner: User): List<ProjectResponseDTO> {
-        return projectRepository.findAllByOwner(owner)
+    fun listAll(owner: User): List<ProjectResponseDTO> =
+        projectRepository.findAllByOwner(owner)
             .map(Project::toResponseDTO)
-    }
 
     @Transactional(readOnly = true)
     fun getById(id: Long, owner: User): ProjectResponseDTO {
@@ -70,6 +79,7 @@ class ProjectService(
         dto.tag?.let { project.tag = it }
         dto.color?.let { project.color = it }
         dto.dueDate?.let { project.dueDate = it }
+
         dto.boardIds?.let { ids ->
             val boardsFromDB = boardRepository.findAllWithCollaboratorsById(ids)
             validateBoardsExist(ids, boardsFromDB)
@@ -78,8 +88,16 @@ class ProjectService(
         }
 
         project.updatedAt = LocalDateTime.now()
+        val updated = projectRepository.save(project)
 
-        return projectRepository.save(project).toResponseDTO()
+        activityService.record(
+            actor = owner,
+            type = ActivityType.PROJECT_UPDATED,
+            referenceId = updated.id,
+            description = "Project '${updated.name}' atualizado"
+        )
+
+        return updated.toResponseDTO()
     }
 
     @Transactional
@@ -89,6 +107,13 @@ class ProjectService(
             .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
 
         projectRepository.delete(project)
+
+        activityService.record(
+            actor = owner,
+            type = ActivityType.PROJECT_DELETED,
+            referenceId = project.id,
+            description = "Project '${project.name}' removido"
+        )
     }
 
     private fun validateBoardsExist(expectedIds: List<Long>, actualBoards: List<Board>) {
