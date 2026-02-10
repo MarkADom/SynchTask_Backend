@@ -25,5 +25,6 @@ enum class ActivityType {
     // Project related
     PROJECT_CREATED,
     PROJECT_UPDATED,
-    PROJECT_DELETED
+    PROJECT_DELETED,
+    PROJECT_BOARDS_UPDATED
 }
