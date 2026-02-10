@@ -44,7 +44,6 @@ class ProjectService(
             boardRepository.save(board)
         }
 
-        // Activity
         activityService.record(
             actor = owner,
             type = ActivityType.PROJECT_CREATED,
@@ -61,13 +60,11 @@ class ProjectService(
             .map(Project::toResponseDTO)
 
     @Transactional(readOnly = true)
-    fun getById(id: Long, owner: User): ProjectResponseDTO {
-        val project = projectRepository.findById(id)
+    fun getById(id: Long, owner: User): ProjectResponseDTO =
+        projectRepository.findById(id)
             .filter { it.owner.id == owner.id }
             .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
-
-        return project.toResponseDTO()
-    }
+            .toResponseDTO()
 
     @Transactional
     fun update(id: Long, dto: ProjectUpdateDTO, owner: User): ProjectResponseDTO {
@@ -95,7 +92,6 @@ class ProjectService(
         project.updatedAt = LocalDateTime.now()
         val updated = projectRepository.save(project)
 
-        // Activity — update geral
         activityService.record(
             actor = owner,
             type = ActivityType.PROJECT_UPDATED,
@@ -103,7 +99,6 @@ class ProjectService(
             description = "Project '${updated.name}' atualizado"
         )
 
-        // Activity — boards alterados (evento separado e explícito)
         if (boardsUpdated) {
             activityService.record(
                 actor = owner,
@@ -124,7 +119,6 @@ class ProjectService(
 
         projectRepository.delete(project)
 
-        // Activity
         activityService.record(
             actor = owner,
             type = ActivityType.PROJECT_DELETED,
