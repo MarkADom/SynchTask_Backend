@@ -2,42 +2,29 @@ package com.synchtask.notification.application.service
 
 import com.synchtask.activity.domain.entity.Activity
 import com.synchtask.activity.domain.model.ActivityType
+import com.synchtask.notification.application.policy.NotificationPolicy
 import org.springframework.stereotype.Service
 
 @Service
 class ActivityNotificationService(
-    private val notificationService: NotificationService
+    private val notificationPolicies: List<NotificationPolicy>,
+    private val notificationService: NotificationService,
 ) {
 
     fun handle(activity: Activity) {
-        when (activity.type) {
+        notificationPolicies
+            .filter { it.supports(activity) }
+            .forEach { policy ->
+                val recipients = policy.resolveRecipients(activity)
 
-            ActivityType.TASK_ASSIGNED -> {
-                notifyTaskAssignment(activity)
+                recipients.forEach { user ->
+                    notificationService.sendNotification(
+                        userEmail = user.email,
+                        message = policy.buildMessage(activity),
+                        type = policy.notificationType(),
+                        groupId = activity.referenceId
+                    )
+                }
             }
-
-            ActivityType.TASK_COMMENTED -> {
-                notifyTaskComment(activity)
-            }
-
-            ActivityType.PROJECT_CREATED -> {
-                notifyProjectCreated(activity)
-            }
-
-            // outros ficam em branco por agora
-            else -> Unit
-        }
-    }
-
-    private fun notifyTaskAssignment(activity: Activity) {
-        // TODO: here later we will pick up recipient
-    }
-
-    private fun notifyTaskComment(activity: Activity) {
-        // TODO: here later we will pick up recipient
-    }
-
-    private fun notifyProjectCreated(activity: Activity) {
-        // TODO: here later we will pick up recipient
     }
 }
