@@ -5,7 +5,6 @@ import com.synchtask.activity.domain.entity.Activity
 import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.user.domain.entity.User
 import org.springframework.stereotype.Component
 
 @Component
@@ -24,35 +23,27 @@ class BoardNotificationPolicy(
     override fun resolveRecipients(
         activity: Activity,
         contextSnapshot: ActivityContextSnapshot?
-    ): Set<User> {
+    ): Set<String> {
         if (activity.type == ActivityType.BOARD_DELETED) {
-            val emails = buildSet {
+            return buildSet {
                 contextSnapshot?.ownerEmail?.let(::add)
                 addAll(contextSnapshot?.collaboratorEmails ?: emptySet())
             }.filter { it != activity.actor.email }.toSet()
-
-            // User to keep current contract
-            return boardRepository.findAll().asSequence() // simple fallback
-                .flatMap { sequenceOf(it.owner) + it.collaborators.asSequence() }
-                .filter { it.email in emails }
-                .toSet()
         }
 
         val boardId = activity.referenceId ?: return emptySet()
         val board = boardRepository.findById(boardId).orElse(null) ?: return emptySet()
 
         return when (activity.type) {
-            ActivityType.BOARD_CREATED -> setOf(board.owner)
+            ActivityType.BOARD_CREATED -> setOf(board.owner.email)
 
             ActivityType.BOARD_UPDATED,
             ActivityType.BOARD_COLLABORATORS_UPDATED ->
-                (board.collaborators + board.owner)
-                    .filter { it.id != activity.actor.id }
+                (board.collaborators.map { it.email } + board.owner.email)
+                    .filter { it != activity.actor.email }
                     .toSet()
 
-            ActivityType.BOARD_DELETED ->
-                emptySet()
-
+            ActivityType.BOARD_DELETED -> emptySet()
             else -> emptySet()
         }
     }

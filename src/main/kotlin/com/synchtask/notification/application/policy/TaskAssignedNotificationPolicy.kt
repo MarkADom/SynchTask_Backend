@@ -19,14 +19,14 @@ class TaskAssignedNotificationPolicy(
     override fun resolveRecipients(
         activity: Activity,
         contextSnapshot: ActivityContextSnapshot?
-    ): Set<User> {
-
+    ): Set<String> {
         val taskId = activity.referenceId ?: return emptySet()
         val task = taskRepository.findById(taskId).orElse(null) ?: return emptySet()
 
-        // Notifica apenas os novos colaboradores (exclui o actor)
         return task.collaborators
-            .filter { it.id != activity.actor.id }
+            .asSequence()
+            .map { it.email }
+            .filter { it != activity.actor.email }
             .toSet()
     }
 
