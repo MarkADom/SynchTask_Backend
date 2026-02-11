@@ -12,7 +12,8 @@ spring:
 
   jpa:
     hibernate:
-      # Development / (ddl-auto:create-drop) schema alignment phase Drops and recreates the schema on startup and shutdown.
+      # Uses ddl-auto=update for local development convenience.
+      # In a production-grade setup, schema migrations should be managed via Flyway or Liquibase.
       ddl-auto: update
     open-in-view: false
     show-sql: true
@@ -105,6 +106,7 @@ management:
     web:
       base-path: /actuator
       exposure:
+        # TODO: limit actuator out of dev.
         include: "*"
   endpoint:
     health:

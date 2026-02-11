@@ -78,6 +78,8 @@ class JwtTokenProvider(
             ?.takeIf { it.startsWith(BEARER_PREFIX) }
             ?.substring(BEARER_PREFIX_LENGTH)
 
+        69
+        // TODO: remove token via query param (or limit only to justified cases)
         val queryToken = request.getParameter("token")?.takeIf { it.isNotBlank() }
 
         return headerToken ?: queryToken

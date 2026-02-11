@@ -79,6 +79,7 @@ class SecurityConfig(
 
                     // Public Endpoints (Accessible Without Authentication)
                     .requestMatchers(
+                        // TODO: limit actuator out of dev.
                         "/actuator/**",
                         "/auth/.well-known/openid-configuration",
                         "/auth/.well-known/oauth-authorization-server",
@@ -138,11 +139,11 @@ class SecurityConfig(
 
     @Bean
     fun jwtDecoder(): JwtDecoder {
+        // TODO: outsource JWK set URI hardcoded
         val decoder = NimbusJwtDecoder
             .withJwkSetUri("http://localhost:8081/jwks")
             .build()
 
-        // Clock skew tolerance of 5 minutes
         val timestampValidator = JwtTimestampValidator(Duration.ofMinutes(5))
 
         // Standard JWT validations + custom timestamp validator
