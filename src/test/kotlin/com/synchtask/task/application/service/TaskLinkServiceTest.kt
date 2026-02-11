@@ -77,7 +77,6 @@ class TaskLinkServiceTest {
         val title = "Docs"
         val url = "https://example.com"
         val now = LocalDateTime.of(2026, 2, 4, 0, 0, 0)
-
         val savedLink = TaskLink(
             id = 100L,
             task = task,
@@ -166,6 +165,7 @@ class TaskLinkServiceTest {
     fun `should throw when link does not exist`() {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskLinkRepository.deleteByTaskAndId(task, 999L) } returns 0
+
         assertFailsWith<ResourceNotFoundException> {
             service.removeLink(task.id!!, 999L, owner)
         }

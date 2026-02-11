@@ -147,7 +147,6 @@ class TaskControllerTest {
 
         every { taskService.findTaskById(5L) } returns task
         every { userService.getUserByEmail(userEntity.email) } returns userEntity
-        every { taskService.canAccessTask(task, userEntity) } returns true
 
         val result = controller.getTaskDetail(5L, userDetails)
 
@@ -160,7 +159,6 @@ class TaskControllerTest {
 
         every { taskService.findTaskById(5L) } returns task
         every { userService.getUserByEmail(userEntity.email) } returns userEntity
-        every { taskService.canAccessTask(task, userEntity) } returns false
 
         assertThrows<UnauthorizedAccessException> {
             controller.getTaskDetail(5L, userDetails)
@@ -200,9 +198,10 @@ class TaskControllerTest {
 
     @Test
     fun `should assign collaborator successfully`() {
-        every { taskService.assignCollaborator(1L, "collab@test.com") } just Runs
+        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { taskService.assignCollaborator(1L, "collab@test.com", userEntity) } just Runs
 
-        val response = controller.assignCollaborator(1L, "collab@test.com")
+        val response = controller.assignCollaborator(1L, "collab@test.com", userDetails)
 
         assertEquals("Collaborator assigned successfully", response.body)
     }
