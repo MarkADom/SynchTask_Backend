@@ -1,5 +1,6 @@
 package com.synchtask.board.application.service
 
+import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.application.dto.BoardCollaboratorUpdateDTO
 import com.synchtask.board.application.dto.BoardCreateDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
@@ -19,6 +20,7 @@ class BoardServiceTest {
 
     private lateinit var boardRepository: BoardRepository
     private lateinit var userRepository: UserRepository
+    private lateinit var activityService: ActivityService
     private lateinit var service: BoardService
 
     private val owner = newUser(1L, "owner@test.com")
@@ -28,9 +30,10 @@ class BoardServiceTest {
     fun setup() {
         clearAllMocks()
 
-        boardRepository = mockk()
-        userRepository = mockk()
-        service = BoardService(boardRepository, userRepository)
+        boardRepository = mockk(relaxed = true)
+        userRepository = mockk(relaxed = true)
+        activityService = mockk(relaxed = true)
+        service = BoardService(boardRepository, userRepository, activityService)
     }
 
     private fun newUser(id: Long, email: String) = User(
@@ -59,12 +62,10 @@ class BoardServiceTest {
     fun `should create board`() {
         val dto = BoardCreateDTO("My Board", "#000", "Desc")
 
-        every { userRepository.findByEmail(owner.email) } returns Optional.of(owner)
-
         every { boardRepository.save(any()) } answers {
             val b = firstArg<Board>()
             Board(
-                id = 10L, // <-- simula o JPA
+                id = 10L,
                 name = b.name,
                 color = b.color,
                 description = b.description,
@@ -75,31 +76,17 @@ class BoardServiceTest {
             )
         }
 
-        val result = service.createBoard(dto, owner.email)
+        val result = service.createBoard(dto, owner)
 
         assertEquals("My Board", result.name)
         verify(exactly = 1) { boardRepository.save(any()) }
     }
 
-
-    @Test
-    fun `should throw when creating board and user not found`() {
-        every { userRepository.findByEmail(owner.email) } returns Optional.empty()
-
-        assertFailsWith<ResourceNotFoundException> {
-            service.createBoard(BoardCreateDTO("X", null, null), owner.email)
-        }
-
-        verify(exactly = 0) { boardRepository.save(any()) }
-    }
-
-
     @Test
     fun `should return boards for user`() {
-        every { userRepository.findByEmail(owner.email) } returns Optional.of(owner)
         every { boardRepository.findByOwner(owner) } returns listOf(newBoard())
 
-        val result = service.getBoardsForUser(owner.email)
+        val result = service.getBoardsForUser(owner)
 
         assertEquals(1, result.size)
     }
@@ -108,10 +95,9 @@ class BoardServiceTest {
     fun `should return board when user has access`() {
         val board = newBoard(owner = owner)
 
-        every { userRepository.findByEmail(owner.email) } returns Optional.of(owner)
         every { boardRepository.findById(any()) } returns Optional.of(board)
 
-        val result = service.getBoardAccessibleByUser(board.id!!, owner.email)
+        val result = service.getBoardAccessibleByUser(board.id!!, owner)
 
         assertEquals(board.id, result.id)
     }
@@ -120,21 +106,19 @@ class BoardServiceTest {
     fun `should throw when user has no access to board`() {
         val board = newBoard(owner = owner)
 
-        every { userRepository.findByEmail(other.email) } returns Optional.of(other)
         every { boardRepository.findById(any()) } returns Optional.of(board)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.getBoardAccessibleByUser(board.id!!, other.email)
+            service.getBoardAccessibleByUser(board.id!!, other)
         }
     }
 
     @Test
     fun `should throw when board does not exist`() {
-        every { userRepository.findByEmail(owner.email) } returns Optional.of(owner)
         every { boardRepository.findById(any()) } returns Optional.empty()
 
         assertFailsWith<ResourceNotFoundException> {
-            service.getBoardAccessibleByUser(99L, owner.email)
+            service.getBoardAccessibleByUser(99L, owner)
         }
     }
 
@@ -143,7 +127,6 @@ class BoardServiceTest {
         val board = newBoard()
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { userRepository.findByEmail(owner.email) } returns Optional.of(owner)
         every { boardRepository.save(any()) } answers { firstArg() }
 
         val dto = BoardUpdateDTO(
@@ -152,7 +135,7 @@ class BoardServiceTest {
             description = "Updated"
         )
 
-        val result = service.updateBoard(board.id!!, dto, owner.email)
+        val result = service.updateBoard(board.id!!, dto, owner)
 
         assertEquals("New", result.name)
         assertEquals("#111", result.color)
@@ -166,10 +149,9 @@ class BoardServiceTest {
         val board = newBoard()
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { userRepository.findByEmail(other.email) } returns Optional.of(other)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.updateBoard(board.id!!, BoardUpdateDTO("X", null, null), other.email)
+            service.updateBoard(board.id!!, BoardUpdateDTO("X", null, null), other)
         }
     }
 
@@ -178,10 +160,9 @@ class BoardServiceTest {
         val board = newBoard()
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { userRepository.findByEmail(owner.email) } returns Optional.of(owner)
         every { boardRepository.delete(board) } just Runs
 
-        service.deleteBoard(board.id!!, owner.email)
+        service.deleteBoard(board.id!!, owner)
 
         verify(exactly = 1) { boardRepository.delete(board) }
     }
@@ -191,10 +172,9 @@ class BoardServiceTest {
         val board = newBoard()
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { userRepository.findByEmail(other.email) } returns Optional.of(other)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.deleteBoard(board.id!!, other.email)
+            service.deleteBoard(board.id!!, other)
         }
 
         verify(exactly = 0) { boardRepository.delete(any()) }
@@ -202,10 +182,9 @@ class BoardServiceTest {
 
     @Test
     fun `should get boards shared with user`() {
-        every { userRepository.findByEmail(other.email) } returns Optional.of(other)
         every { boardRepository.findByCollaboratorsContaining(other) } returns listOf(newBoard())
 
-        val result = service.getBoardsSharedWithUser(other.email)
+        val result = service.getBoardsSharedWithUser(other)
 
         assertEquals(1, result.size)
     }
@@ -216,13 +195,12 @@ class BoardServiceTest {
         val collaborator = newUser(3L, "c@test.com")
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { userRepository.findByEmail(owner.email) } returns Optional.of(owner)
         every { userRepository.findAllById(listOf(3L)) } returns listOf(collaborator)
         every { boardRepository.save(any()) } answers { firstArg() }
 
         val dto = BoardCollaboratorUpdateDTO(listOf(3L))
 
-        service.updateCollaborators(board.id!!, dto, owner.email)
+        service.updateCollaborators(board.id!!, dto, owner)
 
         assertEquals(1, board.collaborators.size)
         assertTrue(board.collaborators.contains(collaborator))
@@ -233,10 +211,9 @@ class BoardServiceTest {
         val board = newBoard()
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { userRepository.findByEmail(other.email) } returns Optional.of(other)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.updateCollaborators(board.id!!, BoardCollaboratorUpdateDTO(emptyList()), other.email)
+            service.updateCollaborators(board.id!!, BoardCollaboratorUpdateDTO(emptyList()), other)
         }
     }
 }

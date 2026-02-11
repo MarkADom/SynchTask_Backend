@@ -5,6 +5,7 @@ import com.synchtask.board.application.service.BoardService
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
@@ -20,6 +21,7 @@ class BoardControllerTest {
 
     private lateinit var boardService: BoardService
     private lateinit var boardRepository: BoardRepository
+    private lateinit var userService: UserService
     private lateinit var controller: BoardController
 
     private lateinit var userEntity: User
@@ -29,7 +31,7 @@ class BoardControllerTest {
     fun setup() {
         boardService = mockk()
         boardRepository = mockk()
-        controller = BoardController(boardService, boardRepository)
+        controller = BoardController(boardService, boardRepository, userService)
 
         userEntity = User(
             id = 1L,
@@ -44,7 +46,11 @@ class BoardControllerTest {
             "hash",
             emptyList()
         )
+        every { userService.getUserByEmail(userEntity.email) } returns userEntity
     }
+
+
+
 
     private fun newBoard(id: Long = 10L): Board =
         Board(
@@ -82,7 +88,7 @@ class BoardControllerTest {
         )
 
 
-        every { boardService.createBoard(request, userEntity.email) } returns response
+        every { boardService.createBoard(request, userEntity) } returns response
 
         val result = controller.createBoard(request, userDetails)
 
@@ -90,7 +96,7 @@ class BoardControllerTest {
         assertEquals("My Board", result.body!!.name)
 
         verify(exactly = 1) {
-            boardService.createBoard(request, userEntity.email)
+            boardService.createBoard(request, userEntity)
         }
     }
 
@@ -98,12 +104,12 @@ class BoardControllerTest {
     fun `should return boards for user`() {
         val boards = listOf(newBoardResponse(1), newBoardResponse(2))
 
-        every { boardService.getBoardsForUser(userEntity.email) } returns boards
+        every { boardService.getBoardsForUser(userEntity) } returns boards
 
         val result = controller.getBoards(userDetails)
 
         assertEquals(2, result.body!!.size)
-        verify { boardService.getBoardsForUser(userEntity.email) }
+        verify { boardService.getBoardsForUser(userEntity) }
     }
 
     @Test
@@ -111,19 +117,19 @@ class BoardControllerTest {
         val board = newBoardResponse()
 
         every {
-            boardService.getBoardAccessibleByUser(10L, userEntity.email)
+            boardService.getBoardAccessibleByUser(10L, userEntity)
         } returns board
 
         val result = controller.getBoard(10L, userDetails)
 
         assertEquals(10L, result.body!!.id)
-        verify { boardService.getBoardAccessibleByUser(10L, userEntity.email) }
+        verify { boardService.getBoardAccessibleByUser(10L, userEntity) }
     }
 
     @Test
     fun `should throw when user has no access to board`() {
         every {
-            boardService.getBoardAccessibleByUser(10L, userEntity.email)
+            boardService.getBoardAccessibleByUser(10L, userEntity)
         } throws UnauthorizedAccessException("Forbidden")
 
         assertThrows<UnauthorizedAccessException> {
@@ -137,23 +143,23 @@ class BoardControllerTest {
         val updated = newBoardResponse()
 
         every {
-            boardService.updateBoard(10L, request, userEntity.email)
+            boardService.updateBoard(10L, request, userEntity)
         } returns updated
 
         val result = controller.updateBoard(10L, request, userDetails)
 
         assertEquals(updated.id, result.body!!.id)
-        verify { boardService.updateBoard(10L, request, userEntity.email) }
+        verify { boardService.updateBoard(10L, request, userEntity) }
     }
 
     @Test
     fun `should delete board`() {
-        every { boardService.deleteBoard(10L, userEntity.email) } just Runs
+        every { boardService.deleteBoard(10L, userEntity) } just Runs
 
         val result = controller.deleteBoard(10L, userDetails)
 
         assertEquals("Board deleted successfully.", result.body)
-        verify { boardService.deleteBoard(10L, userEntity.email) }
+        verify { boardService.deleteBoard(10L, userEntity) }
     }
 
     @Test
@@ -161,13 +167,13 @@ class BoardControllerTest {
         val boards = listOf(newBoardResponse(20))
 
         every {
-            boardService.getBoardsSharedWithUser(userEntity.email)
+            boardService.getBoardsSharedWithUser(userEntity)
         } returns boards
 
         val result = controller.getSharedBoards(userDetails)
 
         assertEquals(1, result.size)
-        verify { boardService.getBoardsSharedWithUser(userEntity.email) }
+        verify { boardService.getBoardsSharedWithUser(userEntity) }
     }
 
     @Test
@@ -176,13 +182,13 @@ class BoardControllerTest {
         val updated = newBoardResponse()
 
         every {
-            boardService.updateCollaborators(10L, dto, userEntity.email)
+            boardService.updateCollaborators(10L, dto, userEntity)
         } returns updated
 
         val result = controller.updateBoardCollaborators(10L, dto, userDetails)
 
         assertEquals(updated.id, result.body!!.id)
-        verify { boardService.updateCollaborators(10L, dto, userEntity.email) }
+        verify { boardService.updateCollaborators(10L, dto, userEntity) }
     }
 
     @Test
