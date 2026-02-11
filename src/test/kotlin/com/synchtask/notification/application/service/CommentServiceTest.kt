@@ -1,14 +1,17 @@
 package com.synchtask.notification.application.service
 
+import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.shared.exception.ResourceNotFoundException
-import com.synchtask.task.domain.repository.TaskCommentRepository
-import com.synchtask.task.domain.repository.TaskRepository
-import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.task.application.dto.TaskCommentCreateDTO
+import com.synchtask.task.application.service.TaskCommentService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment
+import com.synchtask.task.domain.repository.TaskCommentRepository
+import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,7 +24,9 @@ class CommentServiceTest {
     private lateinit var taskCommentRepository: TaskCommentRepository
     private lateinit var taskRepository: TaskRepository
     private lateinit var userRepository: UserRepository
-    private lateinit var commentService: CommentService
+    private lateinit var notificationService: NotificationService
+    private lateinit var activityService: ActivityService
+    private lateinit var commentService: TaskCommentService
 
     private val owner = User(
         id = 1L,
@@ -50,59 +55,47 @@ class CommentServiceTest {
         title = "Test Task",
         description = "A task for testing",
         owner = owner,
-        board = board
+        board = board,
+        collaborators = mutableSetOf(user)
     )
 
     @BeforeEach
     fun setup() {
-        taskCommentRepository = mockk()
-        taskRepository = mockk()
-        userRepository = mockk()
-        commentService = CommentService(
+        taskCommentRepository = mockk(relaxed = true)
+        taskRepository = mockk(relaxed = true)
+        userRepository = mockk(relaxed = true)
+        notificationService = mockk(relaxed = true)
+        activityService = mockk(relaxed = true)
+        commentService = TaskCommentService(
             taskCommentRepository,
             taskRepository,
-            userRepository
+            userRepository,
+            notificationService,
+            activityService,
         )
     }
 
     @Test
     fun `should add comment to task`() {
         val content = "This is a comment"
-        val commentSlot = slot<TaskComment>()
 
         every { taskRepository.findById(1L) } returns Optional.of(task)
-        every { userRepository.findByEmail("alice@example.com") } returns Optional.of(user)
-        every { taskCommentRepository.save(capture(commentSlot)) } answers { commentSlot.captured }
+        every { taskCommentRepository.save(any()) } answers { firstArg<TaskComment>().copy(id = 1L) }
 
-        val result = commentService.addComment(1L, "alice@example.com", content)
+        val result = commentService.addComment(1L, user, TaskCommentCreateDTO(content))
 
-        assertEquals(task, result.task)
-        assertEquals(user, result.user)
+        assertEquals(task.id, result.taskId)
+        assertEquals(user.id, result.userId)
         assertEquals(content, result.content)
 
-        verify(exactly = 1) { taskCommentRepository.save(any()) }
     }
 
     @Test
     fun `should throw if task not found`() {
         every { taskRepository.findById(1L) } returns Optional.empty()
 
-        val ex = assertThrows<ResourceNotFoundException> {
-            commentService.addComment(1L, "alice@example.com", "Comment")
+        assertThrows<ResourceNotFoundException> {
+            commentService.addComment(1L, user, TaskCommentCreateDTO("Comment"))
         }
-
-        assertEquals("Task not found", ex.message)
-    }
-
-    @Test
-    fun `should throw if user not found`() {
-        every { taskRepository.findById(1L) } returns Optional.of(task)
-        every { userRepository.findByEmail("alice@example.com") } returns Optional.empty()
-
-        val ex = assertThrows<ResourceNotFoundException> {
-            commentService.addComment(1L, "alice@example.com", "Comment")
-        }
-
-        assertEquals("User not found: alice@example.com", ex.message)
     }
 }
