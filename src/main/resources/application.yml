@@ -12,11 +12,8 @@ spring:
 
   jpa:
     hibernate:
-      # Development / schema alignment phase Drops and recreates the schema on startup and shutdown.
-      ddl-auto: create-drop
-      # Next step (when schema stabilizes):
-      # ddl-auto: update    # keeps data, applies non-destructive changes
-      # ddl-auto: validate  # recommended with Flyway/Liquibase
+      # Development / (ddl-auto:create-drop) schema alignment phase Drops and recreates the schema on startup and shutdown.
+      ddl-auto: update
     open-in-view: false
     show-sql: true
     properties:

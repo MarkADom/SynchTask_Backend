@@ -1,32 +1,42 @@
 # Aggregate Boundaries (DDD)
 
-This document describes the main aggregates in SynchTask and the responsibilities
-and consistency boundaries enforced by each Aggregate Root.
+This document reflects the current relational schema (`schema.sql` / MySQL dump)
+and describes aggregate boundaries used in SynchTask.
 
 ## User Aggregate
 **Aggregate Root:** `User`
 
+**Primary table:**
+- `users`
+
 **Owned entities / tables:**
 - `refresh_tokens`
 - `user_encryption_keys`
-- `jwt_keys` (infrastructure-backed persistence of signing keys)
-- `friends`
 - `notifications`
+- `friends`
+- `activities` (actor/audit trail)
 
 **Responsibilities:**
-- Identity and authentication lifecycle
-- Token management (issue / revoke)
-- User encryption key lifecycle
-- Social relationships and notifications
+- Identity lifecycle and account state (`is_active`, `is_online`, `last_login`)
+- Token lifecycle (refresh issue/revoke)
+- Personal cryptographic key publication
+- Friendship state machine (`PENDING`, `ACCEPTED`, `REJECTED`, `BLOCKED`)
+- Notification inbox and read/delivery status
+- User activity tracking for domain actions
 
 **Notes:**
-- Cross-aggregate reads are allowed at the service layer, but repositories must
-  remain aggregate-scoped.
+- `jwt_keys` is infrastructure/security persistence and is intentionally outside
+  a user-owned aggregate table (no `user_id` foreign key in schema).
+- Cross-aggregate reads are allowed at application service level; repository
+  access should remain aggregate-scoped.
 
 ---
 
 ## Board Aggregate
 **Aggregate Root:** `Board`
+
+**Primary table:**
+- `boards`
 
 **Owned entities / tables:**
 - `tasks`
@@ -38,42 +48,66 @@ and consistency boundaries enforced by each Aggregate Root.
 - `task_collaborators`
 
 **Responsibilities:**
-- Board ownership and access control
-- Task lifecycle within the board boundary
-- Collaboration rules within the board
+- Board ownership and collaboration management
+- Task lifecycle and status transitions within board scope
+- Task metadata (labels, links, attachments, comments)
+- Membership visibility through board/task collaborator join tables
 
 **Rules:**
-- Tasks are not treated as a standalone aggregate root.
-- Task mutations should be performed through the `Board` boundary (application layer).
+- Tasks are modeled as board-contained entities, not standalone aggregate roots.
+- Task mutations should be coordinated by board-level use-cases.
 
 ---
 
 ## Project Aggregate
 **Aggregate Root:** `Project`
 
-**Owned entities / tables:**
+**Primary table:**
 - `projects`
+
+**Owned entities / tables:**
 - `project_members`
 
+**References:**
+- `boards.project_id` links boards to projects
+
 **Responsibilities:**
-- Grouping boards under a project
-- Project membership and ownership
-- Organizational structure (not task ownership)
+- Project ownership and membership
+- Grouping/organization of boards
+- Planning metadata (`due_date`, `tag`, `color`)
 
 **Notes:**
-- A project may reference boards, but does not directly own tasks.
+- Project references boards, but board-owned entities (`tasks`, comments,
+  attachments, links, labels) remain inside the Board aggregate boundary.
 
 ---
 
 ## Chat Aggregate
 **Aggregate Root:** `ChatRoom`
 
-**Owned entities / tables:**
+**Primary table:**
 - `chat_rooms`
+
+**Owned entities / tables:**
 - `chat_room_participants`
 - `chat_messages`
 
 **Responsibilities:**
-- Room and participant management
-- Message persistence and retrieval
-- Domain isolation from Board/Task contexts
+- Room lifecycle
+- Participant membership
+- Message persistence (`encrypted_message`, timestamp ordering)
+
+**Notes:**
+- Chat remains isolated from Board/Task mutation workflows.
+
+---
+
+## Security Infrastructure Persistence
+
+These tables support security infrastructure concerns and are intentionally
+outside business aggregates:
+
+- `jwt_keys`
+
+This separation keeps domain aggregates focused while still documenting all
+schema artifacts.
