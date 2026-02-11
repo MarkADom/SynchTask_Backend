@@ -40,7 +40,7 @@ class RateLimitFilter(
 
         // Skip rate limiting in development profile
         if (environment.activeProfiles.contains("dev")) {
-            // TODO: Enable rate limiting for production environments only
+            // TODO(domain-repository): add aggregate-specific query methods (e.g. existsByBoardAndId) when a concrete use-case requires it
             chain.doFilter(request, response)
             return
         }

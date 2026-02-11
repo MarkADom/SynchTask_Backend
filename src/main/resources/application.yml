@@ -106,7 +106,7 @@ management:
     web:
       base-path: /actuator
       exposure:
-        # TODO: limit actuator out of dev.
+        # TODO(dev-security): limit actuator exposure outside dev/demo | keep broad visibility now for local diagnostics
         include: "*"
   endpoint:
     health:

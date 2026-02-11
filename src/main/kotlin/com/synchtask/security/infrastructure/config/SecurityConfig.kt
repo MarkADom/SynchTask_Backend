@@ -79,7 +79,7 @@ class SecurityConfig(
 
                     // Public Endpoints (Accessible Without Authentication)
                     .requestMatchers(
-                        // TODO: limit actuator out of dev.
+                        // TODO(dev-security): restrict actuator exposure outside dev/demo | keep public now for local diagnostics
                         "/actuator/**",
                         "/auth/.well-known/openid-configuration",
                         "/auth/.well-known/oauth-authorization-server",
@@ -139,7 +139,7 @@ class SecurityConfig(
 
     @Bean
     fun jwtDecoder(): JwtDecoder {
-        // TODO: outsource JWK set URI hardcoded
+        // TODO(config-security): externalize JWK set URI to env/property | localhost default kept for local portfolio setup
         val decoder = NimbusJwtDecoder
             .withJwkSetUri("http://localhost:8081/jwks")
             .build()
