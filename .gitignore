@@ -1,7 +1,7 @@
 # Build & Gradle
 /build
-/bin
 /.gradle
+uploads
 
 # IntelliJ / IDE
 /.idea
