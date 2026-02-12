@@ -61,10 +61,9 @@ class TaskAttachmentServiceTest {
 
     @BeforeEach
     fun setup() {
-        clearAllMocks()
-
         taskRepository = mockk()
-        taskAttachmentRepository = mockk(relaxed = true)
+        taskAttachmentRepository = mockk()
+        activityService = mockk(relaxed = true)
         service = TaskAttachmentService(taskRepository, taskAttachmentRepository, activityService)
     }
 

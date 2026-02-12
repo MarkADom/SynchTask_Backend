@@ -147,7 +147,6 @@ class TaskControllerTest {
 
         every { taskService.findTaskById(5L) } returns task
         every { userService.getUserByEmail(userEntity.email) } returns userEntity
-
         val result = controller.getTaskDetail(5L, userDetails)
 
         assertEquals(task.id, result.id)
@@ -155,7 +154,8 @@ class TaskControllerTest {
 
     @Test
     fun `should throw UnauthorizedAccessException when user cannot access task`() {
-        val task = mockk<Task>()
+        val otherOwner = userEntity.copy(id = 99L, email = "other@test.com")
+        val task = newTask(5L, "Detail Task").copy(owner = otherOwner)
 
         every { taskService.findTaskById(5L) } returns task
         every { userService.getUserByEmail(userEntity.email) } returns userEntity

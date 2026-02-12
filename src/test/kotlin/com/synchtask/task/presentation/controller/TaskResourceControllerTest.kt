@@ -6,10 +6,10 @@ import com.synchtask.task.application.service.TaskAttachmentService
 import com.synchtask.task.application.service.TaskLinkService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.entity.User
-import org.springframework.security.core.userdetails.User as SpringUser
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.security.core.userdetails.User as SpringUser
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
@@ -20,8 +20,9 @@ class TaskResourceControllerTest {
 
     private lateinit var linkService: TaskLinkService
     private lateinit var attachmentService: TaskAttachmentService
-    private lateinit var controller: TaskResourceController
     private lateinit var userService: UserService
+    private lateinit var controller: TaskResourceController
+
     private lateinit var userDetails: UserDetails
     private lateinit var actor: User
 
@@ -30,18 +31,13 @@ class TaskResourceControllerTest {
         linkService = mockk(relaxed = true)
         attachmentService = mockk(relaxed = true)
         userService = mockk(relaxed = true)
-        controller = TaskResourceController(
-            linkService,
-            attachmentService,
-            userService
-        )
+        controller = TaskResourceController(linkService, attachmentService, userService)
 
         userDetails = SpringUser(
             "user@synchtask.com",
             "hash",
             emptyList()
         )
-
         actor = User(id = 1L, name = "User", email = "user@synchtask.com", passwordHash = "hash")
 
         every { userService.getUserByEmail(userDetails.username) } returns actor

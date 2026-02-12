@@ -150,9 +150,9 @@ class TaskServiceTest {
         every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
         every { taskRepository.save(any()) } answers { firstArg() }
 
-        service.updateTaskStatus(existing.id!!, TaskStatus.COMPLETED, owner)
+        service.updateTaskStatus(existing.id!!, TaskStatus.IN_PROGRESS, owner)
 
-        assertEquals(TaskStatus.COMPLETED, existing.status)
+        assertEquals(TaskStatus.IN_PROGRESS, existing.status)
     }
 
     @Test

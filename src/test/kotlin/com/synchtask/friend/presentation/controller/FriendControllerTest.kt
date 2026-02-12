@@ -3,7 +3,6 @@ package com.synchtask.friend.presentation.controller
 import com.synchtask.friend.application.dto.FriendRequestDTO
 import com.synchtask.friend.application.dto.FriendResponseDTO
 import com.synchtask.friend.application.service.FriendService
-
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -13,16 +12,13 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-
 import org.springframework.security.core.userdetails.User
-
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FriendControllerTest {
 
     private lateinit var friendService: FriendService
     private lateinit var controller: FriendController
-
 
     private val testUser = User(
         "user@email.com",
@@ -78,8 +74,6 @@ class FriendControllerTest {
 
     @Test
     fun `should list friends of current user`() {
-
-
         every { friendService.listFriends("user@email.com") } returns listOf(
             FriendResponseDTO(
                 id = 100L,

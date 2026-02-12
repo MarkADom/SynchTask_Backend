@@ -28,9 +28,9 @@ class ProjectServiceTest {
 
     @BeforeEach
     fun setup() {
-        clearAllMocks()
         projectRepository = mockk()
         boardRepository = mockk()
+        activityService = mockk(relaxed = true)
         service = ProjectService(projectRepository, boardRepository, activityService)
     }
 

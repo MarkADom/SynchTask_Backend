@@ -2,22 +2,21 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
-import com.synchtask.task.application.dto.TaskCommentCreateDTO
-import com.synchtask.shared.exception.ResourceNotFoundException
-import com.synchtask.task.domain.repository.TaskCommentRepository
-import com.synchtask.task.domain.repository.TaskRepository
-import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.notification.application.service.NotificationService
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.task.application.dto.TaskCommentCreateDTO
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.task.domain.entity.TaskStatus
+import com.synchtask.task.domain.repository.TaskCommentRepository
+import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.springframework.messaging.simp.SimpMessagingTemplate
 import java.util.*
 import kotlin.test.assertEquals
 
@@ -27,11 +26,8 @@ class TaskCommentServiceTest {
     private lateinit var taskRepository: TaskRepository
     private lateinit var userRepository: UserRepository
     private lateinit var notificationService: NotificationService
-    private lateinit var messagingTemplate: SimpMessagingTemplate
     private lateinit var activityService: ActivityService
     private lateinit var service: TaskCommentService
-
-    private val userEmail = "user@example.com"
 
     private val user = User(
         id = 1L,
@@ -133,7 +129,7 @@ class TaskCommentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertThrows<UnauthorizedAccessException> {
-            service.addComment(task.id!!, stranger,TaskCommentCreateDTO("Hey"))
+            service.addComment(task.id!!, stranger, TaskCommentCreateDTO("Oi"))
         }
     }
 

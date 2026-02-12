@@ -258,7 +258,8 @@ class UserControllerTest {
         )
 
         every { userService.getUserByEmail(authUser.username) } returns current
-        every { userService.getVisibleUsers(current, emptyList())
+        every {
+            userService.getVisibleUsers(current, emptyList())
         } returns listOf(visibleDto)
 
         val response = controller.getVisibleUsers(authUser)

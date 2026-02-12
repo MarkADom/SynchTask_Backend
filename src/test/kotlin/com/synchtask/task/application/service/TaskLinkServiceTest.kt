@@ -32,13 +32,13 @@ class TaskLinkServiceTest {
 
     @BeforeEach
     fun setup() {
-        clearAllMocks()
-
         taskRepository = mockk()
-        taskLinkRepository = mockk(relaxed = true)
-        service = TaskLinkService(taskRepository, taskLinkRepository,activityService)
+        taskLinkRepository = mockk()
+        activityService = mockk(relaxed = true)
+        service = TaskLinkService(taskRepository, taskLinkRepository, activityService)
 
         owner = newUser(id = 1L, email = "owner@test.com")
+        other = newUser(id = 2L, email = "other@test.com")
         board = newBoard(id = 50L, owner = owner)
         task = newTask(id = 10L, owner = owner, board = board)
     }
@@ -77,6 +77,7 @@ class TaskLinkServiceTest {
         val title = "Docs"
         val url = "https://example.com"
         val now = LocalDateTime.of(2026, 2, 4, 0, 0, 0)
+
         val savedLink = TaskLink(
             id = 100L,
             task = task,
@@ -92,7 +93,7 @@ class TaskLinkServiceTest {
             taskId = task.id!!,
             title = title,
             url = url,
-            user = owner,
+            user = owner
         )
 
         assertEquals(100L, result.id)

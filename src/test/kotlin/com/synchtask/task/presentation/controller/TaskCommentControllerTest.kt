@@ -26,10 +26,7 @@ class TaskCommentControllerTest {
     fun setup() {
         taskCommentService = mockk()
         userService = mockk()
-        controller = TaskCommentController(
-            taskCommentService,
-            userService
-        )
+        controller = TaskCommentController(taskCommentService, userService)
         userDetails = mockk()
     }
 
@@ -44,7 +41,6 @@ class TaskCommentControllerTest {
             content = "Looks good!",
             createdAt = LocalDateTime.now()
         )
-
         val actor = User(id = 101L, name = "User", email = "user@email.com", passwordHash = "hash")
 
         every { userDetails.username } returns "user@email.com"
@@ -52,7 +48,6 @@ class TaskCommentControllerTest {
         every { taskCommentService.addComment(taskId, actor, request) } returns expectedResponse
 
         val response = controller.addComment(taskId, request, userDetails)
-
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals(expectedResponse, response.body)
@@ -63,14 +58,12 @@ class TaskCommentControllerTest {
 
     @Test
     fun `should return all comments for a task`() {
-
         val taskId = 99L
         val comment1 = TaskCommentResponseDTO(1, taskId, 201, "First comment", LocalDateTime.now())
         val comment2 = TaskCommentResponseDTO(2, taskId, 202, "Second comment", LocalDateTime.now())
         val comments = listOf(comment1, comment2)
 
         every { taskCommentService.getCommentsForTask(taskId) } returns comments
-
 
         val response = controller.getComments(taskId)
 

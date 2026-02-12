@@ -12,7 +12,8 @@ import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -71,7 +72,7 @@ class CommentServiceTest {
             taskRepository,
             userRepository,
             notificationService,
-            activityService,
+            activityService
         )
     }
 
@@ -87,7 +88,6 @@ class CommentServiceTest {
         assertEquals(task.id, result.taskId)
         assertEquals(user.id, result.userId)
         assertEquals(content, result.content)
-
     }
 
     @Test
