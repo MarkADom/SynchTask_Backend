@@ -28,7 +28,7 @@ import java.time.LocalDateTime
         )
     ]
 )
-data class TaskComment(
+class TaskComment(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

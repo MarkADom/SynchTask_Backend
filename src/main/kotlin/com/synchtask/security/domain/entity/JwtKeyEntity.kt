@@ -23,7 +23,7 @@ import java.time.LocalDateTime
         Index(name = "idx_jwt_keys_created_at", columnList = "created_at")
     ]
 )
-data class JwtKeyEntity(
+class JwtKeyEntity(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

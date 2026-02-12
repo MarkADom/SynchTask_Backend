@@ -18,14 +18,20 @@ data class UpdateUserDTO(
 ) {
 
     fun toUser(existingUser: User): User {
-        return existingUser.copy(
+        return User(
             id = existingUser.id, // Keep original ID
             name = this.name,
             email = this.email,
-            passwordHash = this.passwordHash ?: existingUser.passwordHash, // Only update if provided
+            passwordHash = this.passwordHash ?: existingUser.passwordHash,
             profilePictureUrl = this.profilePictureUrl ?: existingUser.profilePictureUrl.orEmpty(),
             role = existingUser.role, // Keep role unchanged
-            isActive = existingUser.isActive // Keep status unchanged
+            createdAt = existingUser.createdAt,
+            lastLogin = existingUser.lastLogin,
+            lastActivity = existingUser.lastActivity,
+            isActive = existingUser.isActive, // Keep status unchanged
+            isOnline = existingUser.isOnline,
+            onboardingNotified = existingUser.onboardingNotified
         )
     }
+
 }

@@ -81,7 +81,16 @@ class CommentServiceTest {
         val content = "This is a comment"
 
         every { taskRepository.findById(1L) } returns Optional.of(task)
-        every { taskCommentRepository.save(any()) } answers { firstArg<TaskComment>().copy(id = 1L) }
+        every { taskCommentRepository.save(any()) } answers {
+            val original = firstArg<TaskComment>()
+            TaskComment(
+                id = 1L,
+                task = original.task,
+                user = original.user,
+                content = original.content,
+                createdAt = original.createdAt
+            )
+        }
 
         val result = commentService.addComment(1L, user, TaskCommentCreateDTO(content))
 

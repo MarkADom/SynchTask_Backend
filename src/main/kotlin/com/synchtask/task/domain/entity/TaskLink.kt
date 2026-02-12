@@ -24,7 +24,7 @@ import java.time.LocalDateTime
         Index(name = "idx_task_link_task", columnList = "task_id")
     ]
 )
-data class TaskLink(
+class TaskLink(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

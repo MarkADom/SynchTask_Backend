@@ -34,7 +34,7 @@ import java.time.LocalDateTime
         )
     ]
 )
-data class Friend(
+class Friend(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

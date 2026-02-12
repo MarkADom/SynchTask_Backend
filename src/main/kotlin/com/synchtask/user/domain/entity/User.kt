@@ -28,7 +28,7 @@ import java.time.LocalDateTime
         Index(name = "idx_user_created_at", columnList = "created_at")
     ]
 )
-data class User(
+class User(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

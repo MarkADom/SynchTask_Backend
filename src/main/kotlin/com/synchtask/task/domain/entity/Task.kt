@@ -39,7 +39,7 @@ import java.time.LocalDateTime
         Index(name = "idx_task_created_at", columnList = "created_at")
     ]
 )
-data class Task(
+class Task(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

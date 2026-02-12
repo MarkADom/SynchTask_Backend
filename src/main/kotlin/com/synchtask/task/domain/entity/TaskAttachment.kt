@@ -24,7 +24,7 @@ import java.time.LocalDateTime
         Index(name = "idx_task_attachment_task", columnList = "task_id")
     ]
 )
-data class TaskAttachment(
+class TaskAttachment(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

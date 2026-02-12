@@ -90,7 +90,20 @@ class UserServiceTest {
     @Test
     fun `should update user data and hash new password`() {
         val existing = buildUser()
-        val updates = existing.copy(name = "New Name", passwordHash = "newpass")
+        val updates = User(
+            id = existing.id,
+            name = "New Name",
+            email = existing.email,
+            passwordHash = "newpass",
+            profilePictureUrl = existing.profilePictureUrl,
+            role = existing.role,
+            createdAt = existing.createdAt,
+            lastLogin = existing.lastLogin,
+            lastActivity = existing.lastActivity,
+            isActive = existing.isActive,
+            isOnline = existing.isOnline,
+            onboardingNotified = existing.onboardingNotified
+        )
 
         every { userRepository.findById(existing.id!!) } returns Optional.of(existing)
         every { passwordEncoder.encode("newpass") } returns "new-hash"
@@ -105,7 +118,20 @@ class UserServiceTest {
     @Test
     fun `should not hash password again on update if already hashed`() {
         val existing = buildUser(passwordHash = "old-value-will-be-kept")
-        val updates = existing.copy(passwordHash = "\$2a\$existinghash")
+        val updates = User(
+            id = existing.id,
+            name = existing.name,
+            email = existing.email,
+            passwordHash = "\$2a\$existinghash",
+            profilePictureUrl = existing.profilePictureUrl,
+            role = existing.role,
+            createdAt = existing.createdAt,
+            lastLogin = existing.lastLogin,
+            lastActivity = existing.lastActivity,
+            isActive = existing.isActive,
+            isOnline = existing.isOnline,
+            onboardingNotified = existing.onboardingNotified
+        )
 
         every { userRepository.findById(existing.id!!) } returns Optional.of(existing)
         every { userRepository.save(any()) } answers { firstArg() }

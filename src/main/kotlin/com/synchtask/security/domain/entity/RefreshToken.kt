@@ -28,7 +28,7 @@ import java.time.LocalDateTime
         Index(name = "idx_refresh_user_revoked", columnList = "user_id, is_revoked")
     ]
 )
-data class RefreshToken(
+class RefreshToken(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

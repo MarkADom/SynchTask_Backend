@@ -5,7 +5,6 @@ import com.synchtask.activity.domain.entity.Activity
 import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.task.domain.repository.TaskRepository
-import com.synchtask.user.domain.entity.User
 import org.springframework.stereotype.Component
 
 @Component

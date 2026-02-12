@@ -95,7 +95,18 @@ class NotificationMapperTest {
 
     @Test
     fun `should throw when notification id is null`() {
-        val notification = buildNotification().copy(id = null)
+        val base = buildNotification()
+        val notification = Notification(
+            id = null,
+            recipient = base.recipient,
+            message = base.message,
+            isRead = base.isRead,
+            createdAt = base.createdAt,
+            type = base.type,
+            groupId = base.groupId,
+            delivered = base.delivered
+        )
+
 
         val exception = Assertions.assertThrows(IllegalArgumentException::class.java) {
             NotificationMapper.toResponseDTO(notification)

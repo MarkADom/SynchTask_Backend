@@ -117,7 +117,20 @@ class UserControllerTest {
             role = UserRole.USER
         )
 
-        val updated = existing.copy(name = "New", email = "new@email.com")
+        val updated = User(
+            id = existing.id,
+            name = "New",
+            email = "new@email.com",
+            passwordHash = existing.passwordHash,
+            profilePictureUrl = existing.profilePictureUrl,
+            role = existing.role,
+            createdAt = existing.createdAt,
+            lastLogin = existing.lastLogin,
+            lastActivity = existing.lastActivity,
+            isActive = existing.isActive,
+            isOnline = existing.isOnline,
+            onboardingNotified = existing.onboardingNotified
+        )
 
         every { userService.getUserById(1L) } returns existing
         every { userService.isAuthorized(authUser.username, existing.email) } returns true
@@ -228,7 +241,20 @@ class UserControllerTest {
             passwordHash = "pw"
         )
 
-        val updated = existing.copy(name = "New")
+        val updated = User(
+            id = existing.id,
+            name = "New",
+            email = existing.email,
+            passwordHash = existing.passwordHash,
+            profilePictureUrl = existing.profilePictureUrl,
+            role = existing.role,
+            createdAt = existing.createdAt,
+            lastLogin = existing.lastLogin,
+            lastActivity = existing.lastActivity,
+            isActive = existing.isActive,
+            isOnline = existing.isOnline,
+            onboardingNotified = existing.onboardingNotified
+        )
 
         every { userService.getUserByEmail(authUser.username) } returns existing
         every { userService.updateUser(1L, any()) } returns updated

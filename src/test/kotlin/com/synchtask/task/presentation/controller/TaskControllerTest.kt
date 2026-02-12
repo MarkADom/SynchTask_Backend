@@ -154,8 +154,37 @@ class TaskControllerTest {
 
     @Test
     fun `should throw UnauthorizedAccessException when user cannot access task`() {
-        val otherOwner = userEntity.copy(id = 99L, email = "other@test.com")
-        val task = newTask(5L, "Detail Task").copy(owner = otherOwner)
+        val otherOwner = com.synchtask.user.domain.entity.User(
+            id = 99L,
+            email = "other@test.com",
+            name = userEntity.name,
+            passwordHash = userEntity.passwordHash,
+            profilePictureUrl = userEntity.profilePictureUrl,
+            role = userEntity.role,
+            createdAt = userEntity.createdAt,
+            lastLogin = userEntity.lastLogin,
+            lastActivity = userEntity.lastActivity,
+            isActive = userEntity.isActive,
+            isOnline = userEntity.isOnline,
+            onboardingNotified = userEntity.onboardingNotified
+        )
+
+        val base = newTask(5L, "Detail Task")
+        val task = Task(
+            id = base.id,
+            title = base.title,
+            description = base.description,
+            owner = otherOwner,
+            collaborators = base.collaborators,
+            labels = base.labels,
+            status = base.status,
+            priority = base.priority,
+            comments = base.comments,
+            createdAt = base.createdAt,
+            updatedAt = base.updatedAt,
+            board = base.board
+        )
+
 
         every { taskService.findTaskById(5L) } returns task
         every { userService.getUserByEmail(userEntity.email) } returns userEntity

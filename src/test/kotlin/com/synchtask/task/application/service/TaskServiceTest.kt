@@ -79,7 +79,23 @@ class TaskServiceTest {
     fun `should create task`() {
         val dto = TaskCreateDTO(title = "New", description = "Desc", boardId = board.id!!)
         every { boardRepository.findById(board.id!!) } returns Optional.of(board)
-        every { taskRepository.save(any()) } answers { firstArg<Task>().copy(id = 99L) }
+        every { taskRepository.save(any()) } answers {
+            val t = firstArg<Task>()
+            Task(
+                id = 99L,
+                title = t.title,
+                description = t.description,
+                owner = t.owner,
+                collaborators = t.collaborators,
+                labels = t.labels,
+                status = t.status,
+                priority = t.priority,
+                comments = t.comments,
+                createdAt = t.createdAt,
+                updatedAt = t.updatedAt,
+                board = t.board
+            )
+        }
 
         val result = service.createTask(owner, dto)
 

@@ -42,7 +42,21 @@ class UserService(
             passwordEncoder.encode(rawPassword)
         }
 
-        val secureUser = user.copy(passwordHash = encodedPassword)
+        val secureUser = User(
+            id = user.id,
+            name = user.name,
+            email = user.email,
+            passwordHash = encodedPassword,
+            profilePictureUrl = user.profilePictureUrl,
+            role = user.role,
+            createdAt = user.createdAt,
+            lastLogin = user.lastLogin,
+            lastActivity = user.lastActivity,
+            isActive = user.isActive,
+            isOnline = user.isOnline,
+            onboardingNotified = user.onboardingNotified
+        )
+
         logger.info("User registered: ${secureUser.email}")
         return userRepository.save(secureUser)
     }

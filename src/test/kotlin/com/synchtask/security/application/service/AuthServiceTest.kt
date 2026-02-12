@@ -138,7 +138,12 @@ class AuthServiceTest {
 
         every { userRepository.findByEmail(admin.email) } returns Optional.of(admin)
         every { userRepository.findById(user.id!!) } returns Optional.of(user)
-        every { userRepository.save(any()) } returns user.copy(role = UserRole.COLLABORATOR)
+        every { userRepository.save(any()) } answers {
+            val saved = firstArg<User>()
+            saved.role = UserRole.COLLABORATOR
+            saved
+        }
+
 
         authService.updateUserRole(admin.email, user.id!!, UserRole.COLLABORATOR)
 

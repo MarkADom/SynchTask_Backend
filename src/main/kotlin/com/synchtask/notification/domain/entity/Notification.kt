@@ -34,7 +34,7 @@ import java.time.LocalDateTime
         )
     ]
 )
-data class Notification(
+class Notification(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
