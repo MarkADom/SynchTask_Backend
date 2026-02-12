@@ -1,5 +1,6 @@
 package com.synchtask.project.application.service
 
+import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.project.application.dto.ProjectCreateDTO
@@ -19,6 +20,7 @@ class ProjectServiceTest {
 
     private lateinit var projectRepository: ProjectRepository
     private lateinit var boardRepository: BoardRepository
+    private lateinit var activityService: ActivityService
     private lateinit var service: ProjectService
 
     private val owner = newUser(1L)
@@ -26,10 +28,10 @@ class ProjectServiceTest {
 
     @BeforeEach
     fun setup() {
-        clearAllMocks()
         projectRepository = mockk()
         boardRepository = mockk()
-        service = ProjectService(projectRepository, boardRepository)
+        activityService = mockk(relaxed = true)
+        service = ProjectService(projectRepository, boardRepository, activityService)
     }
 
     private fun newUser(id: Long) = User(

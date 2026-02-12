@@ -1,5 +1,6 @@
 package com.synchtask.task.application.service
 
+import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
@@ -22,20 +23,22 @@ class TaskLinkServiceTest {
 
     private lateinit var taskRepository: TaskRepository
     private lateinit var taskLinkRepository: TaskLinkRepository
+    private lateinit var activityService: ActivityService
     private lateinit var service: TaskLinkService
     private lateinit var owner: User
+    private lateinit var other: User
     private lateinit var board: Board
     private lateinit var task: Task
 
     @BeforeEach
     fun setup() {
-        clearAllMocks()
-
         taskRepository = mockk()
         taskLinkRepository = mockk()
-        service = TaskLinkService(taskRepository, taskLinkRepository)
+        activityService = mockk(relaxed = true)
+        service = TaskLinkService(taskRepository, taskLinkRepository, activityService)
 
         owner = newUser(id = 1L, email = "owner@test.com")
+        other = newUser(id = 2L, email = "other@test.com")
         board = newBoard(id = 50L, owner = owner)
         task = newTask(id = 10L, owner = owner, board = board)
     }
@@ -90,7 +93,7 @@ class TaskLinkServiceTest {
             taskId = task.id!!,
             title = title,
             url = url,
-            userEmail = owner.email
+            user = owner
         )
 
         assertEquals(100L, result.id)
@@ -106,7 +109,7 @@ class TaskLinkServiceTest {
         every { taskRepository.findById(999L) } returns Optional.empty()
 
         assertFailsWith<ResourceNotFoundException> {
-            service.addLink(999L, "Docs", "https://example.com", owner.email)
+            service.addLink(999L, "Docs", "https://example.com", owner)
         }
 
         verify(exactly = 0) { taskLinkRepository.save(any()) }
@@ -117,7 +120,7 @@ class TaskLinkServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.addLink(task.id!!, "Docs", "https://example.com", "attacker@test.com")
+            service.addLink(task.id!!, "Docs", "https://example.com", other)
         }
 
         verify(exactly = 0) { taskLinkRepository.save(any()) }
@@ -131,7 +134,7 @@ class TaskLinkServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskLinkRepository.findAllByTask(task) } returns listOf(l1, l2)
 
-        val result = service.listLinks(task.id!!)
+        val result = service.listLinks(task.id!!, owner)
 
         assertEquals(2, result.size)
         assertEquals("A", result[0].title)
@@ -143,32 +146,30 @@ class TaskLinkServiceTest {
         every { taskRepository.findById(404L) } returns Optional.empty()
 
         assertFailsWith<ResourceNotFoundException> {
-            service.listLinks(404L)
+            service.listLinks(404L, owner)
         }
 
         verify(exactly = 0) { taskLinkRepository.findAllByTask(any()) }
     }
 
     @Test
-    fun `should return true when link is removed`() {
+    fun `should delete link when found`() {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskLinkRepository.deleteByTaskAndId(task, 100L) } returns 1
 
-        val result = service.removeLink(task.id!!, 100L, owner.email)
+        service.removeLink(task.id!!, 100L, owner)
 
-        assertTrue(result)
         verify(exactly = 1) { taskLinkRepository.deleteByTaskAndId(task, 100L) }
     }
 
     @Test
-    fun `should return false when link does not exist`() {
+    fun `should throw when link does not exist`() {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskLinkRepository.deleteByTaskAndId(task, 999L) } returns 0
 
-        val result = service.removeLink(task.id!!, 999L, owner.email)
-
-        assertFalse(result)
-        verify(exactly = 1) { taskLinkRepository.deleteByTaskAndId(task, 999L) }
+        assertFailsWith<ResourceNotFoundException> {
+            service.removeLink(task.id!!, 999L, owner)
+        }
     }
 
     @Test
@@ -176,7 +177,7 @@ class TaskLinkServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.removeLink(task.id!!, 100L, "attacker@test.com")
+            service.removeLink(task.id!!, 100L, other)
         }
 
         verify(exactly = 0) { taskLinkRepository.deleteByTaskAndId(any(), any()) }
@@ -187,7 +188,7 @@ class TaskLinkServiceTest {
         every { taskRepository.findById(404L) } returns Optional.empty()
 
         assertFailsWith<ResourceNotFoundException> {
-            service.removeLink(404L, 100L, owner.email)
+            service.removeLink(404L, 100L, owner)
         }
 
         verify(exactly = 0) { taskLinkRepository.deleteByTaskAndId(any(), any()) }

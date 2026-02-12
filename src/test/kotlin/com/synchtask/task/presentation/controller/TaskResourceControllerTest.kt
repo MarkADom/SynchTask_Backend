@@ -4,10 +4,12 @@ import com.synchtask.task.application.dto.TaskAttachmentDTO
 import com.synchtask.task.application.dto.TaskLinkDTO
 import com.synchtask.task.application.service.TaskAttachmentService
 import com.synchtask.task.application.service.TaskLinkService
+import com.synchtask.user.application.service.UserService
+import com.synchtask.user.domain.entity.User
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.security.core.userdetails.User
+import org.springframework.security.core.userdetails.User as SpringUser
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
@@ -18,21 +20,27 @@ class TaskResourceControllerTest {
 
     private lateinit var linkService: TaskLinkService
     private lateinit var attachmentService: TaskAttachmentService
+    private lateinit var userService: UserService
     private lateinit var controller: TaskResourceController
 
     private lateinit var userDetails: UserDetails
+    private lateinit var actor: User
 
     @BeforeEach
     fun setup() {
-        linkService = mockk()
-        attachmentService = mockk()
-        controller = TaskResourceController(linkService, attachmentService)
+        linkService = mockk(relaxed = true)
+        attachmentService = mockk(relaxed = true)
+        userService = mockk(relaxed = true)
+        controller = TaskResourceController(linkService, attachmentService, userService)
 
-        userDetails = User(
+        userDetails = SpringUser(
             "user@synchtask.com",
             "hash",
             emptyList()
         )
+        actor = User(id = 1L, name = "User", email = "user@synchtask.com", passwordHash = "hash")
+
+        every { userService.getUserByEmail(userDetails.username) } returns actor
     }
 
     @Test
@@ -45,7 +53,7 @@ class TaskResourceControllerTest {
         )
 
         every {
-            linkService.addLink(10L, "GitHub", "https://github.com", userDetails.username)
+            linkService.addLink(10L, "GitHub", "https://github.com", actor)
         } returns dto
 
         val response = controller.addLink(
@@ -60,7 +68,7 @@ class TaskResourceControllerTest {
         assertEquals(dto.url, response.body!!.url)
 
         verify(exactly = 1) {
-            linkService.addLink(10L, "GitHub", "https://github.com", userDetails.username)
+            linkService.addLink(10L, "GitHub", "https://github.com", actor)
         }
     }
 
@@ -71,21 +79,21 @@ class TaskResourceControllerTest {
             TaskLinkDTO(2L, "Repo", "https://repo", LocalDateTime.now())
         )
 
-        every { linkService.listLinks(10L) } returns links
+        every { linkService.listLinks(10L, actor) } returns links
 
-        val response = controller.listLinks(10L)
+        val response = controller.listLinks(10L, userDetails)
 
         assertEquals(2, response.body!!.size)
         assertEquals("Doc", response.body!![0].title)
 
-        verify(exactly = 1) { linkService.listLinks(10L) }
+        verify(exactly = 1) { linkService.listLinks(10L, actor) }
     }
 
     @Test
     fun `should delete link successfully`() {
         every {
-            linkService.removeLink(10L, 5L, userDetails.username)
-        } returns true
+            linkService.removeLink(10L, 5L, actor)
+        } just Runs
 
         val response = controller.deleteLink(
             taskId = 10L,
@@ -93,30 +101,10 @@ class TaskResourceControllerTest {
             user = userDetails
         )
 
-        assertEquals(200, response.statusCode.value())
-        assertEquals("Link deleted successfully", response.body)
+        assertEquals(204, response.statusCode.value())
 
         verify(exactly = 1) {
-            linkService.removeLink(10L, 5L, userDetails.username)
-        }
-    }
-
-    @Test
-    fun `should return not found when deleting non-existing link`() {
-        every {
-            linkService.removeLink(10L, 99L, userDetails.username)
-        } returns false
-
-        val response = controller.deleteLink(
-            taskId = 10L,
-            linkId = 99L,
-            user = userDetails
-        )
-
-        assertEquals(404, response.statusCode.value())
-
-        verify(exactly = 1) {
-            linkService.removeLink(10L, 99L, userDetails.username)
+            linkService.removeLink(10L, 5L, actor)
         }
     }
 
@@ -132,7 +120,7 @@ class TaskResourceControllerTest {
         )
 
         every {
-            attachmentService.uploadFile(10L, file, userDetails.username)
+            attachmentService.uploadFile(10L, file, actor)
         } returns dto
 
         val response = controller.uploadFile(
@@ -146,7 +134,7 @@ class TaskResourceControllerTest {
         assertEquals("https://cdn.synchtask.com/file.pdf", response.body!!.fileUrl)
 
         verify(exactly = 1) {
-            attachmentService.uploadFile(10L, file, userDetails.username)
+            attachmentService.uploadFile(10L, file, actor)
         }
     }
 
@@ -168,7 +156,7 @@ class TaskResourceControllerTest {
         )
 
         every {
-            attachmentService.listAttachments(10L, userDetails.username)
+            attachmentService.listAttachments(10L, actor)
         } returns attachments
 
         val response = controller.listAttachments(10L, userDetails)
@@ -177,15 +165,15 @@ class TaskResourceControllerTest {
         assertEquals("a.txt", response.body!![0].fileName)
 
         verify(exactly = 1) {
-            attachmentService.listAttachments(10L, userDetails.username)
+            attachmentService.listAttachments(10L, actor)
         }
     }
 
     @Test
     fun `should delete attachment successfully`() {
         every {
-            attachmentService.deleteAttachment(10L, 3L, userDetails.username)
-        } returns true
+            attachmentService.deleteAttachment(10L, 3L, actor)
+        } just Runs
 
         val response = controller.deleteAttachment(
             taskId = 10L,
@@ -193,30 +181,10 @@ class TaskResourceControllerTest {
             user = userDetails
         )
 
-        assertEquals(200, response.statusCode.value())
-        assertEquals("Attachment deleted successfully", response.body)
+        assertEquals(204, response.statusCode.value())
 
         verify(exactly = 1) {
-            attachmentService.deleteAttachment(10L, 3L, userDetails.username)
-        }
-    }
-
-    @Test
-    fun `should return not found when deleting attachment`() {
-        every {
-            attachmentService.deleteAttachment(10L, 99L, userDetails.username)
-        } returns false
-
-        val response = controller.deleteAttachment(
-            taskId = 10L,
-            attachmentId = 99L,
-            user = userDetails
-        )
-
-        assertEquals(404, response.statusCode.value())
-
-        verify(exactly = 1) {
-            attachmentService.deleteAttachment(10L, 99L, userDetails.username)
+            attachmentService.deleteAttachment(10L, 3L, actor)
         }
     }
 }

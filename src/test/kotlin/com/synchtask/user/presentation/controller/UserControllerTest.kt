@@ -10,9 +10,12 @@ import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -155,6 +158,22 @@ class UserControllerTest {
     }
 
     @Test
+    fun `should return 404 when update user target does not exist`() {
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("admin@email.com", "pw", emptyList())
+
+        every { userService.getUserById(999L) } returns null
+
+        val response = controller.updateUser(
+            999L,
+            UpdateUserDTO("X", "x@email.com", null, null),
+            authUser
+        )
+
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+    }
+
+    @Test
     fun `should delete user if authorized`() {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("user@email.com", "pw", emptyList())
@@ -224,6 +243,20 @@ class UserControllerTest {
     }
 
     @Test
+    fun `should throw when authenticated user not found on updateCurrentUser`() {
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("ghost@email.com", "pw", emptyList())
+
+        every { userService.getUserByEmail(authUser.username) } returns null
+
+        val ex = assertFailsWith<ResourceNotFoundException> {
+            controller.updateCurrentUser(UpdateUserDTO("X", "x@email.com", null, null), authUser)
+        }
+
+        assertEquals("Authenticated user not found", ex.message)
+    }
+
+    @Test
     fun `should get online users`() {
         val onlineUsers = listOf(
             UserStatusDTO("a@email.com", "A", now),
@@ -258,10 +291,7 @@ class UserControllerTest {
         )
 
         every { userService.getUserByEmail(authUser.username) } returns current
-        every { friendService.listFriendUsers(authUser.username) } returns emptyList()
-        every {
-            userService.getVisibleUsers(current, emptyList())
-        } returns listOf(visibleDto)
+        every { userService.getVisibleUsers(current, emptyList()) } returns listOf(visibleDto)
 
         val response = controller.getVisibleUsers(authUser)
 
@@ -270,6 +300,91 @@ class UserControllerTest {
         assertEquals("Friend", response.body!![0].name)
     }
 
+    @Test
+    fun `should return current authenticated user`() {
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("me@email.com", "pw", emptyList())
+
+        val existing = User(
+            id = 1L,
+            name = "Me",
+            email = "me@email.com",
+            passwordHash = "pw"
+        )
+
+        every { userService.getUserByEmail(authUser.username) } returns existing
+
+        val response = controller.getCurrentUser(authUser)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("Me", response.body!!.name)
+    }
+
+    @Test
+    fun `should throw when current authenticated user not found`() {
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("ghost@email.com", "pw", emptyList())
+
+        every { userService.getUserByEmail(authUser.username) } returns null
+
+        val ex = assertFailsWith<ResourceNotFoundException> {
+            controller.getCurrentUser(authUser)
+        }
+
+        assertEquals("Authenticated user not found", ex.message)
+    }
+
+    @Test
+    fun `should return paged public users`() {
+        val pageable = PageRequest.of(0, 10)
+        val users = listOf(
+            User(
+                id = 1L,
+                name = "Public One",
+                email = "public1@email.com",
+                passwordHash = "pw",
+                isOnline = true
+            ),
+            User(
+                id = 2L,
+                name = "Public Two",
+                email = "public2@email.com",
+                passwordHash = "pw",
+                isOnline = true
+            )
+        )
+
+        every { userService.findPublicUsers("Pub", true, pageable) } returns
+                PageImpl(users, pageable, users.size.toLong())
+
+        val response = controller.getPublicUsers("Pub", true, pageable)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(2, response.body!!.content.size)
+        assertEquals("Public One", response.body!!.content.first().name)
+    }
+
+    @Test
+    fun `should update profile picture`() {
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("me@email.com", "pw", emptyList())
+        val file = mockk<MultipartFile>()
+
+        val updatedUser = User(
+            id = 1L,
+            name = "Me",
+            email = "me@email.com",
+            passwordHash = "pw",
+            profilePictureUrl = "https://cdn/img.png"
+        )
+
+        every { userService.updateProfilePicture(authUser.username, file) } returns updatedUser
+
+        val response = controller.updateProfilePicture(file, authUser)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("https://cdn/img.png", response.body!!["profilePictureUrl"])
+    }
 
     @Test
     fun `should get assignable users`() {

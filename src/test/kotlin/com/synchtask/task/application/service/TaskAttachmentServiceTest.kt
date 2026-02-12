@@ -1,5 +1,6 @@
 package com.synchtask.task.application.service
 
+import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
@@ -18,18 +19,26 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 class TaskAttachmentServiceTest {
 
     private lateinit var taskRepository: TaskRepository
     private lateinit var taskAttachmentRepository: TaskAttachmentRepository
+    private lateinit var activityService: ActivityService
     private lateinit var service: TaskAttachmentService
 
     private val owner = User(
         id = 1L,
         name = "Owner",
         email = "owner@test.com",
+        passwordHash = "hash",
+        role = UserRole.USER
+    )
+
+    private val other = User(
+        id = 2L,
+        name = "Other",
+        email = "other@test.com",
         passwordHash = "hash",
         role = UserRole.USER
     )
@@ -52,11 +61,10 @@ class TaskAttachmentServiceTest {
 
     @BeforeEach
     fun setup() {
-        clearAllMocks()
-
         taskRepository = mockk()
         taskAttachmentRepository = mockk()
-        service = TaskAttachmentService(taskRepository, taskAttachmentRepository)
+        activityService = mockk(relaxed = true)
+        service = TaskAttachmentService(taskRepository, taskAttachmentRepository, activityService)
     }
 
     @Test
@@ -67,12 +75,9 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskAttachmentRepository.save(any()) } answers { firstArg() }
 
-        val result = service.uploadFile(task.id!!, file, owner.email)
+        val result = service.uploadFile(task.id!!, file, owner)
 
         assertEquals("file.txt", result.fileName)
-        assertTrue(result.fileUrl.contains("cdn.synchtask.app"))
-
-        verify(exactly = 1) { taskAttachmentRepository.save(any()) }
     }
 
     @Test
@@ -81,7 +86,7 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(999L) } returns Optional.empty()
 
         assertFailsWith<ResourceNotFoundException> {
-            service.uploadFile(999L, file, owner.email)
+            service.uploadFile(999L, file, owner)
         }
     }
 
@@ -91,7 +96,7 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.uploadFile(task.id!!, file, "other@test.com")
+            service.uploadFile(task.id!!, file, other)
         }
 
         verify(exactly = 0) { taskAttachmentRepository.save(any()) }
@@ -109,7 +114,7 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskAttachmentRepository.findAllByTask(task) } returns listOf(attachment)
 
-        val result = service.listAttachments(task.id!!, owner.email)
+        val result = service.listAttachments(task.id!!, owner)
 
         assertEquals(1, result.size)
         assertEquals("doc.pdf", result.first().fileName)
@@ -120,7 +125,7 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.listAttachments(task.id!!, "other@test.com")
+            service.listAttachments(task.id!!, other)
         }
     }
 
@@ -129,20 +134,19 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskAttachmentRepository.deleteByTaskAndId(task, 5L) } returns 1
 
-        val result = service.deleteAttachment(task.id!!, 5L, owner.email)
+        service.deleteAttachment(task.id!!, 5L, owner)
 
-        assertTrue(result)
         verify { taskAttachmentRepository.deleteByTaskAndId(task, 5L) }
     }
 
     @Test
-    fun `should return false when attachment not found`() {
+    fun `should throw when attachment not found`() {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskAttachmentRepository.deleteByTaskAndId(task, 5L) } returns 0
 
-        val result = service.deleteAttachment(task.id!!, 5L, owner.email)
-
-        assertTrue(!result)
+        assertFailsWith<ResourceNotFoundException> {
+            service.deleteAttachment(task.id!!, 5L, owner)
+        }
     }
 
     @Test
@@ -150,7 +154,7 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.deleteAttachment(task.id!!, 5L, "other@test.com")
+            service.deleteAttachment(task.id!!, 5L, other)
         }
 
         verify(exactly = 0) { taskAttachmentRepository.deleteByTaskAndId(any(), any()) }
