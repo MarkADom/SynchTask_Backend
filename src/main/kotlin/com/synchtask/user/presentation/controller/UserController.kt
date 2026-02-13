@@ -11,6 +11,7 @@ import com.synchtask.user.application.dto.UserRegistrationDTO
 import com.synchtask.user.application.dto.UserResponseDTO
 import com.synchtask.user.application.dto.UserStatusDTO
 import com.synchtask.user.application.service.UserService
+import com.synchtask.user.presentation.mapper.UserCommandMapper
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -51,7 +52,12 @@ class UserController(
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     fun createUser(@RequestBody userRegistrationDTO: UserRegistrationDTO): ResponseEntity<UserResponseDTO> {
-        val newUser = userService.createUser(userRegistrationDTO.toUser(passwordEncoder))
+        val newUser = userService.createUser(
+            UserCommandMapper.toNewUser(
+                dto = userRegistrationDTO,
+                passwordEncoder = passwordEncoder
+            )
+        )
         logger.info("User created successfully: ${newUser.email}")
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponseDTO(newUser))
     }
@@ -83,7 +89,7 @@ class UserController(
     fun updateUser(
         @PathVariable id: Long,
         @RequestBody updateUserDTO: UpdateUserDTO,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<UserResponseDTO> {
         val userEmail = user.username
         val existingUser = userService.getUserById(id)
@@ -94,9 +100,11 @@ class UserController(
                 logger.warn("Unauthorized update attempt by $userEmail on user ${existingUser.email}")
                 ResponseEntity.status(HttpStatus.FORBIDDEN).build()
             }
+
             else -> {
-                val updatedUser = userService.updateUser(id, updateUserDTO.toUser(existingUser))
-                    ?: return handleUserNotFound(id, userEmail)
+                val updatedUser =
+                    userService.updateUser(id, UserCommandMapper.toUpdatedUser(updateUserDTO, existingUser))
+                        ?: return handleUserNotFound(id, userEmail)
 
                 logger.info("User updated successfully: id=$id by admin=${userEmail}")
                 ResponseEntity.ok(UserMapper.toResponseDTO(updatedUser))
@@ -108,7 +116,7 @@ class UserController(
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id == authentication.principal.id")
     fun deleteUser(
         @PathVariable id: Long,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<Void> {
         val userEmail = user.username
         val userToDelete = userService.getUserById(id)
@@ -144,7 +152,7 @@ class UserController(
     fun getPublicUsers(
         @RequestParam(required = false) name: String?,
         @RequestParam(required = false) onlineOnly: Boolean?,
-        @PageableDefault(size = 20, sort = ["name"]) pageable: Pageable
+        @PageableDefault(size = 20, sort = ["name"]) pageable: Pageable,
     ): ResponseEntity<Page<UserPublicDTO>> {
         val users = userService.findPublicUsers(name, onlineOnly, pageable)
         return ResponseEntity.ok(users.map(UserMapper::toPublicDTO))
@@ -159,13 +167,14 @@ class UserController(
     @PreAuthorize("isAuthenticated()")
     fun updateCurrentUser(
         @RequestBody updateUserDTO: UpdateUserDTO,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<UserResponseDTO> {
         val currentUser = userService.getUserByEmail(user.username)
             ?: throw ResourceNotFoundException("Authenticated user not found")
 
-        val updatedUser = userService.updateUser(currentUser.id!!, updateUserDTO.toUser(currentUser))
-            ?: throw ResourceNotFoundException("Failed to update user")
+        val updatedUser =
+            userService.updateUser(currentUser.id!!, UserCommandMapper.toUpdatedUser(updateUserDTO, currentUser))
+                ?: throw ResourceNotFoundException("Failed to update user")
 
         logger.info("User self-updated successfully: email=${updatedUser.email}")
         return ResponseEntity.ok(UserMapper.toResponseDTO(updatedUser))
@@ -175,7 +184,7 @@ class UserController(
     @PreAuthorize("isAuthenticated()")
     fun updateProfilePicture(
         @RequestParam file: MultipartFile,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<Map<String, String>> {
         val updatedUser = userService.updateProfilePicture(user.username, file)
         return ResponseEntity.ok(mapOf("profilePictureUrl" to updatedUser.profilePictureUrl.orEmpty()))

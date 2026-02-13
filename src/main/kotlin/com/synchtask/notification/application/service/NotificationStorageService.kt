@@ -65,7 +65,8 @@ class NotificationStorageService(
     }
 
     fun getRedisKeys(pattern: String): Set<String> {
-        return redisTemplate.keys(pattern) ?: emptySet()
+        val keys: Set<String?> = redisTemplate.keys(pattern)
+        return keys.filterNotNull().toSet()
     }
 
     fun deleteRedisKeys(keys: Collection<String>) {

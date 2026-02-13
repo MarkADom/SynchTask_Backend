@@ -1,6 +1,5 @@
 package com.synchtask.user.application.dto
 
-import com.synchtask.user.domain.entity.User
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 
@@ -15,23 +14,4 @@ data class UpdateUserDTO(
     val profilePictureUrl: String? = null,
 
     val passwordHash: String? = null,
-) {
-
-    fun toUser(existingUser: User): User {
-        return User(
-            id = existingUser.id, // Keep original ID
-            name = this.name,
-            email = this.email,
-            passwordHash = this.passwordHash ?: existingUser.passwordHash,
-            profilePictureUrl = this.profilePictureUrl ?: existingUser.profilePictureUrl.orEmpty(),
-            role = existingUser.role, // Keep role unchanged
-            createdAt = existingUser.createdAt,
-            lastLogin = existingUser.lastLogin,
-            lastActivity = existingUser.lastActivity,
-            isActive = existingUser.isActive, // Keep status unchanged
-            isOnline = existingUser.isOnline,
-            onboardingNotified = existingUser.onboardingNotified
-        )
-    }
-
-}
+)

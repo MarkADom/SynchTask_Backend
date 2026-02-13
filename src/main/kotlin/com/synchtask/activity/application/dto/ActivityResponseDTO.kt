@@ -1,6 +1,5 @@
 package com.synchtask.activity.application.dto
 
-import com.synchtask.activity.domain.entity.Activity
 import java.time.LocalDateTime
 
 data class ActivityResponseDTO(

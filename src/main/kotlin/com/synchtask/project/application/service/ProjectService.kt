@@ -8,9 +8,9 @@ import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.project.application.dto.ProjectCreateDTO
 import com.synchtask.project.application.dto.ProjectResponseDTO
 import com.synchtask.project.application.dto.ProjectUpdateDTO
-import com.synchtask.project.application.dto.toResponseDTO
 import com.synchtask.project.domain.entity.Project
 import com.synchtask.project.domain.repository.ProjectRepository
+import com.synchtask.project.presentation.mapper.ProjectMapper
 import com.synchtask.user.domain.entity.User
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -52,20 +52,20 @@ class ProjectService(
             description = "Project '${savedProject.name}' criado"
         )
 
-        return savedProject.toResponseDTO()
+        return ProjectMapper.toResponse(savedProject)
     }
 
     @Transactional(readOnly = true)
     fun listAll(owner: User): List<ProjectResponseDTO> =
         projectRepository.findAllByOwner(owner)
-            .map(Project::toResponseDTO)
+            .map(ProjectMapper::toResponse)
 
     @Transactional(readOnly = true)
     fun getById(id: Long, owner: User): ProjectResponseDTO =
         projectRepository.findById(id)
             .filter { it.owner.id == owner.id }
             .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
-            .toResponseDTO()
+            .let(ProjectMapper::toResponse)
 
     @Transactional
     fun update(id: Long, dto: ProjectUpdateDTO, owner: User): ProjectResponseDTO {
@@ -109,7 +109,7 @@ class ProjectService(
             )
         }
 
-        return updated.toResponseDTO()
+        return updated.let(ProjectMapper::toResponse)
     }
 
     @Transactional
