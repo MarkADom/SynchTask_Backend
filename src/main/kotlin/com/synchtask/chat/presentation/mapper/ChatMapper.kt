@@ -4,23 +4,22 @@ import com.synchtask.chat.application.dto.ChatMessageDTO
 import com.synchtask.chat.application.dto.ChatRoomDTO
 import com.synchtask.chat.domain.entity.ChatMessage
 import com.synchtask.chat.domain.entity.ChatRoom
+import com.synchtask.shared.presentation.mapper.MapperSupport.requireId
 
 object ChatMapper {
 
-    fun toChatRoomDTO(chatRoom: ChatRoom): ChatRoomDTO {
-        return ChatRoomDTO(
-            id = chatRoom.id!!,
+    fun toChatRoomDTO(chatRoom: ChatRoom): ChatRoomDTO =
+        ChatRoomDTO(
+            id = requireId(chatRoom.id, "ChatRoom"),
             participants = chatRoom.participants.map { it.email }
         )
-    }
 
-    fun toChatMessageDTO(chatMessage: ChatMessage): ChatMessageDTO {
-        return ChatMessageDTO(
-            id = chatMessage.id!!,
-            chatRoomId = chatMessage.chatRoom.id!!,
+    fun toChatMessageDTO(chatMessage: ChatMessage): ChatMessageDTO =
+        ChatMessageDTO(
+            id = requireId(chatMessage.id, "ChatMessage"),
+            chatRoomId = requireId(chatMessage.chatRoom.id, "ChatRoom"),
             senderEmail = chatMessage.sender.email,
             message = chatMessage.encryptedMessage,
             timestamp = chatMessage.timestamp
         )
-    }
 }

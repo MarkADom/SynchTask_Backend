@@ -75,7 +75,7 @@ class ChatMapperTest {
         )
         val chatRoom = ChatRoom(id = null, participants = mutableSetOf(user))
 
-        Assertions.assertThrows(NullPointerException::class.java) {
+        Assertions.assertThrows(IllegalArgumentException::class.java) {
             ChatMapper.toChatRoomDTO(chatRoom)
         }
     }
@@ -97,7 +97,7 @@ class ChatMapperTest {
             timestamp = LocalDateTime.now()
         )
 
-        Assertions.assertThrows(NullPointerException::class.java) {
+        Assertions.assertThrows(IllegalArgumentException::class.java) {
             ChatMapper.toChatMessageDTO(message)
         }
     }

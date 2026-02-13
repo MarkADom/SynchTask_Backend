@@ -164,7 +164,7 @@ class TaskMapperTest {
             createdAt = now
         )
 
-        Assertions.assertThrows(NullPointerException::class.java) {
+        Assertions.assertThrows(IllegalArgumentException::class.java) {
             TaskMapper.toTaskCommentResponseDTO(comment)
         }
     }

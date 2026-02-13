@@ -1,5 +1,6 @@
 package com.synchtask.task.presentation.mapper
 
+import com.synchtask.shared.presentation.mapper.MapperSupport.requireId
 import com.synchtask.task.application.dto.TaskCommentResponseDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.domain.entity.Task
@@ -7,32 +8,30 @@ import com.synchtask.task.domain.entity.TaskComment
 
 object TaskMapper {
 
-    fun toTaskResponseDTO(task: Task): TaskResponseDTO {
-        return TaskResponseDTO(
-            id = task.id ?: throw IllegalArgumentException("Task ID cannot be null"),
+    fun toTaskResponseDTO(task: Task): TaskResponseDTO =
+        TaskResponseDTO(
+            id = requireId(task.id, "Task"),
             title = task.title,
             description = task.description,
-            creatorId = task.owner.id!!,
+            creatorId = requireId(task.owner.id, "User"),
             creatorName = task.owner.name,
-            assignees = task.collaborators.map { it.id!! },
+            assignees = task.collaborators.map { requireId(it.id, "User") },
             status = task.status,
             labels = task.labels.toList(),
             createdAt = task.createdAt,
             updatedAt = task.updatedAt,
-            boardId = task.board.id ?: throw IllegalArgumentException("Board ID cannot be null"),
+            boardId = requireId(task.board.id, "Board"),
             boardName = task.board.name,
             projectName = task.board.project?.name,
             priority = task.priority,
         )
-    }
 
-    fun toTaskCommentResponseDTO(comment: TaskComment): TaskCommentResponseDTO {
-        return TaskCommentResponseDTO(
-            id = comment.id!!,
-            taskId = comment.task.id!!,
-            userId = comment.user.id!!,
+    fun toTaskCommentResponseDTO(comment: TaskComment): TaskCommentResponseDTO =
+        TaskCommentResponseDTO(
+            id = requireId(comment.id, "Comment"),
+            taskId = requireId(comment.task.id, "Task"),
+            userId = requireId(comment.user.id, "User"),
             content = comment.content,
             createdAt = comment.createdAt
         )
     }
-}
