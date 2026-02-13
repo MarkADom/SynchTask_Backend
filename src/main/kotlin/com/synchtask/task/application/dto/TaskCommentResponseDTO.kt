@@ -3,10 +3,6 @@ package com.synchtask.task.application.dto
 import com.synchtask.task.domain.entity.TaskComment
 import java.time.LocalDateTime
 
-data class TaskCommentCreateDTO(
-    val content: String
-)
-
 data class TaskCommentResponseDTO(
     val id: Long,
     val taskId: Long,

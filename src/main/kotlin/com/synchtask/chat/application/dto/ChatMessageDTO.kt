@@ -11,7 +11,6 @@ data class ChatMessageDTO(
     val timestamp: LocalDateTime
 ) {
     companion object {
-
         fun fromEntity(entity: ChatMessage) = ChatMessageDTO(
             id = entity.id ?: error("ChatMessage ID cannot be null"),
             chatRoomId = entity.chatRoom.id ?: error("ChatRoom ID cannot be null"),

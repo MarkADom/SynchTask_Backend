@@ -7,7 +7,6 @@ data class ChatRoomDTO(
     val participants: List<String>  // Emails of participants
 ) {
     companion object {
-
         fun fromEntity(chatRoom: ChatRoom): ChatRoomDTO {
             return ChatRoomDTO(
                 id = chatRoom.id!!,
