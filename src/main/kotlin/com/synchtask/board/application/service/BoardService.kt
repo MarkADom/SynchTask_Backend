@@ -7,6 +7,7 @@ import com.synchtask.board.application.dto.BoardCollaboratorUpdateDTO
 import com.synchtask.board.application.dto.BoardCreateDTO
 import com.synchtask.board.application.dto.BoardResponseDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
+import com.synchtask.board.application.dto.BoardSimpleDTO
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.board.presentation.mapper.BoardMapper
@@ -124,6 +125,16 @@ class BoardService(
     fun getBoardsSharedWithUser(actor: User): List<BoardResponseDTO> =
         boardRepository.findByCollaboratorsContaining(actor)
             .map(BoardMapper::toResponse)
+
+    @Transactional(readOnly = true)
+    fun getSimpleBoardsForUser(actor: User): List<BoardSimpleDTO> {
+        val owned = boardRepository.findByOwner(actor)
+        val shared = boardRepository.findByCollaboratorsContaining(actor)
+
+        return (owned + shared)
+            .distinctBy { it.id }
+            .map { BoardSimpleDTO(id = it.id ?: throw IllegalStateException("Board ID cannot be null"), name = it.name) }
+    }
 
     @Transactional
     fun updateCollaborators(

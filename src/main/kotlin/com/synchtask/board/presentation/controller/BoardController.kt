@@ -6,11 +6,9 @@ import com.synchtask.board.application.dto.BoardResponseDTO
 import com.synchtask.board.application.dto.BoardSimpleDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.board.application.service.BoardService
-import com.synchtask.board.domain.repository.BoardRepository
-import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
-import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -27,21 +25,16 @@ import org.springframework.web.bind.annotation.*
 @SecurityRequirement(name = "BearerAuth")
 class BoardController(
     private val boardService: BoardService,
-    private val boardRepository: BoardRepository,
-    private val userService: UserService
+    private val userService: UserService,
+    private val authenticatedUserService: AuthenticatedUserService,
 ) {
-
-    private val logger = LoggerFactory.getLogger(BoardController::class.java)
-
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     fun createBoard(
         @RequestBody request: BoardCreateDTO,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<BoardResponseDTO> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
+        val actor = authenticatedUserService.requireUser(user)
 
         val board = boardService.createBoard(request, actor)
         return ResponseEntity.ok(board)
@@ -52,9 +45,7 @@ class BoardController(
     fun getBoards(
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<List<BoardResponseDTO>> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
+        val actor = authenticatedUserService.requireUser(user)
 
         val boards = boardService.getBoardsForUser(actor)
         return ResponseEntity.ok(boards)
@@ -67,8 +58,7 @@ class BoardController(
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<BoardResponseDTO> {
 
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
+        val actor = authenticatedUserService.requireUser(user)
 
         val board = boardService.getBoardAccessibleByUser(id, actor)
         return ResponseEntity.ok(board)
@@ -82,8 +72,7 @@ class BoardController(
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<BoardResponseDTO> {
 
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
+        val actor = authenticatedUserService.requireUser(user)
 
         val updated = boardService.updateBoard(id, request, actor)
         return ResponseEntity.ok(updated)
@@ -96,8 +85,7 @@ class BoardController(
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<String> {
 
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
+        val actor = authenticatedUserService.requireUser(user)
 
         boardService.deleteBoard(id, actor)
         return ResponseEntity.ok("Board deleted successfully.")
@@ -109,8 +97,7 @@ class BoardController(
         @AuthenticationPrincipal user: UserDetails
     ): List<BoardResponseDTO> {
 
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
+        val actor = authenticatedUserService.requireUser(user)
 
         return boardService.getBoardsSharedWithUser(actor)
     }
@@ -123,8 +110,7 @@ class BoardController(
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<BoardResponseDTO> {
 
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
+        val actor = authenticatedUserService.requireUser(user)
 
         val updated = boardService.updateCollaborators(id, dto, actor)
         return ResponseEntity.ok(updated)
@@ -132,8 +118,8 @@ class BoardController(
 
     @GetMapping("/simple")
     @PreAuthorize("isAuthenticated()")
-    fun getSimpleBoards(): List<BoardSimpleDTO> {
-        return boardRepository.findAll()
-            .map { BoardSimpleDTO(it.id!!, it.name) }
+    fun getSimpleBoards(@AuthenticationPrincipal user: UserDetails): List<BoardSimpleDTO> {
+        val actor = authenticatedUserService.requireUser(user)
+        return boardService.getSimpleBoardsForUser(actor)
     }
 }

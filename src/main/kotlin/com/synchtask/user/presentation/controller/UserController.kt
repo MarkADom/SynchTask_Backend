@@ -3,13 +3,13 @@ package com.synchtask.user.presentation.controller
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.presentation.mapper.UserMapper
-import com.synchtask.friend.application.service.FriendService
 import com.synchtask.user.application.dto.UpdateUserDTO
 import com.synchtask.user.application.dto.UserOptionDTO
 import com.synchtask.user.application.dto.UserPublicDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
 import com.synchtask.user.application.dto.UserResponseDTO
 import com.synchtask.user.application.dto.UserStatusDTO
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.user.presentation.mapper.UserCommandMapper
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -44,9 +44,10 @@ import org.springframework.web.multipart.MultipartFile
 @SecurityRequirement(name = "BearerAuth")
 class UserController(
     private val userService: UserService,
+    private val authenticatedUserService: AuthenticatedUserService,
     private val passwordEncoder: BCryptPasswordEncoder,
-    private val friendService: FriendService,
-) {
+
+    ) {
     private val logger = LoggerFactory.getLogger(UserController::class.java)
 
     @PostMapping
@@ -91,7 +92,7 @@ class UserController(
         @RequestBody updateUserDTO: UpdateUserDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<UserResponseDTO> {
-        val userEmail = user.username
+        val userEmail = authenticatedUserService.requireUser(user).email
         val existingUser = userService.getUserById(id)
 
         return when {
@@ -118,7 +119,7 @@ class UserController(
         @PathVariable id: Long,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<Void> {
-        val userEmail = user.username
+        val userEmail = authenticatedUserService.requireUser(user).email
         val userToDelete = userService.getUserById(id)
             ?: throw ResourceNotFoundException("User not found with ID: $id")
 
@@ -142,8 +143,7 @@ class UserController(
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     fun getCurrentUser(@AuthenticationPrincipal user: UserDetails): ResponseEntity<UserResponseDTO> {
-        val currentUser = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("Authenticated user not found")
+        val currentUser = authenticatedUserService.requireUser(user)
         return ResponseEntity.ok(UserMapper.toResponseDTO(currentUser))
     }
 
@@ -169,9 +169,7 @@ class UserController(
         @RequestBody updateUserDTO: UpdateUserDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<UserResponseDTO> {
-        val currentUser = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("Authenticated user not found")
-
+        val currentUser = authenticatedUserService.requireUser(user)
         val updatedUser =
             userService.updateUser(currentUser.id!!, UserCommandMapper.toUpdatedUser(updateUserDTO, currentUser))
                 ?: throw ResourceNotFoundException("Failed to update user")
@@ -186,16 +184,20 @@ class UserController(
         @RequestParam file: MultipartFile,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<Map<String, String>> {
-        val updatedUser = userService.updateProfilePicture(user.username, file)
-        return ResponseEntity.ok(mapOf("profilePictureUrl" to updatedUser.profilePictureUrl.orEmpty()))
+        val updatedUser = userService.updateProfilePicture(
+            authenticatedUserService.requireUser(user).email, file
+        )
+        return ResponseEntity.ok(
+            mapOf(
+                "profilePictureUrl" to updatedUser.profilePictureUrl.orEmpty()
+            )
+        )
     }
 
     @GetMapping("/visible")
     @PreAuthorize("isAuthenticated()")
     fun getVisibleUsers(@AuthenticationPrincipal user: UserDetails): ResponseEntity<List<UserResponseDTO>> {
-        val currentUser = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("Authenticated user not found")
-
+        val currentUser = authenticatedUserService.requireUser(user)
         val visibleUsers = userService.getVisibleUsers(currentUser, emptyList())
 
         return ResponseEntity.ok(visibleUsers)

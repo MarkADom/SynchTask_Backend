@@ -1,19 +1,15 @@
 package com.synchtask.task.presentation.controller
 
 import com.synchtask.task.domain.entity.TaskStatus
-import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.service.TaskService
-import com.synchtask.user.application.service.UserService
 import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskLabelUpdateDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.task.presentation.mapper.TaskMapper
-import jakarta.persistence.EntityManager
-import jakarta.validation.Valid
-import org.slf4j.LoggerFactory
+import com.synchtask.user.application.service.AuthenticatedUserService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
@@ -33,17 +29,15 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/tasks")
 class TaskController(
     private val taskService: TaskService,
-    private val userService: UserService,
+    private val authenticatedUserService: AuthenticatedUserService,
 ) {
-    private val logger = LoggerFactory.getLogger(TaskController::class.java)
 
     @PostMapping
     fun createTask(
         @RequestBody request: TaskCreateDTO,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): TaskResponseDTO {
-        val creator = userService.getUserByEmail(user.username)
-            ?: throw UnauthorizedAccessException("User not authenticated.")
+        val creator = authenticatedUserService.requireUser(user)
         val created = taskService.createTask(creator, request)
         return TaskMapper.toResponse(created)
     }
@@ -59,10 +53,7 @@ class TaskController(
         @RequestParam(required = false) boardId: Long?,
         @PageableDefault(size = 20, sort = ["createdAt"]) pageable: Pageable,
     ): Page<TaskResponseDTO> {
-        val userEntity = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found: ${user.username}")
-
-        // Retrieve filtered, visibility-safe tasks
+        val userEntity = authenticatedUserService.requireUser(user)
         val tasks = taskService.getTasksWithFilters(
             user = userEntity,
             status = status,
@@ -72,7 +63,6 @@ class TaskController(
             pageable = pageable
         )
 
-        // Map to DTO for response
         return tasks.map { TaskMapper.toResponse(it) }
     }
 
@@ -83,8 +73,7 @@ class TaskController(
         @AuthenticationPrincipal user: UserDetails,
     ): TaskResponseDTO {
         val task = taskService.findTaskById(taskId)
-        val userEntity = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found.")
+        val userEntity = authenticatedUserService.requireUser(user)
 
         if (!task.canBeAccessedBy(userEntity)) {
             throw UnauthorizedAccessException("You do not have access to this task.")
@@ -98,11 +87,9 @@ class TaskController(
     fun updateTask(
         @PathVariable taskId: Long,
         @RequestBody updatedTask: TaskUpdateDTO,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<TaskResponseDTO> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found.")
+        val actor = authenticatedUserService.requireUser(user)
 
         val updated = taskService.updateTask(taskId, updatedTask, actor)
         return ResponseEntity.ok(TaskMapper.toResponse(updated))
@@ -113,11 +100,9 @@ class TaskController(
     fun updateStatus(
         @PathVariable taskId: Long,
         @RequestParam status: TaskStatus,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<String> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found.")
+        val actor = authenticatedUserService.requireUser(user)
 
         taskService.updateTaskStatus(
             taskId = taskId,
@@ -134,8 +119,7 @@ class TaskController(
         @PathVariable taskId: Long,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<String> {
-        val userEntity = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found.")
+        val userEntity = authenticatedUserService.requireUser(user)
 
         taskService.deleteTask(taskId, userEntity)
         return ResponseEntity.ok("Task deleted successfully")
@@ -146,11 +130,9 @@ class TaskController(
     fun assignCollaborator(
         @PathVariable taskId: Long,
         @RequestParam email: String,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<String> {
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found.")
-
+        val actor = authenticatedUserService.requireUser(user)
         taskService.assignCollaborator(taskId, email, actor)
         return ResponseEntity.ok("Collaborator assigned successfully")
     }
@@ -160,10 +142,9 @@ class TaskController(
     fun updateLabels(
         @PathVariable taskId: Long,
         @RequestBody request: TaskLabelUpdateDTO,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<String> {
-        val userEntity = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found.")
+        val userEntity = authenticatedUserService.requireUser(user)
 
         taskService.updateTaskLabels(taskId, request.labels, userEntity)
         return ResponseEntity.ok("Labels updated successfully")
@@ -174,29 +155,13 @@ class TaskController(
     fun updateAssignees(
         @PathVariable taskId: Long,
         @RequestBody request: TaskAssigneeUpdateDTO,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<String> {
-        val userEntity = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found.")
+        val userEntity = authenticatedUserService.requireUser(user)
 
         taskService.updateTaskAssignees(taskId, request.userIds, userEntity)
         return ResponseEntity.ok("Assignees updated successfully")
     }
 
-    /**
-     * Admin-only endpoint to clear JPA second-level cache.
-     */
-    @RestController
-    @RequestMapping("/admin/cache")
-    class CacheAdminController(
-        private val entityManager: EntityManager
-    ) {
-
-        @PostMapping("/clear")
-        @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-        fun clear(): ResponseEntity<String> {
-            entityManager.entityManagerFactory.cache.evictAll()
-            return ResponseEntity.ok("Cache cleared")
-        }
-    }
 }
+

@@ -8,7 +8,7 @@ object BoardMapper {
 
     fun toResponse(entity: Board): BoardResponseDTO =
         BoardResponseDTO(
-            id = requireId(entity.id, "Bord"),
+            id = requireId(entity.id, "Board"),
             name = entity.name,
             color = entity.color,
             description = entity.description,
