@@ -30,7 +30,7 @@ class ChatMapperTest {
             participants = mutableSetOf(user1, user2)
         )
 
-        val dto: ChatRoomDTO = ChatMapper.toChatRoomDTO(chatRoom)
+        val dto: ChatRoomDTO = ChatMapper.toRoomDto(chatRoom)
 
         Assertions.assertEquals(100L, dto.id)
         Assertions.assertTrue(dto.participants.containsAll(listOf("alice@example.com", "bob@example.com")))
@@ -56,7 +56,7 @@ class ChatMapperTest {
             timestamp = LocalDateTime.now()
         )
 
-        val dto: ChatMessageDTO = ChatMapper.toChatMessageDTO(chatMessage)
+        val dto: ChatMessageDTO = ChatMapper.toMessageDto(chatMessage)
 
         Assertions.assertEquals(300L, dto.id)
         Assertions.assertEquals(200L, dto.chatRoomId)
@@ -76,7 +76,7 @@ class ChatMapperTest {
         val chatRoom = ChatRoom(id = null, participants = mutableSetOf(user))
 
         Assertions.assertThrows(IllegalArgumentException::class.java) {
-            ChatMapper.toChatRoomDTO(chatRoom)
+            ChatMapper.toRoomDto(chatRoom)
         }
     }
 
@@ -98,7 +98,7 @@ class ChatMapperTest {
         )
 
         Assertions.assertThrows(IllegalArgumentException::class.java) {
-            ChatMapper.toChatMessageDTO(message)
+            ChatMapper.toMessageDto(message)
         }
     }
 }

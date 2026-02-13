@@ -12,6 +12,7 @@ import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -72,7 +73,7 @@ class TaskCommentService(
             }
 
         logger.info("Comment added by ${user.email} on task '${task.title}'")
-        return TaskCommentResponseDTO.fromEntity(comment)
+        return TaskMapper.toCommentResponse(comment)
     }
 
     @Transactional(readOnly = true)
@@ -82,6 +83,6 @@ class TaskCommentService(
 
         return taskCommentRepository
             .findByTaskOrderByCreatedAtAsc(task)
-            .map { TaskCommentResponseDTO.fromEntity(it) }
+            .map { TaskMapper.toCommentResponse(it) }
     }
 }

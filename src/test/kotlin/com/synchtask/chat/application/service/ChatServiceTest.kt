@@ -8,6 +8,7 @@ import com.synchtask.user.domain.entity.User
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.chat.domain.repository.ChatMessageRepository
 import com.synchtask.chat.domain.repository.ChatRoomRepository
+import com.synchtask.chat.presentation.mapper.ChatMapper
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
@@ -70,7 +71,7 @@ class ChatServiceTest {
 
         val result = chatService.getOrCreateChatRoom(participants)
 
-        assertEquals(ChatRoomDTO.fromEntity(chatRoom), result)
+        assertEquals(ChatMapper.toRoomDto(chatRoom), result)
         verify { chatRoomRepository.save(any()) }
     }
 
@@ -83,7 +84,7 @@ class ChatServiceTest {
 
         val result = chatService.getOrCreateChatRoom(participants)
 
-        assertEquals(ChatRoomDTO.fromEntity(chatRoom), result)
+        assertEquals(ChatMapper.toRoomDto(chatRoom), result)
         verify(exactly = 0) { chatRoomRepository.save(any()) }
     }
 
@@ -104,7 +105,7 @@ class ChatServiceTest {
 
         val result = chatService.sendMessage(chatRoom.id!!, sender.email, messageContent)
 
-        assertEquals(ChatMessageDTO.fromEntity(chatMessage), result)
+        assertEquals(ChatMapper.toMessageDto(chatMessage), result)
         verify { chatMessageRepository.save(any()) }
     }
 
@@ -120,7 +121,7 @@ class ChatServiceTest {
 
         val result = chatService.getChatHistory(chatRoom.id!!)
 
-        assertEquals(messages.map { ChatMessageDTO.fromEntity(it) }, result)
+        assertEquals(messages.map { ChatMapper.toMessageDto(it) }, result)
     }
 
     @Test

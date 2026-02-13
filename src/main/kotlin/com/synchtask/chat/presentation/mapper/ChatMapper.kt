@@ -8,13 +8,13 @@ import com.synchtask.shared.presentation.mapper.MapperSupport.requireId
 
 object ChatMapper {
 
-    fun toChatRoomDTO(chatRoom: ChatRoom): ChatRoomDTO =
+    fun toRoomDto(chatRoom: ChatRoom): ChatRoomDTO =
         ChatRoomDTO(
             id = requireId(chatRoom.id, "ChatRoom"),
             participants = chatRoom.participants.map { it.email }
         )
 
-    fun toChatMessageDTO(chatMessage: ChatMessage): ChatMessageDTO =
+    fun toMessageDto(chatMessage: ChatMessage): ChatMessageDTO =
         ChatMessageDTO(
             id = requireId(chatMessage.id, "ChatMessage"),
             chatRoomId = requireId(chatMessage.chatRoom.id, "ChatRoom"),

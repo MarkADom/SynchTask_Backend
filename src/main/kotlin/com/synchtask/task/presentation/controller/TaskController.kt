@@ -10,6 +10,7 @@ import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskLabelUpdateDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
+import com.synchtask.task.presentation.mapper.TaskMapper
 import jakarta.persistence.EntityManager
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
@@ -44,7 +45,7 @@ class TaskController(
         val creator = userService.getUserByEmail(user.username)
             ?: throw UnauthorizedAccessException("User not authenticated.")
         val created = taskService.createTask(creator, request)
-        return TaskResponseDTO.fromEntity(created)
+        return TaskMapper.toResponse(created)
     }
 
     @GetMapping
@@ -72,7 +73,7 @@ class TaskController(
         )
 
         // Map to DTO for response
-        return tasks.map { TaskResponseDTO.fromEntity(it) }
+        return tasks.map { TaskMapper.toResponse(it) }
     }
 
     @GetMapping("/{taskId}")
@@ -89,7 +90,7 @@ class TaskController(
             throw UnauthorizedAccessException("You do not have access to this task.")
         }
 
-        return TaskResponseDTO.fromEntity(task)
+        return TaskMapper.toResponse(task)
     }
 
     @PutMapping("/{taskId}")
@@ -104,7 +105,7 @@ class TaskController(
             ?: throw ResourceNotFoundException("User not found.")
 
         val updated = taskService.updateTask(taskId, updatedTask, actor)
-        return ResponseEntity.ok(TaskResponseDTO.fromEntity(updated))
+        return ResponseEntity.ok(TaskMapper.toResponse(updated))
     }
 
     @PutMapping("/{taskId}/status")

@@ -8,6 +8,7 @@ import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.domain.repository.TaskLinkRepository
 import com.synchtask.task.domain.repository.TaskRepository
+import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -54,7 +55,7 @@ class TaskLinkService(
 
         logger.info("User '${user.email}' added link '${link.title}' to task '${task.title}'")
 
-        return TaskLinkDTO.fromEntity(link)
+        return TaskMapper.toLinkDto(link)
     }
 
     @Transactional(readOnly = true)
@@ -72,7 +73,7 @@ class TaskLinkService(
 
         return taskLinkRepository
             .findAllByTask(task)
-            .map { TaskLinkDTO.fromEntity(it) }
+            .map { TaskMapper.toLinkDto(it) }
     }
 
     @Transactional

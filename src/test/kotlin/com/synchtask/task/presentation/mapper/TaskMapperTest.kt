@@ -61,7 +61,7 @@ class TaskMapperTest {
 
     @Test
     fun `should map Task to TaskResponseDTO correctly`() {
-        val dto = TaskMapper.toTaskResponseDTO(task)
+        val dto = TaskMapper.toResponse(task)
 
         Assertions.assertEquals(100L, dto.id)
         Assertions.assertEquals("Test Task", dto.title)
@@ -95,7 +95,7 @@ class TaskMapperTest {
             createdAt = now
         )
 
-        val dto = TaskMapper.toTaskCommentResponseDTO(comment)
+        val dto = TaskMapper.toCommentResponse(comment)
 
         Assertions.assertEquals(500L, dto.id)
         Assertions.assertEquals(100L, dto.taskId)
@@ -122,7 +122,7 @@ class TaskMapperTest {
         )
 
         val ex = Assertions.assertThrows(IllegalArgumentException::class.java) {
-            TaskMapper.toTaskResponseDTO(invalidTask)
+            TaskMapper.toResponse(invalidTask)
         }
 
         Assertions.assertEquals("Task ID cannot be null", ex.message)
@@ -165,7 +165,7 @@ class TaskMapperTest {
         )
 
         Assertions.assertThrows(IllegalArgumentException::class.java) {
-            TaskMapper.toTaskCommentResponseDTO(comment)
+            TaskMapper.toCommentResponse(comment)
         }
     }
 }

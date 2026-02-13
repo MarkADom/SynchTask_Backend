@@ -10,16 +10,4 @@ data class ActivityResponseDTO(
     val referenceId: Long?,
     val description: String?,
     val createdAt: LocalDateTime
-) {
-    companion object {
-        fun fromEntity(activity: Activity): ActivityResponseDTO =
-            ActivityResponseDTO(
-                id = activity.id!!,
-                type = activity.type.name,
-                actorEmail = activity.actor.email,
-                referenceId = activity.referenceId,
-                description = activity.description,
-                createdAt = activity.createdAt
-            )
-    }
-}
+)

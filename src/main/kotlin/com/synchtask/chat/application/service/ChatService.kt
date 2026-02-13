@@ -8,6 +8,7 @@ import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.chat.domain.repository.ChatMessageRepository
 import com.synchtask.chat.domain.repository.ChatRoomRepository
+import com.synchtask.chat.presentation.mapper.ChatMapper
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -34,11 +35,11 @@ class ChatService(
 
         val existingChat = chatRoomRepository.findByExactParticipants(users, users.size)
         if (existingChat != null) {
-            return ChatRoomDTO.fromEntity(existingChat)
+            return ChatMapper.toRoomDto(existingChat)
         }
 
         val chatRoom = chatRoomRepository.save(ChatRoom(participants = users.toMutableSet()))
-        return ChatRoomDTO.fromEntity(chatRoom)
+        return ChatMapper.toRoomDto(chatRoom)
     }
 
     @Transactional
@@ -61,7 +62,7 @@ class ChatService(
                 timestamp = LocalDateTime.now()
             )
         )
-        return ChatMessageDTO.fromEntity(chatMessage)
+        return ChatMapper.toMessageDto(chatMessage)
     }
 
     fun getChatHistory(chatRoomId: Long): List<ChatMessageDTO> {
@@ -71,6 +72,6 @@ class ChatService(
         val messages = chatMessageRepository.findByChatRoomOrderByTimestampAsc(chatRoom)
         logger.info("Retrieved ${messages.size} messages from chatRoom ${chatRoom.id}")
 
-        return messages.map { ChatMessageDTO.fromEntity(it) }
+        return messages.map { ChatMapper.toMessageDto(it) }
     }
 }

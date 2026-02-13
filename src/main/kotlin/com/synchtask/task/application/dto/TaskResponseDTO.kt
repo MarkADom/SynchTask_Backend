@@ -1,6 +1,5 @@
 package com.synchtask.task.application.dto
 
-import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import java.time.LocalDateTime
@@ -20,25 +19,4 @@ data class TaskResponseDTO(
     val boardName: String?,
     val projectName: String?,
     val priority: TaskPriority,
-) {
-    companion object {
-        fun fromEntity(task: Task): TaskResponseDTO {
-            return TaskResponseDTO(
-                id = task.id ?: throw IllegalArgumentException("Task ID cannot be null"),
-                title = task.title,
-                description = task.description,
-                creatorId = task.owner.id!!,
-                creatorName = task.owner.name,
-                assignees = task.collaborators.map { it.id!! },
-                status = task.status,
-                labels = task.labels.toList(),
-                createdAt = task.createdAt,
-                updatedAt = task.updatedAt,
-                boardId = task.board.id!!,
-                boardName = task.board.name,
-                projectName = task.board.project?.name,
-                priority = task.priority,
-            )
-        }
-    }
-}
+)
