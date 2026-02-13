@@ -5,6 +5,7 @@ import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.notification.domain.repository.NotificationRepository
+import com.synchtask.notification.presentation.mapper.NotificationMapper
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisTemplate
@@ -44,7 +45,7 @@ class NotificationStorageService(
         val savedNotification = notificationRepository.save(notification)
         val redisKey = "notifications:$recipientEmail"
         val redisField = savedNotification.id!!.toString()
-        val notificationDTO = NotificationRedisDTO.fromEntity(savedNotification)
+        val notificationDTO = NotificationMapper.toRedisDTO(savedNotification)
 
         redisTemplate.opsForHash<String, NotificationRedisDTO>().put(redisKey, redisField, notificationDTO)
 
@@ -64,7 +65,7 @@ class NotificationStorageService(
     }
 
     fun getRedisKeys(pattern: String): Set<String> {
-        return redisTemplate.keys(pattern)
+        return redisTemplate.keys(pattern) ?: emptySet()
     }
 
     fun deleteRedisKeys(keys: Collection<String>) {

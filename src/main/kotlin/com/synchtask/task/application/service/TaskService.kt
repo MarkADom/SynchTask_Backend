@@ -16,6 +16,7 @@ import com.synchtask.friend.application.port.FriendshipChecker
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.notification.application.service.NotificationService
+import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.websocket.application.service.TaskWebSocketService
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -117,7 +118,7 @@ class TaskService(
             description = "Task '${updated.title}' atualizada"
         )
 
-        taskWebSocketService.sendTaskUpdate(TaskResponseDTO.fromEntity(updated))
+        taskWebSocketService.sendTaskUpdate(TaskMapper.toResponse(updated))
         return updated
     }
 
@@ -192,7 +193,7 @@ class TaskService(
             )
         }
 
-        taskWebSocketService.sendTaskUpdate(TaskResponseDTO.fromEntity(task))
+        taskWebSocketService.sendTaskUpdate(TaskMapper.toResponse(task))
     }
 
     @Transactional

@@ -8,6 +8,7 @@ import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.domain.repository.TaskAttachmentRepository
 import com.synchtask.task.domain.repository.TaskRepository
+import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -63,7 +64,7 @@ class TaskAttachmentService(
             "User '${user.email}' uploaded file '${attachment.fileName}' to task '${task.title}'"
         )
 
-        return TaskAttachmentDTO.fromEntity(attachment)
+        return TaskMapper.toAttachmentDto(attachment)
     }
 
     @Transactional(readOnly = true)
@@ -83,7 +84,7 @@ class TaskAttachmentService(
 
         return taskAttachmentRepository
             .findAllByTask(task)
-            .map { TaskAttachmentDTO.fromEntity(it) }
+            .map { TaskMapper.toAttachmentDto(it) }
     }
 
     @Transactional

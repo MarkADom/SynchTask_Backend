@@ -18,3 +18,11 @@ naming:
 comments:
   UndocumentedPublicClass:
     active: false
+
+complexity:
+  LongParameterList:
+    active: true
+    functionThreshold: 7
+    constructorThreshold: 12
+    ignoreDefaultParameters: true
+    excludes: ['**/domain/entity/**']

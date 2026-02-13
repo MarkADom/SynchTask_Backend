@@ -2,6 +2,7 @@ package com.synchtask.activity.presentation.controller
 
 import com.synchtask.activity.application.dto.ActivityResponseDTO
 import com.synchtask.activity.application.service.ActivityService
+import com.synchtask.activity.presentation.mapper.ActivityMapper
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.application.service.UserService
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -26,6 +27,6 @@ class ActivityController(
 
         return activityService
             .getActivitiesForUser(userEntity)
-            .map { ActivityResponseDTO.fromEntity(it) }
+            .map { ActivityMapper.toResponse(it) }
     }
 }
