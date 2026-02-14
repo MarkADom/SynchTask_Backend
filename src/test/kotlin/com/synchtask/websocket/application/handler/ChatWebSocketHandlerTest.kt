@@ -10,7 +10,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate
 import java.time.LocalDateTime
 
 class ChatWebSocketHandlerTest {
-
     private lateinit var chatService: ChatWebSocketService
     private lateinit var simpMessagingTemplate: SimpMessagingTemplate
     private lateinit var handler: ChatWebSocketHandler
@@ -24,12 +23,13 @@ class ChatWebSocketHandlerTest {
 
     @Test
     fun `should process and broadcast valid encrypted message`() {
-        val dto = WebSocketMessageDTO(
-            chatRoomId = 42L,
-            senderEmail = "user@example.com",
-            encryptedMessage = "EncryptedPayload",
-            timestamp = LocalDateTime.now()
-        )
+        val dto =
+            WebSocketMessageDTO(
+                chatRoomId = 42L,
+                senderEmail = "user@example.com",
+                encryptedMessage = "EncryptedPayload",
+                timestamp = LocalDateTime.now()
+            )
 
         handler.handleMessage(dto)
 
@@ -41,12 +41,13 @@ class ChatWebSocketHandlerTest {
 
     @Test
     fun `should ignore message when encrypted message is blank`() {
-        val dto = WebSocketMessageDTO(
-            chatRoomId = 42L,
-            senderEmail = "user@example.com",
-            encryptedMessage = "   ",
-            timestamp = LocalDateTime.now()
-        )
+        val dto =
+            WebSocketMessageDTO(
+                chatRoomId = 42L,
+                senderEmail = "user@example.com",
+                encryptedMessage = "   ",
+                timestamp = LocalDateTime.now()
+            )
 
         handler.handleMessage(dto)
 
@@ -60,7 +61,4 @@ class ChatWebSocketHandlerTest {
             simpMessagingTemplate.convertAndSend(any<String>(), any(), any(), any())
         }
     }
-
-
-
 }

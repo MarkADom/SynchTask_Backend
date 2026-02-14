@@ -16,22 +16,21 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 @OpenAPIDefinition(
-    info = Info(
+    info =
+    Info(
         title = "SynchTask API",
         version = "1.0",
-        description = "API Documentation for SynchTask"),
+        description = "API Documentation for SynchTask"
+    ),
     security = [SecurityRequirement(name = "BearerAuth")]
 )
-
 @SecurityScheme(
     name = "BearerAuth",
     type = SecuritySchemeType.HTTP,
     scheme = "bearer",
     bearerFormat = "JWT"
 )
-
 class SwaggerConfig {
-
     @Bean
     fun publicApi(): GroupedOpenApi {
         return GroupedOpenApi.builder()
@@ -40,4 +39,3 @@ class SwaggerConfig {
             .build()
     }
 }
-

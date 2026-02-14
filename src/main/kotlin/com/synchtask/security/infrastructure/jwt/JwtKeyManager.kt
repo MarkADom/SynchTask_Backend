@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicReference
  */
 @Component
 class JwtKeyManager {
-
     private val logger = LoggerFactory.getLogger(JwtKeyManager::class.java)
 
     private val keyPairRef = AtomicReference(loadKeyPair())
@@ -56,10 +55,11 @@ class JwtKeyManager {
     }
 
     private fun pemToDer(pemBytes: ByteArray): ByteArray {
-        val pemString = String(pemBytes)
-            .replace(Regex("-----BEGIN (.*?)-----"), "")
-            .replace(Regex("-----END (.*?)-----"), "")
-            .replace(Regex("\\s+"), "")
+        val pemString =
+            String(pemBytes)
+                .replace(Regex("-----BEGIN (.*?)-----"), "")
+                .replace(Regex("-----END (.*?)-----"), "")
+                .replace(Regex("\\s+"), "")
         return Base64.getDecoder().decode(pemString)
     }
 
@@ -79,21 +79,25 @@ class JwtKeyManager {
         val publicKey = getPublicKey() as RSAPublicKey
 
         val modulusBase64Url = Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey.modulus.toByteArray())
-        val exponentBase64Url = Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey.publicExponent.toByteArray())
+        val exponentBase64Url =
+            Base64.getUrlEncoder().withoutPadding().encodeToString(
+                publicKey.publicExponent.toByteArray()
+            )
 
         val kid = generateKid(publicKey)
 
         return mapOf(
-            "keys" to listOf(
-                mapOf(
-                    "kty" to "RSA",
-                    "alg" to "RS256",
-                    "use" to "sig",
-                    "n" to modulusBase64Url,
-                    "e" to exponentBase64Url,
-                    "kid" to kid
+            "keys" to
+                listOf(
+                    mapOf(
+                        "kty" to "RSA",
+                        "alg" to "RS256",
+                        "use" to "sig",
+                        "n" to modulusBase64Url,
+                        "e" to exponentBase64Url,
+                        "kid" to kid
+                    )
                 )
-            )
         )
     }
 

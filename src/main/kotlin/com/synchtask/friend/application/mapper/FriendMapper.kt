@@ -8,13 +8,14 @@ import com.synchtask.user.domain.repository.UserRepository
 class FriendMapper(
     private val userRepository: UserRepository
 ) {
-
     fun toResponse(friend: Friend, currentUserId: Long): FriendResponseDTO {
-        val requester = userRepository.findById(friend.requesterId)
-            .orElseThrow { ResourceNotFoundException("User not found: ${friend.requesterId}") }
+        val requester =
+            userRepository.findById(friend.requesterId)
+                .orElseThrow { ResourceNotFoundException("User not found: ${friend.requesterId}") }
 
-        val friendUser = userRepository.findById(friend.friendId)
-            .orElseThrow { ResourceNotFoundException("User not found: ${friend.friendId}") }
+        val friendUser =
+            userRepository.findById(friend.friendId)
+                .orElseThrow { ResourceNotFoundException("User not found: ${friend.friendId}") }
 
         val isIncoming = friend.friendId == currentUserId
 

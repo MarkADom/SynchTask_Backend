@@ -14,7 +14,6 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent
 import java.security.Principal
 
 class WebSocketEventListenerTest {
-
     private lateinit var userService: UserService
     private lateinit var reconnectionHandler: WebSocketReconnectionHandler
     private lateinit var listener: WebSocketEventListener
@@ -30,9 +29,10 @@ class WebSocketEventListenerTest {
     fun `should mark user as online on WebSocket connect`() {
         val principal = Principal { "user@example.com" }
 
-        val message = MessageBuilder.withPayload(ByteArray(0))
-            .setHeader("simpUser", principal)
-            .build()
+        val message =
+            MessageBuilder.withPayload(ByteArray(0))
+                .setHeader("simpUser", principal)
+                .build()
 
         val event = SessionConnectedEvent(this, message)
 
@@ -49,9 +49,10 @@ class WebSocketEventListenerTest {
     fun `should mark user as offline and handle reconnect if needed`() {
         val principal = Principal { "user@example.com" }
 
-        val message = MessageBuilder.withPayload(ByteArray(0))
-            .setHeader("simpUser", principal)
-            .build()
+        val message =
+            MessageBuilder.withPayload(ByteArray(0))
+                .setHeader("simpUser", principal)
+                .build()
 
         val event = SessionDisconnectEvent(this, message, "sess-123", CloseStatus.NORMAL)
 
@@ -71,9 +72,10 @@ class WebSocketEventListenerTest {
     fun `should not trigger reconnect if shouldAttemptReconnection returns false`() {
         val principal = Principal { "user@example.com" }
 
-        val message = MessageBuilder.withPayload(ByteArray(0))
-            .setHeader("simpUser", principal)
-            .build()
+        val message =
+            MessageBuilder.withPayload(ByteArray(0))
+                .setHeader("simpUser", principal)
+                .build()
 
         val event = SessionDisconnectEvent(this, message, "sess-123", CloseStatus.NORMAL)
 

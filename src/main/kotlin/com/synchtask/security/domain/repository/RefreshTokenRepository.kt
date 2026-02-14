@@ -12,7 +12,6 @@ import java.util.*
 
 @Repository
 interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {
-
     fun findByToken(token: String): Optional<RefreshToken>
 
     @EntityGraph(attributePaths = ["com/synchtask/user"])

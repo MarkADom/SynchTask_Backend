@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service
 class FriendshipCheckerImpl(
     private val friendRepository: FriendRepository
 ) : FriendshipChecker {
-
     override fun areFriends(userId: Long, otherUserId: Long): Boolean {
         return friendRepository.existsFriendshipBetween(userId, otherUserId)
     }

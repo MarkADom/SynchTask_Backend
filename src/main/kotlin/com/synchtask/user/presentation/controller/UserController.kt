@@ -2,7 +2,6 @@ package com.synchtask.user.presentation.controller
 
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
-import com.synchtask.user.presentation.mapper.UserMapper
 import com.synchtask.user.application.dto.UpdateUserDTO
 import com.synchtask.user.application.dto.UserOptionDTO
 import com.synchtask.user.application.dto.UserPublicDTO
@@ -12,6 +11,7 @@ import com.synchtask.user.application.dto.UserStatusDTO
 import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.user.presentation.mapper.UserCommandMapper
+import com.synchtask.user.presentation.mapper.UserMapper
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -46,19 +46,19 @@ class UserController(
     private val userService: UserService,
     private val authenticatedUserService: AuthenticatedUserService,
     private val passwordEncoder: BCryptPasswordEncoder,
-
-    ) {
+) {
     private val logger = LoggerFactory.getLogger(UserController::class.java)
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     fun createUser(@RequestBody userRegistrationDTO: UserRegistrationDTO): ResponseEntity<UserResponseDTO> {
-        val newUser = userService.createUser(
-            UserCommandMapper.toNewUser(
-                dto = userRegistrationDTO,
-                passwordEncoder = passwordEncoder
+        val newUser =
+            userService.createUser(
+                UserCommandMapper.toNewUser(
+                    dto = userRegistrationDTO,
+                    passwordEncoder = passwordEncoder
+                )
             )
-        )
         logger.info("User created successfully: ${newUser.email}")
         return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toResponseDTO(newUser))
     }
@@ -66,8 +66,9 @@ class UserController(
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id == authentication.principal.id")
     fun getUser(@PathVariable id: Long): ResponseEntity<UserResponseDTO> {
-        val user = userService.getUserById(id)
-            ?: throw ResourceNotFoundException("User not found with ID: $id")
+        val user =
+            userService.getUserById(id)
+                ?: throw ResourceNotFoundException("User not found with ID: $id")
         return ResponseEntity.ok(UserMapper.toResponseDTO(user))
     }
 
@@ -107,7 +108,7 @@ class UserController(
                     userService.updateUser(id, UserCommandMapper.toUpdatedUser(updateUserDTO, existingUser))
                         ?: return handleUserNotFound(id, userEmail)
 
-                logger.info("User updated successfully: id=$id by admin=${userEmail}")
+                logger.info("User updated successfully: id=$id by admin=$userEmail")
                 ResponseEntity.ok(UserMapper.toResponseDTO(updatedUser))
             }
         }
@@ -115,13 +116,11 @@ class UserController(
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id == authentication.principal.id")
-    fun deleteUser(
-        @PathVariable id: Long,
-        @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<Void> {
+    fun deleteUser(@PathVariable id: Long, @AuthenticationPrincipal user: UserDetails,): ResponseEntity<Void> {
         val userEmail = authenticatedUserService.requireUser(user).email
-        val userToDelete = userService.getUserById(id)
-            ?: throw ResourceNotFoundException("User not found with ID: $id")
+        val userToDelete =
+            userService.getUserById(id)
+                ?: throw ResourceNotFoundException("User not found with ID: $id")
 
         if (!userService.isAuthorized(userEmail, userToDelete.email)) {
             logger.warn("Unauthorized delete attempt by $userEmail on user ${userToDelete.email}")
@@ -184,9 +183,11 @@ class UserController(
         @RequestParam file: MultipartFile,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<Map<String, String>> {
-        val updatedUser = userService.updateProfilePicture(
-            authenticatedUserService.requireUser(user).email, file
-        )
+        val updatedUser =
+            userService.updateProfilePicture(
+                authenticatedUserService.requireUser(user).email,
+                file
+            )
         return ResponseEntity.ok(
             mapOf(
                 "profilePictureUrl" to updatedUser.profilePictureUrl.orEmpty()

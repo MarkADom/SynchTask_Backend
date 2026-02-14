@@ -10,7 +10,6 @@ class ActivityNotificationService(
     private val notificationPolicies: List<NotificationPolicy>,
     private val notificationService: NotificationService,
 ) {
-
     fun handle(activity: Activity, contextSnapshot: ActivityContextSnapshot? = null) {
         notificationPolicies
             .filter { it.supports(activity) }

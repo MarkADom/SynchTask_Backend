@@ -1,13 +1,13 @@
 package com.synchtask.task.presentation.controller
 
-import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.shared.exception.UnauthorizedAccessException
-import com.synchtask.task.application.service.TaskService
 import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskLabelUpdateDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
+import com.synchtask.task.application.service.TaskService
+import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.application.service.AuthenticatedUserService
 import org.springframework.data.domain.Page
@@ -31,12 +31,8 @@ class TaskController(
     private val taskService: TaskService,
     private val authenticatedUserService: AuthenticatedUserService,
 ) {
-
     @PostMapping
-    fun createTask(
-        @RequestBody request: TaskCreateDTO,
-        @AuthenticationPrincipal user: UserDetails,
-    ): TaskResponseDTO {
+    fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
         val creator = authenticatedUserService.requireUser(user)
         val created = taskService.createTask(creator, request)
         return TaskMapper.toResponse(created)
@@ -54,24 +50,22 @@ class TaskController(
         @PageableDefault(size = 20, sort = ["createdAt"]) pageable: Pageable,
     ): Page<TaskResponseDTO> {
         val userEntity = authenticatedUserService.requireUser(user)
-        val tasks = taskService.getTasksWithFilters(
-            user = userEntity,
-            status = status,
-            label = label,
-            assigneeId = assigneeId,
-            boardId = boardId,
-            pageable = pageable
-        )
+        val tasks =
+            taskService.getTasksWithFilters(
+                user = userEntity,
+                status = status,
+                label = label,
+                assigneeId = assigneeId,
+                boardId = boardId,
+                pageable = pageable
+            )
 
         return tasks.map { TaskMapper.toResponse(it) }
     }
 
     @GetMapping("/{taskId}")
     @Transactional(readOnly = true)
-    fun getTaskDetail(
-        @PathVariable taskId: Long,
-        @AuthenticationPrincipal user: UserDetails,
-    ): TaskResponseDTO {
+    fun getTaskDetail(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
         val task = taskService.findTaskById(taskId)
         val userEntity = authenticatedUserService.requireUser(user)
 
@@ -115,10 +109,7 @@ class TaskController(
 
     @DeleteMapping("/{taskId}")
     @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
-    fun deleteTask(
-        @PathVariable taskId: Long,
-        @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<String> {
+    fun deleteTask(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): ResponseEntity<String> {
         val userEntity = authenticatedUserService.requireUser(user)
 
         taskService.deleteTask(taskId, userEntity)
@@ -162,6 +153,4 @@ class TaskController(
         taskService.updateTaskAssignees(taskId, request.userIds, userEntity)
         return ResponseEntity.ok("Assignees updated successfully")
     }
-
 }
-

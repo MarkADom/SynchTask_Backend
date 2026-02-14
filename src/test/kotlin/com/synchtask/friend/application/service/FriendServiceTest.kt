@@ -17,27 +17,28 @@ import org.junit.jupiter.api.assertThrows
 import java.util.Optional
 
 class FriendServiceTest {
-
     private lateinit var friendRepository: FriendRepository
     private lateinit var userRepository: UserRepository
     private lateinit var notificationService: NotificationService
     private lateinit var service: FriendService
 
-    private val alice = User(
-        id = 1L,
-        name = "Alice",
-        email = "alice@example.com",
-        passwordHash = "123",
-        role = UserRole.USER
-    )
+    private val alice =
+        User(
+            id = 1L,
+            name = "Alice",
+            email = "alice@example.com",
+            passwordHash = "123",
+            role = UserRole.USER
+        )
 
-    private val bob = User(
-        id = 2L,
-        name = "Bob",
-        email = "bob@example.com",
-        passwordHash = "456",
-        role = UserRole.USER
-    )
+    private val bob =
+        User(
+            id = 2L,
+            name = "Bob",
+            email = "bob@example.com",
+            passwordHash = "456",
+            role = UserRole.USER
+        )
 
     @BeforeEach
     fun setUp() {
@@ -52,12 +53,13 @@ class FriendServiceTest {
         every { userRepository.findByEmail(alice.email) } returns Optional.of(alice)
         every { userRepository.findByEmail(bob.email) } returns Optional.of(bob)
         every { friendRepository.findByRequesterIdAndFriendId(any(), any()) } returns null
-        every { friendRepository.save(any()) } returns Friend(
-            id = 10L,
-            requesterId = alice.id!!,
-            friendId = bob.id!!,
-            status = FriendshipStatus.PENDING
-        )
+        every { friendRepository.save(any()) } returns
+            Friend(
+                id = 10L,
+                requesterId = alice.id!!,
+                friendId = bob.id!!,
+                status = FriendshipStatus.PENDING
+            )
 
         val result = service.sendFriendRequest(alice.email, bob.email)
 
@@ -72,7 +74,9 @@ class FriendServiceTest {
     fun `should throw if friend request already exists in direct direction`() {
         every { userRepository.findByEmail(alice.email) } returns Optional.of(alice)
         every { userRepository.findByEmail(bob.email) } returns Optional.of(bob)
-        every { friendRepository.findByRequesterIdAndFriendId(alice.id!!, bob.id!!) } returns Friend(requesterId = alice.id!!, friendId = bob.id!!)
+        every {
+            friendRepository.findByRequesterIdAndFriendId(alice.id!!, bob.id!!)
+        } returns Friend(requesterId = alice.id!!, friendId = bob.id!!)
 
         assertThrows<FriendRequestAlreadySentException> {
             service.sendFriendRequest(alice.email, bob.email)
@@ -84,7 +88,9 @@ class FriendServiceTest {
         every { userRepository.findByEmail(alice.email) } returns Optional.of(alice)
         every { userRepository.findByEmail(bob.email) } returns Optional.of(bob)
         every { friendRepository.findByRequesterIdAndFriendId(alice.id!!, bob.id!!) } returns null
-        every { friendRepository.findByRequesterIdAndFriendId(bob.id!!, alice.id!!) } returns Friend(requesterId = bob.id!!, friendId = alice.id!!)
+        every {
+            friendRepository.findByRequesterIdAndFriendId(bob.id!!, alice.id!!)
+        } returns Friend(requesterId = bob.id!!, friendId = alice.id!!)
 
         assertThrows<FriendRequestAlreadySentException> {
             service.sendFriendRequest(alice.email, bob.email)
@@ -93,12 +99,13 @@ class FriendServiceTest {
 
     @Test
     fun `should accept friend request`() {
-        val request = Friend(
-            id = 1L,
-            requesterId = alice.id!!,
-            friendId = bob.id!!,
-            status = FriendshipStatus.PENDING
-        )
+        val request =
+            Friend(
+                id = 1L,
+                requesterId = alice.id!!,
+                friendId = bob.id!!,
+                status = FriendshipStatus.PENDING
+            )
 
         every { userRepository.findByEmail(bob.email) } returns Optional.of(bob)
         every { friendRepository.findById(1L) } returns Optional.of(request)
@@ -136,16 +143,17 @@ class FriendServiceTest {
 
     @Test
     fun `should list all friend relations`() {
-        val friendship = Friend(
-            id= 99L,
-            requesterId = alice.id!!,
-            friendId = bob.id!!,
-            status = FriendshipStatus.ACCEPTED
-        )
+        val friendship =
+            Friend(
+                id = 99L,
+                requesterId = alice.id!!,
+                friendId = bob.id!!,
+                status = FriendshipStatus.ACCEPTED
+            )
 
         every { userRepository.findByEmail(alice.email) } returns Optional.of(alice)
         every { friendRepository.findAllByRequesterIdOrFriendId(alice.id!!, alice.id!!) } returns listOf(friendship)
-        every { userRepository.findById(alice.id!!)} returns Optional.of(alice)
+        every { userRepository.findById(alice.id!!) } returns Optional.of(alice)
         every { userRepository.findById(bob.id!!) } returns Optional.of(bob)
 
         val result = service.listFriends(alice.email)

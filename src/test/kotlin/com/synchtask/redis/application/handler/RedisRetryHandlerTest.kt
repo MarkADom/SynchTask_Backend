@@ -13,7 +13,6 @@ import org.springframework.data.redis.core.StringRedisTemplate
 import java.util.concurrent.ScheduledExecutorService
 
 class RedisRetryHandlerTest {
-
     private lateinit var redisTemplate: StringRedisTemplate
     private lateinit var scheduler: ScheduledExecutorService
     private lateinit var handler: RedisRetryHandler

@@ -7,7 +7,6 @@ import com.synchtask.board.application.dto.BoardSimpleDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.board.application.service.BoardService
 import com.synchtask.user.application.service.AuthenticatedUserService
-import com.synchtask.user.application.service.UserService
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.*
 @SecurityRequirement(name = "BearerAuth")
 class BoardController(
     private val boardService: BoardService,
-    private val userService: UserService,
     private val authenticatedUserService: AuthenticatedUserService,
 ) {
     @PostMapping
@@ -42,9 +40,7 @@ class BoardController(
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    fun getBoards(
-        @AuthenticationPrincipal user: UserDetails
-    ): ResponseEntity<List<BoardResponseDTO>> {
+    fun getBoards(@AuthenticationPrincipal user: UserDetails): ResponseEntity<List<BoardResponseDTO>> {
         val actor = authenticatedUserService.requireUser(user)
 
         val boards = boardService.getBoardsForUser(actor)
@@ -53,11 +49,7 @@ class BoardController(
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    fun getBoard(
-        @PathVariable id: Long,
-        @AuthenticationPrincipal user: UserDetails
-    ): ResponseEntity<BoardResponseDTO> {
-
+    fun getBoard(@PathVariable id: Long, @AuthenticationPrincipal user: UserDetails): ResponseEntity<BoardResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
 
         val board = boardService.getBoardAccessibleByUser(id, actor)
@@ -71,7 +63,6 @@ class BoardController(
         @RequestBody request: BoardUpdateDTO,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<BoardResponseDTO> {
-
         val actor = authenticatedUserService.requireUser(user)
 
         val updated = boardService.updateBoard(id, request, actor)
@@ -80,11 +71,7 @@ class BoardController(
 
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    fun deleteBoard(
-        @PathVariable id: Long,
-        @AuthenticationPrincipal user: UserDetails
-    ): ResponseEntity<String> {
-
+    fun deleteBoard(@PathVariable id: Long, @AuthenticationPrincipal user: UserDetails): ResponseEntity<String> {
         val actor = authenticatedUserService.requireUser(user)
 
         boardService.deleteBoard(id, actor)
@@ -93,10 +80,7 @@ class BoardController(
 
     @GetMapping("/shared")
     @PreAuthorize("isAuthenticated()")
-    fun getSharedBoards(
-        @AuthenticationPrincipal user: UserDetails
-    ): List<BoardResponseDTO> {
-
+    fun getSharedBoards(@AuthenticationPrincipal user: UserDetails): List<BoardResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
 
         return boardService.getBoardsSharedWithUser(actor)
@@ -109,7 +93,6 @@ class BoardController(
         @RequestBody dto: BoardCollaboratorUpdateDTO,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<BoardResponseDTO> {
-
         val actor = authenticatedUserService.requireUser(user)
 
         val updated = boardService.updateCollaborators(id, dto, actor)

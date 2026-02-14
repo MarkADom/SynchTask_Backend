@@ -21,7 +21,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class UserControllerTest {
-
     private lateinit var userService: UserService
     private lateinit var passwordEncoder: BCryptPasswordEncoder
     private lateinit var friendService: FriendService
@@ -43,13 +42,14 @@ class UserControllerTest {
         val dto = UserRegistrationDTO("John", "john@email.com", "password", null)
         val encoded = "encoded"
 
-        val createdUser = User(
-            id = 1L,
-            name = "John",
-            email = dto.email,
-            passwordHash = encoded,
-            role = UserRole.USER
-        )
+        val createdUser =
+            User(
+                id = 1L,
+                name = "John",
+                email = dto.email,
+                passwordHash = encoded,
+                role = UserRole.USER
+            )
 
         every { passwordEncoder.encode(dto.password) } returns encoded
         every { userService.createUser(any()) } returns createdUser
@@ -62,13 +62,14 @@ class UserControllerTest {
 
     @Test
     fun `should get user by id`() {
-        val user = User(
-            id = 42L,
-            name = "Alice",
-            email = "alice@email.com",
-            passwordHash = "pw",
-            role = UserRole.USER
-        )
+        val user =
+            User(
+                id = 42L,
+                name = "Alice",
+                email = "alice@email.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
 
         every { userService.getUserById(42L) } returns user
 
@@ -82,19 +83,21 @@ class UserControllerTest {
     fun `should throw 404 if user not found`() {
         every { userService.getUserById(99L) } returns null
 
-        val ex = assertFailsWith<ResourceNotFoundException> {
-            controller.getUser(99L)
-        }
+        val ex =
+            assertFailsWith<ResourceNotFoundException> {
+                controller.getUser(99L)
+            }
 
         assertEquals("User not found with ID: 99", ex.message)
     }
 
     @Test
     fun `should get all users`() {
-        val users = listOf(
-            UserResponseDTO(1L, "User1", "u1@email.com", null),
-            UserResponseDTO(2L, "User2", "u2@email.com", null)
-        )
+        val users =
+            listOf(
+                UserResponseDTO(1L, "User1", "u1@email.com", null),
+                UserResponseDTO(2L, "User2", "u2@email.com", null)
+            )
 
         every { userService.getAllUsers() } returns users
 
@@ -109,38 +112,41 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("admin@email.com", "pw", emptyList())
 
-        val existing = User(
-            id = 1L,
-            name = "Old",
-            email = "old@email.com",
-            passwordHash = "pw",
-            role = UserRole.USER
-        )
+        val existing =
+            User(
+                id = 1L,
+                name = "Old",
+                email = "old@email.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
 
-        val updated = User(
-            id = existing.id,
-            name = "New",
-            email = "new@email.com",
-            passwordHash = existing.passwordHash,
-            profilePictureUrl = existing.profilePictureUrl,
-            role = existing.role,
-            createdAt = existing.createdAt,
-            lastLogin = existing.lastLogin,
-            lastActivity = existing.lastActivity,
-            isActive = existing.isActive,
-            isOnline = existing.isOnline,
-            onboardingNotified = existing.onboardingNotified
-        )
+        val updated =
+            User(
+                id = existing.id,
+                name = "New",
+                email = "new@email.com",
+                passwordHash = existing.passwordHash,
+                profilePictureUrl = existing.profilePictureUrl,
+                role = existing.role,
+                createdAt = existing.createdAt,
+                lastLogin = existing.lastLogin,
+                lastActivity = existing.lastActivity,
+                isActive = existing.isActive,
+                isOnline = existing.isOnline,
+                onboardingNotified = existing.onboardingNotified
+            )
 
         every { userService.getUserById(1L) } returns existing
         every { userService.isAuthorized(authUser.username, existing.email) } returns true
         every { userService.updateUser(1L, any()) } returns updated
 
-        val response = controller.updateUser(
-            1L,
-            UpdateUserDTO("New", "new@email.com", null, null),
-            authUser
-        )
+        val response =
+            controller.updateUser(
+                1L,
+                UpdateUserDTO("New", "new@email.com", null, null),
+                authUser
+            )
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals("new@email.com", response.body!!.email)
@@ -151,21 +157,23 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("attacker@email.com", "pw", emptyList())
 
-        val existing = User(
-            id = 1L,
-            name = "User",
-            email = "user@email.com",
-            passwordHash = "pw"
-        )
+        val existing =
+            User(
+                id = 1L,
+                name = "User",
+                email = "user@email.com",
+                passwordHash = "pw"
+            )
 
         every { userService.getUserById(1L) } returns existing
         every { userService.isAuthorized(authUser.username, existing.email) } returns false
 
-        val response = controller.updateUser(
-            1L,
-            UpdateUserDTO("X", "x@email.com", null, null),
-            authUser
-        )
+        val response =
+            controller.updateUser(
+                1L,
+                UpdateUserDTO("X", "x@email.com", null, null),
+                authUser
+            )
 
         assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
     }
@@ -177,11 +185,12 @@ class UserControllerTest {
 
         every { userService.getUserById(999L) } returns null
 
-        val response = controller.updateUser(
-            999L,
-            UpdateUserDTO("X", "x@email.com", null, null),
-            authUser
-        )
+        val response =
+            controller.updateUser(
+                999L,
+                UpdateUserDTO("X", "x@email.com", null, null),
+                authUser
+            )
 
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
     }
@@ -191,12 +200,13 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("user@email.com", "pw", emptyList())
 
-        val user = User(
-            id = 3L,
-            name = "Del",
-            email = "user@email.com",
-            passwordHash = "pw"
-        )
+        val user =
+            User(
+                id = 3L,
+                name = "Del",
+                email = "user@email.com",
+                passwordHash = "pw"
+            )
 
         every { userService.getUserById(3L) } returns user
         every { userService.isAuthorized(authUser.username, user.email) } returns true
@@ -212,19 +222,21 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("hacker@email.com", "pw", emptyList())
 
-        val user = User(
-            id = 10L,
-            name = "Bob",
-            email = "bob@email.com",
-            passwordHash = "pw"
-        )
+        val user =
+            User(
+                id = 10L,
+                name = "Bob",
+                email = "bob@email.com",
+                passwordHash = "pw"
+            )
 
         every { userService.getUserById(10L) } returns user
         every { userService.isAuthorized(authUser.username, user.email) } returns false
 
-        val ex = assertFailsWith<UnauthorizedAccessException> {
-            controller.deleteUser(10L, authUser)
-        }
+        val ex =
+            assertFailsWith<UnauthorizedAccessException> {
+                controller.deleteUser(10L, authUser)
+            }
 
         assertEquals("Unauthorized to delete this user", ex.message)
     }
@@ -234,35 +246,38 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("me@email.com", "pw", emptyList())
 
-        val existing = User(
-            id = 1L,
-            name = "Old",
-            email = "me@email.com",
-            passwordHash = "pw"
-        )
+        val existing =
+            User(
+                id = 1L,
+                name = "Old",
+                email = "me@email.com",
+                passwordHash = "pw"
+            )
 
-        val updated = User(
-            id = existing.id,
-            name = "New",
-            email = existing.email,
-            passwordHash = existing.passwordHash,
-            profilePictureUrl = existing.profilePictureUrl,
-            role = existing.role,
-            createdAt = existing.createdAt,
-            lastLogin = existing.lastLogin,
-            lastActivity = existing.lastActivity,
-            isActive = existing.isActive,
-            isOnline = existing.isOnline,
-            onboardingNotified = existing.onboardingNotified
-        )
+        val updated =
+            User(
+                id = existing.id,
+                name = "New",
+                email = existing.email,
+                passwordHash = existing.passwordHash,
+                profilePictureUrl = existing.profilePictureUrl,
+                role = existing.role,
+                createdAt = existing.createdAt,
+                lastLogin = existing.lastLogin,
+                lastActivity = existing.lastActivity,
+                isActive = existing.isActive,
+                isOnline = existing.isOnline,
+                onboardingNotified = existing.onboardingNotified
+            )
 
         every { userService.getUserByEmail(authUser.username) } returns existing
         every { userService.updateUser(1L, any()) } returns updated
 
-        val response = controller.updateCurrentUser(
-            UpdateUserDTO("New", "user@email.com", null, null),
-            authUser
-        )
+        val response =
+            controller.updateCurrentUser(
+                UpdateUserDTO("New", "user@email.com", null, null),
+                authUser
+            )
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals("New", response.body!!.name)
@@ -275,19 +290,21 @@ class UserControllerTest {
 
         every { userService.getUserByEmail(authUser.username) } returns null
 
-        val ex = assertFailsWith<ResourceNotFoundException> {
-            controller.updateCurrentUser(UpdateUserDTO("X", "x@email.com", null, null), authUser)
-        }
+        val ex =
+            assertFailsWith<ResourceNotFoundException> {
+                controller.updateCurrentUser(UpdateUserDTO("X", "x@email.com", null, null), authUser)
+            }
 
         assertEquals("Authenticated user not found", ex.message)
     }
 
     @Test
     fun `should get online users`() {
-        val onlineUsers = listOf(
-            UserStatusDTO("a@email.com", "A", now),
-            UserStatusDTO("b@email.com", "B", now)
-        )
+        val onlineUsers =
+            listOf(
+                UserStatusDTO("a@email.com", "A", now),
+                UserStatusDTO("b@email.com", "B", now)
+            )
 
         every { userService.getOnlineUsers() } returns onlineUsers
 
@@ -302,19 +319,21 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("me@email.com", "pw", emptyList())
 
-        val current = User(
-            id = 1L,
-            name = "Me",
-            email = "me@email.com",
-            passwordHash = "pw"
-        )
+        val current =
+            User(
+                id = 1L,
+                name = "Me",
+                email = "me@email.com",
+                passwordHash = "pw"
+            )
 
-        val visibleDto = UserResponseDTO(
-            id = 2L,
-            name = "Friend",
-            email = "friend@email.com",
-            profilePictureUrl = null
-        )
+        val visibleDto =
+            UserResponseDTO(
+                id = 2L,
+                name = "Friend",
+                email = "friend@email.com",
+                profilePictureUrl = null
+            )
 
         every { userService.getUserByEmail(authUser.username) } returns current
         every { userService.getVisibleUsers(current, emptyList()) } returns listOf(visibleDto)
@@ -331,12 +350,13 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("me@email.com", "pw", emptyList())
 
-        val existing = User(
-            id = 1L,
-            name = "Me",
-            email = "me@email.com",
-            passwordHash = "pw"
-        )
+        val existing =
+            User(
+                id = 1L,
+                name = "Me",
+                email = "me@email.com",
+                passwordHash = "pw"
+            )
 
         every { userService.getUserByEmail(authUser.username) } returns existing
 
@@ -353,9 +373,10 @@ class UserControllerTest {
 
         every { userService.getUserByEmail(authUser.username) } returns null
 
-        val ex = assertFailsWith<ResourceNotFoundException> {
-            controller.getCurrentUser(authUser)
-        }
+        val ex =
+            assertFailsWith<ResourceNotFoundException> {
+                controller.getCurrentUser(authUser)
+            }
 
         assertEquals("Authenticated user not found", ex.message)
     }
@@ -363,25 +384,26 @@ class UserControllerTest {
     @Test
     fun `should return paged public users`() {
         val pageable = PageRequest.of(0, 10)
-        val users = listOf(
-            User(
-                id = 1L,
-                name = "Public One",
-                email = "public1@email.com",
-                passwordHash = "pw",
-                isOnline = true
-            ),
-            User(
-                id = 2L,
-                name = "Public Two",
-                email = "public2@email.com",
-                passwordHash = "pw",
-                isOnline = true
+        val users =
+            listOf(
+                User(
+                    id = 1L,
+                    name = "Public One",
+                    email = "public1@email.com",
+                    passwordHash = "pw",
+                    isOnline = true
+                ),
+                User(
+                    id = 2L,
+                    name = "Public Two",
+                    email = "public2@email.com",
+                    passwordHash = "pw",
+                    isOnline = true
+                )
             )
-        )
 
         every { userService.findPublicUsers("Pub", true, pageable) } returns
-                PageImpl(users, pageable, users.size.toLong())
+            PageImpl(users, pageable, users.size.toLong())
 
         val response = controller.getPublicUsers("Pub", true, pageable)
 
@@ -396,13 +418,14 @@ class UserControllerTest {
             org.springframework.security.core.userdetails.User("me@email.com", "pw", emptyList())
         val file = mockk<MultipartFile>()
 
-        val updatedUser = User(
-            id = 1L,
-            name = "Me",
-            email = "me@email.com",
-            passwordHash = "pw",
-            profilePictureUrl = "https://cdn/img.png"
-        )
+        val updatedUser =
+            User(
+                id = 1L,
+                name = "Me",
+                email = "me@email.com",
+                passwordHash = "pw",
+                profilePictureUrl = "https://cdn/img.png"
+            )
 
         every { userService.updateProfilePicture(authUser.username, file) } returns updatedUser
 
@@ -414,20 +437,21 @@ class UserControllerTest {
 
     @Test
     fun `should get assignable users`() {
-        val users = listOf(
-            User(
-                id = 1L,
-                name = "A",
-                email = "a@email.com",
-                passwordHash = "pw"
-            ),
-            User(
-                id = 2L,
-                name = "B",
-                email = "b@email.com",
-                passwordHash = "pw"
+        val users =
+            listOf(
+                User(
+                    id = 1L,
+                    name = "A",
+                    email = "a@email.com",
+                    passwordHash = "pw"
+                ),
+                User(
+                    id = 2L,
+                    name = "B",
+                    email = "b@email.com",
+                    passwordHash = "pw"
+                )
             )
-        )
 
         every { userService.getAssignableUsers() } returns users
 

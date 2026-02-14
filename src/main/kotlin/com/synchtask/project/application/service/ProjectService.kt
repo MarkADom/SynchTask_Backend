@@ -23,20 +23,20 @@ class ProjectService(
     private val boardRepository: BoardRepository,
     private val activityService: ActivityService,
 ) {
-
     @Transactional
     fun create(dto: ProjectCreateDTO, owner: User): ProjectResponseDTO {
         val boards = boardRepository.findAllWithCollaboratorsById(dto.boardIds)
         validateBoardsExist(dto.boardIds, boards)
 
-        val project = Project(
-            name = dto.name,
-            description = dto.description,
-            tag = dto.tag ?: "",
-            color = dto.color ?: "#60A5FA",
-            owner = owner,
-            dueDate = dto.dueDate ?: LocalDate.now()
-        )
+        val project =
+            Project(
+                name = dto.name,
+                description = dto.description,
+                tag = dto.tag ?: "",
+                color = dto.color ?: "#60A5FA",
+                owner = owner,
+                dueDate = dto.dueDate ?: LocalDate.now()
+            )
 
         val savedProject = projectRepository.save(project)
 
@@ -56,22 +56,21 @@ class ProjectService(
     }
 
     @Transactional(readOnly = true)
-    fun listAll(owner: User): List<ProjectResponseDTO> =
-        projectRepository.findAllByOwner(owner)
-            .map(ProjectMapper::toResponse)
+    fun listAll(owner: User): List<ProjectResponseDTO> = projectRepository.findAllByOwner(owner)
+        .map(ProjectMapper::toResponse)
 
     @Transactional(readOnly = true)
-    fun getById(id: Long, owner: User): ProjectResponseDTO =
-        projectRepository.findById(id)
-            .filter { it.owner.id == owner.id }
-            .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
-            .let(ProjectMapper::toResponse)
+    fun getById(id: Long, owner: User): ProjectResponseDTO = projectRepository.findById(id)
+        .filter { it.owner.id == owner.id }
+        .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
+        .let(ProjectMapper::toResponse)
 
     @Transactional
     fun update(id: Long, dto: ProjectUpdateDTO, owner: User): ProjectResponseDTO {
-        val project = projectRepository.findById(id)
-            .filter { it.owner.id == owner.id }
-            .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
+        val project =
+            projectRepository.findById(id)
+                .filter { it.owner.id == owner.id }
+                .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
 
         var boardsUpdated = false
 
@@ -114,14 +113,16 @@ class ProjectService(
 
     @Transactional
     fun delete(id: Long, owner: User) {
-        val project = projectRepository.findById(id)
-            .filter { it.owner.id == owner.id }
-            .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
+        val project =
+            projectRepository.findById(id)
+                .filter { it.owner.id == owner.id }
+                .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
 
-        val snapshot = ActivityContextSnapshot(
-            ownerEmail = project.owner.email,
-            memberEmails = project.members.map { it.email }.toSet()
-        )
+        val snapshot =
+            ActivityContextSnapshot(
+                ownerEmail = project.owner.email,
+                memberEmails = project.members.map { it.email }.toSet()
+            )
 
         projectRepository.delete(project)
 
@@ -133,7 +134,6 @@ class ProjectService(
             contextSnapshot = snapshot
         )
     }
-
 
     private fun validateBoardsExist(expectedIds: List<Long>, actualBoards: List<Board>) {
         if (actualBoards.size != expectedIds.size) {

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test
  * Unit test for OpenID Connect discovery endpoint.
  */
 class OpenIdConfigurationControllerTest {
-
     private val controller = OpenIdConfigurationController()
 
     @Test

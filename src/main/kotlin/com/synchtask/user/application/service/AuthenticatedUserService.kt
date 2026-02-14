@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service
 class AuthenticatedUserService(
     private val userService: UserService
 ) {
-    fun requireUser(principal: UserDetails): User =
-        userService.getUserByEmail(principal.username)
-            ?: throw ResourceNotFoundException("Authenticated user not found: ${principal.username}")
+    fun requireUser(principal: UserDetails): User = userService.getUserByEmail(principal.username)
+        ?: throw ResourceNotFoundException("Authenticated user not found: ${principal.username}")
 }

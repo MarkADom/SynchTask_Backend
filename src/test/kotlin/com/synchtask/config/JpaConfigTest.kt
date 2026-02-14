@@ -8,7 +8,6 @@ import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.transaction.PlatformTransactionManager
 
 class JpaConfigTest {
-
     private val jpaConfig = JpaConfig()
 
     @Test

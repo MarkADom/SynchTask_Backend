@@ -27,7 +27,6 @@ class JwtTokenProvider(
     @Value("\${jwt.issuer}") private val issuer: String,
     @Value("\${jwt.audience}") private val audience: String
 ) {
-
     private val logger = LoggerFactory.getLogger(JwtTokenProvider::class.java)
     private val privateKey: PrivateKey by lazy { jwtKeyManager.getPrivateKey() }
     private val publicKey: PublicKey by lazy { jwtKeyManager.getPublicKey() }
@@ -36,8 +35,9 @@ class JwtTokenProvider(
         val now = Date()
         val expiryDate = Date(now.time + expiration)
 
-        val user = userRepository.findByEmail(userDetails.username)
-            .orElseThrow { IllegalArgumentException("User not found") }
+        val user =
+            userRepository.findByEmail(userDetails.username)
+                .orElseThrow { IllegalArgumentException("User not found") }
 
         return Jwts.builder()
             .subject(user.email)
@@ -55,11 +55,12 @@ class JwtTokenProvider(
             val claims = parseToken(token).payload
             val username = claims.subject ?: return null
 
-            val userDetails = runCatching { userDetailsService.loadUserByUsername(username) }
-                .getOrElse {
-                    logger.warn("Failed to load user from JWT: ${it.message}")
-                    return null
-                }
+            val userDetails =
+                runCatching { userDetailsService.loadUserByUsername(username) }
+                    .getOrElse {
+                        logger.warn("Failed to load user from JWT: ${it.message}")
+                        return null
+                    }
 
             if (userDetails.authorities.isEmpty()) {
                 logger.warn("User has no assigned roles: $username")
@@ -74,9 +75,10 @@ class JwtTokenProvider(
     }
 
     fun extractTokenFromRequest(request: HttpServletRequest): String? {
-        val headerToken = request.getHeader("Authorization")
-            ?.takeIf { it.startsWith(BEARER_PREFIX) }
-            ?.substring(BEARER_PREFIX_LENGTH)
+        val headerToken =
+            request.getHeader("Authorization")
+                ?.takeIf { it.startsWith(BEARER_PREFIX) }
+                ?.substring(BEARER_PREFIX_LENGTH)
 
         69
         // TODO: remove token via query param (or limit only to justified cases)

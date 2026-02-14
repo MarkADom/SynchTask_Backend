@@ -10,7 +10,6 @@ import kotlin.test.assertEquals
  * Verifies that the home endpoint returns the expected static response.
  */
 class HomeControllerTest {
-
     @Test
     fun `should return home page response`() {
         // Arrange

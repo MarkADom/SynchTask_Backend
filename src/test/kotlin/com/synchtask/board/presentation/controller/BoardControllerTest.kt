@@ -17,12 +17,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.security.core.userdetails.User as SpringUser
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
+import org.springframework.security.core.userdetails.User as SpringUser
 
 class BoardControllerTest {
-
     private lateinit var boardService: BoardService
     private lateinit var boardRepository: BoardRepository
     private lateinit var userService: UserService
@@ -38,24 +37,38 @@ class BoardControllerTest {
         userService = mockk(relaxed = true)
         controller = BoardController(boardService, boardRepository, userService)
 
-        userEntity = User(
-            id = 1L,
-            name = "User",
-            email = "user@test.com",
-            passwordHash = "hash",
-            role = UserRole.USER)
+        userEntity =
+            User(
+                id = 1L,
+                name = "User",
+                email = "user@test.com",
+                passwordHash = "hash",
+                role = UserRole.USER
+            )
 
         userDetails = SpringUser(userEntity.email, "hash", emptyList())
         every { userService.getUserByEmail(userEntity.email) } returns userEntity
     }
 
-    private fun newBoard(id: Long = 10L): Board =
-        Board(id = id, name = "Board $id", color = "#fff", description = "Desc", owner = userEntity,
-            collaborators = mutableSetOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+    private fun newBoard(id: Long = 10L): Board = Board(
+        id = id,
+        name = "Board $id",
+        color = "#fff",
+        description = "Desc",
+        owner = userEntity,
+        collaborators = mutableSetOf(),
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now()
+    )
 
     private fun newBoardResponse(id: Long = 10L) = BoardResponseDTO(
-        id = id, name = "Board $id", color = "#fff", description = "Desc",
-        createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), ownerName = userEntity.name
+        id = id,
+        name = "Board $id",
+        color = "#fff",
+        description = "Desc",
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now(),
+        ownerName = userEntity.name
     )
 
     @Test

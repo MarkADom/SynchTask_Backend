@@ -15,7 +15,6 @@ import java.io.PrintWriter
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RateLimitFilterTest {
-
     private lateinit var rateLimitConfig: RateLimitConfig
     private lateinit var environment: Environment
     private lateinit var filter: RateLimitFilter

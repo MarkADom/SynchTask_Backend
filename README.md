@@ -79,6 +79,7 @@ Cross-aggregate access is intentionally avoided at the repository level to prese
 - **API Docs:** OpenAPI 3 / Swagger
 - **Build Tool:** Gradle
 - **Static Analysis:** Detekt
+- **Code Style & Static Analysis** Ktlint
 - **Coverage:** JaCoCo
 - **Quality Gate:** SonarQube
 

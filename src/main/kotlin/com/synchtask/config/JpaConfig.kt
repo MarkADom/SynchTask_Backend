@@ -39,11 +39,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
         "com.synchtask.activity.domain.entity",
     ]
 )
-
-
 @EnableTransactionManagement
 class JpaConfig {
-
     @Bean
     fun transactionManager(entityManagerFactory: EntityManagerFactory): PlatformTransactionManager =
         JpaTransactionManager(entityManagerFactory).apply {

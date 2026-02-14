@@ -23,7 +23,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class NotificationPoliciesTest {
-
     private val actor = User(id = 1L, name = "Actor", email = "actor@test.com", passwordHash = "hash")
     private val owner = User(id = 2L, name = "Owner", email = "owner@test.com", passwordHash = "hash")
     private val collab = User(id = 3L, name = "Collab", email = "collab@test.com", passwordHash = "hash")
@@ -45,10 +44,11 @@ class NotificationPoliciesTest {
         assertEquals(NotificationType.GROUP, policy.notificationType())
         assertEquals("updated", policy.buildMessage(updated))
 
-        val recipientsFromSnapshot = policy.resolveRecipients(
-            deleted,
-            ActivityContextSnapshot(ownerEmail = owner.email, collaboratorEmails = setOf(collab.email, actor.email))
-        )
+        val recipientsFromSnapshot =
+            policy.resolveRecipients(
+                deleted,
+                ActivityContextSnapshot(ownerEmail = owner.email, collaboratorEmails = setOf(collab.email, actor.email))
+            )
         assertEquals(setOf(owner.email, collab.email), recipientsFromSnapshot)
     }
 
@@ -57,21 +57,23 @@ class NotificationPoliciesTest {
         val projectRepository = mockk<ProjectRepository>()
         val policy = ProjectNotificationPolicy(projectRepository)
 
-        val project = Project(
-            id = 7L,
-            name = "Project",
-            owner = owner,
-            dueDate = LocalDate.now(),
-            members = mutableSetOf(collab, actor)
-        )
+        val project =
+            Project(
+                id = 7L,
+                name = "Project",
+                owner = owner,
+                dueDate = LocalDate.now(),
+                members = mutableSetOf(collab, actor)
+            )
 
         val created = Activity(actor = actor, type = ActivityType.PROJECT_CREATED, referenceId = 7L)
-        val updated = Activity(
-            actor = actor,
-            type = ActivityType.PROJECT_UPDATED,
-            referenceId = 7L,
-            description = "project changed"
-        )
+        val updated =
+            Activity(
+                actor = actor,
+                type = ActivityType.PROJECT_UPDATED,
+                referenceId = 7L,
+                description = "project changed"
+            )
         val deleted = Activity(actor = actor, type = ActivityType.PROJECT_DELETED)
 
         every { projectRepository.findById(7L) } returns Optional.of(project)
@@ -83,10 +85,11 @@ class NotificationPoliciesTest {
         assertEquals(NotificationType.GROUP, policy.notificationType())
         assertEquals("project changed", policy.buildMessage(updated))
 
-        val recipientsFromSnapshot = policy.resolveRecipients(
-            deleted,
-            ActivityContextSnapshot(ownerEmail = owner.email, memberEmails = setOf(collab.email, actor.email))
-        )
+        val recipientsFromSnapshot =
+            policy.resolveRecipients(
+                deleted,
+                ActivityContextSnapshot(ownerEmail = owner.email, memberEmails = setOf(collab.email, actor.email))
+            )
         assertEquals(setOf(owner.email, collab.email), recipientsFromSnapshot)
     }
 
@@ -98,16 +101,17 @@ class NotificationPoliciesTest {
         val assignedPolicy = TaskAssignedNotificationPolicy(taskRepository)
 
         val board = Board(id = 11L, name = "Board", owner = owner)
-        val task = Task(
-            id = 101L,
-            title = "Task",
-            description = "Desc",
-            owner = owner,
-            collaborators = mutableSetOf(collab, actor),
-            status = TaskStatus.TODO,
-            priority = TaskPriority.MID,
-            board = board
-        )
+        val task =
+            Task(
+                id = 101L,
+                title = "Task",
+                description = "Desc",
+                owner = owner,
+                collaborators = mutableSetOf(collab, actor),
+                status = TaskStatus.TODO,
+                priority = TaskPriority.MID,
+                board = board
+            )
 
         every { taskRepository.findById(101L) } returns Optional.of(task)
 

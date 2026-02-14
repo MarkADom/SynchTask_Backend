@@ -9,4 +9,3 @@ enum class NotificationType {
     CHAT_MESSAGE,
     INVITATION
 }
-

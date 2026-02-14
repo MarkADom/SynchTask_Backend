@@ -1,9 +1,9 @@
 package com.synchtask.security.application.service
 
 import com.synchtask.security.domain.entity.RefreshToken
-import com.synchtask.user.domain.entity.User
-import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.security.domain.repository.RefreshTokenRepository
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.user.domain.entity.User
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -14,21 +14,22 @@ import java.util.UUID
 class RefreshTokenService(
     private val refreshTokenRepository: RefreshTokenRepository,
 ) {
-
     private val logger = LoggerFactory.getLogger(RefreshTokenService::class.java)
 
     fun createRefreshToken(user: User): RefreshToken {
-        val refreshToken = RefreshToken(
-            user = user,
-            token = generateSecureToken(),
-            expiryDate = LocalDateTime.now().plusDays(REFRESH_TOKEN_EXPIRY_DAYS)
-        )
+        val refreshToken =
+            RefreshToken(
+                user = user,
+                token = generateSecureToken(),
+                expiryDate = LocalDateTime.now().plusDays(REFRESH_TOKEN_EXPIRY_DAYS)
+            )
         return refreshTokenRepository.save(refreshToken)
     }
 
     fun validateRefreshToken(token: String): RefreshToken {
-        val refreshToken = refreshTokenRepository.findByToken(token)
-            .orElseThrow { ResourceNotFoundException("Invalid refresh token") }
+        val refreshToken =
+            refreshTokenRepository.findByToken(token)
+                .orElseThrow { ResourceNotFoundException("Invalid refresh token") }
 
         require(!refreshToken.isRevoked) { "Refresh token is revoked" }
         require(refreshToken.expiryDate.isAfter(LocalDateTime.now())) { "Refresh token is expired" }
@@ -38,8 +39,9 @@ class RefreshTokenService(
 
     @Transactional
     fun revokeToken(token: String) {
-        val refreshToken = refreshTokenRepository.findByToken(token)
-            .orElseThrow { ResourceNotFoundException("Refresh token not found") }
+        val refreshToken =
+            refreshTokenRepository.findByToken(token)
+                .orElseThrow { ResourceNotFoundException("Refresh token not found") }
 
         refreshToken.isRevoked = true
         refreshTokenRepository.save(refreshToken)

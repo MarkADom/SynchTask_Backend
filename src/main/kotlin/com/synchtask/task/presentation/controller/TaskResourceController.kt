@@ -4,8 +4,7 @@ import com.synchtask.task.application.dto.TaskAttachmentDTO
 import com.synchtask.task.application.dto.TaskLinkDTO
 import com.synchtask.task.application.service.TaskAttachmentService
 import com.synchtask.task.application.service.TaskLinkService
-import com.synchtask.shared.exception.ResourceNotFoundException
-import com.synchtask.user.application.service.UserService
+import com.synchtask.user.application.service.AuthenticatedUserService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -23,9 +22,8 @@ import org.springframework.web.multipart.MultipartFile
 class TaskResourceController(
     private val taskLinkService: TaskLinkService,
     private val taskAttachmentService: TaskAttachmentService,
-    private val userService: UserService
+    private val authenticatedUserService: AuthenticatedUserService
 ) {
-
     // LINKS
 
     @PostMapping("/links")
@@ -36,10 +34,7 @@ class TaskResourceController(
         @RequestParam url: String,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<TaskLinkDTO> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
-
+        val actor = authenticatedUserService.requireUser(user)
         val result = taskLinkService.addLink(taskId, title, url, actor)
         return ResponseEntity.ok(result)
     }
@@ -49,10 +44,7 @@ class TaskResourceController(
         @PathVariable taskId: Long,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<List<TaskLinkDTO>> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
-
+        val actor = authenticatedUserService.requireUser(user)
         return ResponseEntity.ok(
             taskLinkService.listLinks(taskId, actor)
         )
@@ -65,10 +57,7 @@ class TaskResourceController(
         @PathVariable linkId: Long,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<Void> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
-
+        val actor = authenticatedUserService.requireUser(user)
         taskLinkService.removeLink(taskId, linkId, actor)
         return ResponseEntity.noContent().build()
     }
@@ -82,10 +71,7 @@ class TaskResourceController(
         @RequestParam file: MultipartFile,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<TaskAttachmentDTO> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
-
+        val actor = authenticatedUserService.requireUser(user)
         val result = taskAttachmentService.uploadFile(taskId, file, actor)
         return ResponseEntity.ok(result)
     }
@@ -95,10 +81,7 @@ class TaskResourceController(
         @PathVariable taskId: Long,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<List<TaskAttachmentDTO>> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
-
+        val actor = authenticatedUserService.requireUser(user)
         return ResponseEntity.ok(
             taskAttachmentService.listAttachments(taskId, actor)
         )
@@ -111,10 +94,7 @@ class TaskResourceController(
         @PathVariable attachmentId: Long,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<Void> {
-
-        val actor = userService.getUserByEmail(user.username)
-            ?: throw ResourceNotFoundException("User not found")
-
+        val actor = authenticatedUserService.requireUser(user)
         taskAttachmentService.deleteAttachment(taskId, attachmentId, actor)
         return ResponseEntity.noContent().build()
     }

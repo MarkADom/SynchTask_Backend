@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test
  * - Uses pure MockK with manual injection.
  */
 class AuthAdminControllerTest {
-
     private lateinit var jwtKeyManager: JwtKeyManager
     private lateinit var authAdminController: AuthAdminController
 

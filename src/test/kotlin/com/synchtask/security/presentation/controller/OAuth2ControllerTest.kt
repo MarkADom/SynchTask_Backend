@@ -8,20 +8,21 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.core.user.OAuth2User
 
 class OAuth2ControllerTest {
-
     private val controller = OAuth2Controller()
 
     @Test
     fun `should return OAuth2 user attributes`() {
-        val attributes = mapOf(
-            "email" to "oauth@example.com",
-            "name" to "OAuth User"
-        )
+        val attributes =
+            mapOf(
+                "email" to "oauth@example.com",
+                "name" to "OAuth User"
+            )
 
-        val authorities = listOf(
-            GrantedAuthority { "ROLE_USER" },
-            GrantedAuthority { "ROLE_COLLABORATOR" }
-        )
+        val authorities =
+            listOf(
+                GrantedAuthority { "ROLE_USER" },
+                GrantedAuthority { "ROLE_COLLABORATOR" }
+            )
 
         val oauth2User = mockk<OAuth2User>()
         every { oauth2User.attributes } returns attributes

@@ -13,7 +13,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class WebSocketManagerTest {
-
     private lateinit var redisTemplate: RedisTemplate<String, String>
     private lateinit var setOps: SetOperations<String, String>
     private lateinit var manager: WebSocketManager

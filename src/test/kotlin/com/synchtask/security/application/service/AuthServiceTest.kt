@@ -1,12 +1,12 @@
 package com.synchtask.security.application.service
 
+import com.synchtask.notification.application.manager.NotificationManager
 import com.synchtask.security.domain.entity.RefreshToken
+import com.synchtask.security.domain.exception.InvalidCredentialsException
+import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.security.domain.exception.InvalidCredentialsException
-import com.synchtask.notification.application.manager.NotificationManager
 import com.synchtask.user.domain.repository.UserRepository
-import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
@@ -21,7 +21,6 @@ import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthServiceTest {
-
     private lateinit var authenticationManager: AuthenticationManager
     private lateinit var userDetailsService: UserDetailsService
     private lateinit var jwtTokenProvider: JwtTokenProvider
@@ -29,7 +28,7 @@ class AuthServiceTest {
     private lateinit var userRepository: UserRepository
     private lateinit var passwordEncoder: PasswordEncoder
     private lateinit var authService: AuthService
-    private lateinit var notificationManager: NotificationManager;
+    private lateinit var notificationManager: NotificationManager
 
     @BeforeAll
     fun setup() {
@@ -41,29 +40,31 @@ class AuthServiceTest {
         passwordEncoder = mockk()
         notificationManager = mockk(relaxed = true)
 
-        authService = AuthService(
-            authenticationManager,
-            userDetailsService,
-            jwtTokenProvider,
-            refreshTokenService,
-            userRepository,
-            passwordEncoder,
-            notificationManager
-        )
+        authService =
+            AuthService(
+                authenticationManager,
+                userDetailsService,
+                jwtTokenProvider,
+                refreshTokenService,
+                userRepository,
+                passwordEncoder,
+                notificationManager
+            )
     }
 
     @Test
     fun `should authenticate and return tokens`() {
         val email = "user@synchtask.com"
         val rawPassword = "123456"
-        val user = User(
-            id = 1L,
-            name = "Test User",
-            email = email,
-            passwordHash = "hashed",
-            profilePictureUrl = "",
-            role = UserRole.USER
-        )
+        val user =
+            User(
+                id = 1L,
+                name = "Test User",
+                email = email,
+                passwordHash = "hashed",
+                profilePictureUrl = "",
+                role = UserRole.USER
+            )
         val userDetails = mockk<UserDetails>()
 
         every { userDetails.username } returns email
@@ -75,12 +76,13 @@ class AuthServiceTest {
         every { jwtTokenProvider.generateToken(any()) } returns "jwt-token"
         every { userRepository.findByEmail(email) } returns Optional.of(user)
         every { userRepository.save(any()) } returns user
-        every { refreshTokenService.createRefreshToken(user) } returns RefreshToken(
-            id = 1L,
-            token = "refresh-token",
-            user = user,
-            expiryDate = LocalDateTime.now().plusHours(1)
-        )
+        every { refreshTokenService.createRefreshToken(user) } returns
+            RefreshToken(
+                id = 1L,
+                token = "refresh-token",
+                user = user,
+                expiryDate = LocalDateTime.now().plusHours(1)
+            )
 
         val result = authService.authenticate(email, rawPassword)
 
@@ -93,9 +95,10 @@ class AuthServiceTest {
         val email = "invalid@email.com"
         every { userDetailsService.loadUserByUsername(email) } throws InvalidCredentialsException("Invalid email or password")
 
-        val exception = assertThrows<InvalidCredentialsException> {
-            authService.authenticate(email, "123456")
-        }
+        val exception =
+            assertThrows<InvalidCredentialsException> {
+                authService.authenticate(email, "123456")
+            }
 
         assertEquals("Invalid email or password", exception.message)
     }
@@ -110,31 +113,34 @@ class AuthServiceTest {
         every { userDetailsService.loadUserByUsername(email) } returns userDetails
         every { passwordEncoder.matches("wrong", "hashed") } returns false
 
-        val exception = assertThrows<InvalidCredentialsException> {
-            authService.authenticate(email, "wrong")
-        }
+        val exception =
+            assertThrows<InvalidCredentialsException> {
+                authService.authenticate(email, "wrong")
+            }
 
         assertEquals("Invalid email or password", exception.message)
     }
 
     @Test
     fun `should update user role when performed by admin`() {
-        val admin = User(
-            id = 1L,
-            name = "Admin",
-            email = "admin@synchtask.com",
-            passwordHash = "admin123",
-            profilePictureUrl = "",
-            role = UserRole.ADMIN
-        )
-        val user = User(
-            id = 2L,
-            name = "Target",
-            email = "user@synchtask.com",
-            passwordHash = "user123",
-            profilePictureUrl = "",
-            role = UserRole.USER
-        )
+        val admin =
+            User(
+                id = 1L,
+                name = "Admin",
+                email = "admin@synchtask.com",
+                passwordHash = "admin123",
+                profilePictureUrl = "",
+                role = UserRole.ADMIN
+            )
+        val user =
+            User(
+                id = 2L,
+                name = "Target",
+                email = "user@synchtask.com",
+                passwordHash = "user123",
+                profilePictureUrl = "",
+                role = UserRole.USER
+            )
 
         every { userRepository.findByEmail(admin.email) } returns Optional.of(admin)
         every { userRepository.findById(user.id!!) } returns Optional.of(user)
@@ -144,7 +150,6 @@ class AuthServiceTest {
             saved
         }
 
-
         authService.updateUserRole(admin.email, user.id!!, UserRole.COLLABORATOR)
 
         verify { userRepository.save(match { it.role == UserRole.COLLABORATOR }) }
@@ -152,48 +157,53 @@ class AuthServiceTest {
 
     @Test
     fun `should throw forbidden when non-admin tries to update role`() {
-        val nonAdmin = User(
-            id = 1L,
-            name = "User",
-            email = "user@synchtask.com",
-            passwordHash = "user123",
-            profilePictureUrl = "",
-            role = UserRole.USER
-        )
+        val nonAdmin =
+            User(
+                id = 1L,
+                name = "User",
+                email = "user@synchtask.com",
+                passwordHash = "user123",
+                profilePictureUrl = "",
+                role = UserRole.USER
+            )
         every { userRepository.findByEmail(nonAdmin.email) } returns Optional.of(nonAdmin)
 
-        val exception = assertThrows<ResponseStatusException> {
-            authService.updateUserRole(nonAdmin.email, 999L, UserRole.COLLABORATOR)
-        }
+        val exception =
+            assertThrows<ResponseStatusException> {
+                authService.updateUserRole(nonAdmin.email, 999L, UserRole.COLLABORATOR)
+            }
 
         assertEquals(HttpStatus.FORBIDDEN, exception.statusCode)
     }
 
     @Test
     fun `should prevent assigning ADMIN role`() {
-        val admin = User(
-            id = 1L,
-            name = "Admin",
-            email = "admin@synchtask.com",
-            passwordHash = "admin123",
-            profilePictureUrl = "",
-            role = UserRole.ADMIN
-        )
-        val targetUser = User(
-            id = 2L,
-            name = "Target",
-            email = "target@synchtask.com",
-            passwordHash = "pass123",
-            profilePictureUrl = "",
-            role = UserRole.USER
-        )
+        val admin =
+            User(
+                id = 1L,
+                name = "Admin",
+                email = "admin@synchtask.com",
+                passwordHash = "admin123",
+                profilePictureUrl = "",
+                role = UserRole.ADMIN
+            )
+        val targetUser =
+            User(
+                id = 2L,
+                name = "Target",
+                email = "target@synchtask.com",
+                passwordHash = "pass123",
+                profilePictureUrl = "",
+                role = UserRole.USER
+            )
 
         every { userRepository.findByEmail(admin.email) } returns Optional.of(admin)
         every { userRepository.findById(targetUser.id!!) } returns Optional.of(targetUser)
 
-        val exception = assertThrows<ResponseStatusException> {
-            authService.updateUserRole(admin.email, targetUser.id!!, UserRole.ADMIN)
-        }
+        val exception =
+            assertThrows<ResponseStatusException> {
+                authService.updateUserRole(admin.email, targetUser.id!!, UserRole.ADMIN)
+            }
 
         assertEquals(HttpStatus.FORBIDDEN, exception.statusCode)
     }

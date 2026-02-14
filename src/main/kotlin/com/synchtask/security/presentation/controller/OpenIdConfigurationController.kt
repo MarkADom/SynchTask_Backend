@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/auth/.well-known")
 class OpenIdConfigurationController {
-
     @GetMapping("/openid-configuration")
     fun openIdConfig(request: HttpServletRequest): Map<String, Any> {
         val baseUrl = "${request.scheme}://${request.serverName}:${request.serverPort}/api/auth"
@@ -26,4 +25,3 @@ class OpenIdConfigurationController {
         )
     }
 }
-

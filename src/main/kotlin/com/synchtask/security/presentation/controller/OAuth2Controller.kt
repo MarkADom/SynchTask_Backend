@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/oauth2")
 class OAuth2Controller {
-
     private val logger = LoggerFactory.getLogger(OAuth2Controller::class.java)
 
     /**

@@ -23,16 +23,16 @@ class RateLimitConfig(
     @Value("\${ratelimiter.public.limit}") private val publicRequestLimit: Long,
     @Value("\${ratelimiter.public.window}") private val publicTimeWindow: Long,
 ) {
-
     private val buckets = ConcurrentHashMap<String, Bucket>()
 
     fun resolveBucket(identifier: String): Bucket {
         return buckets.computeIfAbsent(identifier) {
-            val (limit, window) = if (identifier.startsWith("anon-")) {
-                anonRequestLimit to anonTimeWindow
-            } else {
-                userRequestLimit to userTimeWindow
-            }
+            val (limit, window) =
+                if (identifier.startsWith("anon-")) {
+                    anonRequestLimit to anonTimeWindow
+                } else {
+                    userRequestLimit to userTimeWindow
+                }
 
             Bucket.builder()
                 .addLimit(
@@ -46,18 +46,17 @@ class RateLimitConfig(
     }
 
     @Bean
-    fun publicBucket(): Bucket =
-        Bucket.builder()
-            .addLimit(
-                Bandwidth.classic(
+    fun publicBucket(): Bucket = Bucket.builder()
+        .addLimit(
+            Bandwidth.classic(
+                publicRequestLimit,
+                Refill.greedy(
                     publicRequestLimit,
-                    Refill.greedy(
-                        publicRequestLimit,
-                        Duration.ofMinutes(publicTimeWindow)
-                    )
+                    Duration.ofMinutes(publicTimeWindow)
                 )
             )
-            .build()
+        )
+        .build()
 
     private fun getUserIdentifier(request: HttpServletRequest): String {
         val authentication = SecurityContextHolder.getContext().authentication

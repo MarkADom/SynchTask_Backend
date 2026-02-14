@@ -1,23 +1,23 @@
 package com.synchtask.user.application.service
 
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.application.dto.UserResponseDTO
 import com.synchtask.user.application.dto.UserStatusDTO
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.domain.exception.UserAlreadyExistsException
-import com.synchtask.user.presentation.mapper.UserMapper
 import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.user.presentation.mapper.UserMapper
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Page
 import org.springframework.web.multipart.MultipartFile
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
@@ -26,7 +26,6 @@ class UserService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
-
     private val logger = LoggerFactory.getLogger(UserService::class.java)
 
     fun createUser(user: User): User {
@@ -35,27 +34,29 @@ class UserService(
         }
 
         val rawPassword = user.passwordHash
-        val encodedPassword = if (rawPassword.startsWith("\$2a\$")) {
-            logger.warn("Password already encoded: skipping hashing")
-            rawPassword
-        } else {
-            passwordEncoder.encode(rawPassword)
-        }
+        val encodedPassword =
+            if (rawPassword.startsWith("\$2a\$")) {
+                logger.warn("Password already encoded: skipping hashing")
+                rawPassword
+            } else {
+                passwordEncoder.encode(rawPassword)
+            }
 
-        val secureUser = User(
-            id = user.id,
-            name = user.name,
-            email = user.email,
-            passwordHash = encodedPassword,
-            profilePictureUrl = user.profilePictureUrl,
-            role = user.role,
-            createdAt = user.createdAt,
-            lastLogin = user.lastLogin,
-            lastActivity = user.lastActivity,
-            isActive = user.isActive,
-            isOnline = user.isOnline,
-            onboardingNotified = user.onboardingNotified
-        )
+        val secureUser =
+            User(
+                id = user.id,
+                name = user.name,
+                email = user.email,
+                passwordHash = encodedPassword,
+                profilePictureUrl = user.profilePictureUrl,
+                role = user.role,
+                createdAt = user.createdAt,
+                lastLogin = user.lastLogin,
+                lastActivity = user.lastActivity,
+                isActive = user.isActive,
+                isOnline = user.isOnline,
+                onboardingNotified = user.onboardingNotified
+            )
 
         logger.info("User registered: ${secureUser.email}")
         return userRepository.save(secureUser)
@@ -88,8 +89,7 @@ class UserService(
         userRepository.deleteById(id)
     }
 
-    fun isAdmin(email: String): Boolean =
-        userRepository.findByEmail(email).orElse(null)?.role == UserRole.ADMIN
+    fun isAdmin(email: String): Boolean = userRepository.findByEmail(email).orElse(null)?.role == UserRole.ADMIN
 
     fun isAuthorized(authenticatedEmail: String, targetEmail: String): Boolean {
         return authenticatedEmail == targetEmail || isAdmin(authenticatedEmail)
@@ -97,8 +97,9 @@ class UserService(
 
     @Transactional
     fun setUserOnlineStatus(email: String, isOnline: Boolean) {
-        val user = userRepository.findByEmail(email)
-            .orElseThrow { IllegalArgumentException("User not found") }
+        val user =
+            userRepository.findByEmail(email)
+                .orElseThrow { IllegalArgumentException("User not found") }
 
         user.isOnline = isOnline
         if (!isOnline) {
@@ -111,26 +112,27 @@ class UserService(
 
     @Transactional
     fun updateLastActivity(email: String) {
-        val user = userRepository.findByEmail(email)
-            .orElseThrow { IllegalArgumentException("User not found") }
+        val user =
+            userRepository.findByEmail(email)
+                .orElseThrow { IllegalArgumentException("User not found") }
 
         user.lastActivity = LocalDateTime.now()
         userRepository.save(user)
         logger.info("User ${user.email} last activity updated")
     }
 
-    fun isUserOnline(email: String): Boolean =
-        userRepository.findByEmail(email).orElse(null)?.isOnline ?: false
+    fun isUserOnline(email: String): Boolean = userRepository.findByEmail(email).orElse(null)?.isOnline ?: false
 
     @Transactional(readOnly = true)
     fun getOnlineUsers(): List<UserStatusDTO> {
-        val online = userRepository.findAllByIsOnlineTrue().map {
-            UserStatusDTO(
-                email = it.email,
-                name = it.name,
-                lastActivity = it.lastActivity ?: LocalDateTime.now()
-            )
-        }
+        val online =
+            userRepository.findAllByIsOnlineTrue().map {
+                UserStatusDTO(
+                    email = it.email,
+                    name = it.name,
+                    lastActivity = it.lastActivity ?: LocalDateTime.now()
+                )
+            }
         logger.info("Fetched ${online.size} online users")
         return online
     }
@@ -159,8 +161,9 @@ class UserService(
 
     @Transactional
     fun updateProfilePicture(email: String, file: MultipartFile): User {
-        val user = userRepository.findByEmail(email)
-            .orElseThrow { ResourceNotFoundException("User not found") }
+        val user =
+            userRepository.findByEmail(email)
+                .orElseThrow { ResourceNotFoundException("User not found") }
 
         val uploadDir = Paths.get("uploads/profile-pictures/")
         if (!Files.exists(uploadDir)) {
@@ -182,15 +185,13 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun getVisibleUsers(currentUser: User, friends: List<User>): List<UserResponseDTO> {
-        val visibleUsers = if (currentUser.role == UserRole.ADMIN || currentUser.role == UserRole.OWNER) {
-            userRepository.findAll()
-        } else {
-            val assignable = getAssignableUsers()
-            (friends + assignable).distinctBy { it.id }
-        }
+        val visibleUsers =
+            if (currentUser.role == UserRole.ADMIN || currentUser.role == UserRole.OWNER) {
+                userRepository.findAll()
+            } else {
+                val assignable = getAssignableUsers()
+                (friends + assignable).distinctBy { it.id }
+            }
         return visibleUsers.map(UserMapper::toResponseDTO)
     }
-
-
 }
-

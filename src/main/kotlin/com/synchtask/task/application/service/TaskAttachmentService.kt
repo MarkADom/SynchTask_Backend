@@ -2,10 +2,10 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.domain.model.ActivityType
-import com.synchtask.task.application.dto.TaskAttachmentDTO
-import com.synchtask.task.domain.entity.TaskAttachment
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.task.application.dto.TaskAttachmentDTO
+import com.synchtask.task.domain.entity.TaskAttachment
 import com.synchtask.task.domain.repository.TaskAttachmentRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.task.presentation.mapper.TaskMapper
@@ -22,18 +22,13 @@ class TaskAttachmentService(
     private val taskAttachmentRepository: TaskAttachmentRepository,
     private val activityService: ActivityService,
 ) {
-
     private val logger = LoggerFactory.getLogger(TaskAttachmentService::class.java)
 
     @Transactional
-    fun uploadFile(
-        taskId: Long,
-        file: MultipartFile,
-        user: User,
-    ): TaskAttachmentDTO {
-
-        val task = taskRepository.findById(taskId)
-            .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
+    fun uploadFile(taskId: Long, file: MultipartFile, user: User,): TaskAttachmentDTO {
+        val task =
+            taskRepository.findById(taskId)
+                .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
         if (!task.canBeEditedBy(user)) {
             throw UnauthorizedAccessException(
@@ -45,13 +40,14 @@ class TaskAttachmentService(
         val fakeUrl =
             "https://cdn.synchtask.app/files/${UUID.randomUUID()}/${file.originalFilename}"
 
-        val attachment = taskAttachmentRepository.save(
-            TaskAttachment(
-                task = task,
-                fileName = file.originalFilename ?: "unnamed-file",
-                fileUrl = fakeUrl
+        val attachment =
+            taskAttachmentRepository.save(
+                TaskAttachment(
+                    task = task,
+                    fileName = file.originalFilename ?: "unnamed-file",
+                    fileUrl = fakeUrl
+                )
             )
-        )
 
         activityService.record(
             actor = user,
@@ -68,13 +64,10 @@ class TaskAttachmentService(
     }
 
     @Transactional(readOnly = true)
-    fun listAttachments(
-        taskId: Long,
-        user: User,
-    ): List<TaskAttachmentDTO> {
-
-        val task = taskRepository.findById(taskId)
-            .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
+    fun listAttachments(taskId: Long, user: User,): List<TaskAttachmentDTO> {
+        val task =
+            taskRepository.findById(taskId)
+                .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
         if (!task.canBeAccessedBy(user)) {
             throw UnauthorizedAccessException(
@@ -88,14 +81,10 @@ class TaskAttachmentService(
     }
 
     @Transactional
-    fun deleteAttachment(
-        taskId: Long,
-        attachmentId: Long,
-        user: User,
-    ) {
-
-        val task = taskRepository.findById(taskId)
-            .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
+    fun deleteAttachment(taskId: Long, attachmentId: Long, user: User,) {
+        val task =
+            taskRepository.findById(taskId)
+                .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
         if (!task.canBeEditedBy(user)) {
             throw UnauthorizedAccessException(

@@ -16,7 +16,6 @@ import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
 class TaskCommentControllerTest {
-
     private lateinit var taskCommentService: TaskCommentService
     private lateinit var userService: UserService
     private lateinit var controller: TaskCommentController
@@ -34,13 +33,14 @@ class TaskCommentControllerTest {
     fun `should add comment to task`() {
         val taskId = 42L
         val request = TaskCommentCreateDTO("Looks good!")
-        val expectedResponse = TaskCommentResponseDTO(
-            id = 1L,
-            taskId = taskId,
-            userId = 101L,
-            content = "Looks good!",
-            createdAt = LocalDateTime.now()
-        )
+        val expectedResponse =
+            TaskCommentResponseDTO(
+                id = 1L,
+                taskId = taskId,
+                userId = 101L,
+                content = "Looks good!",
+                createdAt = LocalDateTime.now()
+            )
         val actor = User(id = 101L, name = "User", email = "user@email.com", passwordHash = "hash")
 
         every { userDetails.username } returns "user@email.com"

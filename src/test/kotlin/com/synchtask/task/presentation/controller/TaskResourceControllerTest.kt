@@ -9,15 +9,14 @@ import com.synchtask.user.domain.entity.User
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.security.core.userdetails.User as SpringUser
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.multipart.MultipartFile
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import org.springframework.security.core.userdetails.User as SpringUser
 
 class TaskResourceControllerTest {
-
     private lateinit var linkService: TaskLinkService
     private lateinit var attachmentService: TaskAttachmentService
     private lateinit var userService: UserService
@@ -33,11 +32,12 @@ class TaskResourceControllerTest {
         userService = mockk(relaxed = true)
         controller = TaskResourceController(linkService, attachmentService, userService)
 
-        userDetails = SpringUser(
-            "user@synchtask.com",
-            "hash",
-            emptyList()
-        )
+        userDetails =
+            SpringUser(
+                "user@synchtask.com",
+                "hash",
+                emptyList()
+            )
         actor = User(id = 1L, name = "User", email = "user@synchtask.com", passwordHash = "hash")
 
         every { userService.getUserByEmail(userDetails.username) } returns actor
@@ -45,23 +45,25 @@ class TaskResourceControllerTest {
 
     @Test
     fun `should add link successfully`() {
-        val dto = TaskLinkDTO(
-            id = 1L,
-            title = "GitHub",
-            url = "https://github.com",
-            createdAt = LocalDateTime.now()
-        )
+        val dto =
+            TaskLinkDTO(
+                id = 1L,
+                title = "GitHub",
+                url = "https://github.com",
+                createdAt = LocalDateTime.now()
+            )
 
         every {
             linkService.addLink(10L, "GitHub", "https://github.com", actor)
         } returns dto
 
-        val response = controller.addLink(
-            taskId = 10L,
-            title = "GitHub",
-            url = "https://github.com",
-            user = userDetails
-        )
+        val response =
+            controller.addLink(
+                taskId = 10L,
+                title = "GitHub",
+                url = "https://github.com",
+                user = userDetails
+            )
 
         assertEquals(dto.id, response.body!!.id)
         assertEquals(dto.title, response.body!!.title)
@@ -74,10 +76,11 @@ class TaskResourceControllerTest {
 
     @Test
     fun `should list links`() {
-        val links = listOf(
-            TaskLinkDTO(1L, "Doc", "https://docs", LocalDateTime.now()),
-            TaskLinkDTO(2L, "Repo", "https://repo", LocalDateTime.now())
-        )
+        val links =
+            listOf(
+                TaskLinkDTO(1L, "Doc", "https://docs", LocalDateTime.now()),
+                TaskLinkDTO(2L, "Repo", "https://repo", LocalDateTime.now())
+            )
 
         every { linkService.listLinks(10L, actor) } returns links
 
@@ -95,11 +98,12 @@ class TaskResourceControllerTest {
             linkService.removeLink(10L, 5L, actor)
         } just Runs
 
-        val response = controller.deleteLink(
-            taskId = 10L,
-            linkId = 5L,
-            user = userDetails
-        )
+        val response =
+            controller.deleteLink(
+                taskId = 10L,
+                linkId = 5L,
+                user = userDetails
+            )
 
         assertEquals(204, response.statusCode.value())
 
@@ -112,22 +116,24 @@ class TaskResourceControllerTest {
     fun `should upload attachment`() {
         val file = mockk<MultipartFile>()
 
-        val dto = TaskAttachmentDTO(
-            id = 1L,
-            fileName = "file.pdf",
-            fileUrl = "https://cdn.synchtask.com/file.pdf",
-            uploadedAt = LocalDateTime.now()
-        )
+        val dto =
+            TaskAttachmentDTO(
+                id = 1L,
+                fileName = "file.pdf",
+                fileUrl = "https://cdn.synchtask.com/file.pdf",
+                uploadedAt = LocalDateTime.now()
+            )
 
         every {
             attachmentService.uploadFile(10L, file, actor)
         } returns dto
 
-        val response = controller.uploadFile(
-            taskId = 10L,
-            file = file,
-            user = userDetails
-        )
+        val response =
+            controller.uploadFile(
+                taskId = 10L,
+                file = file,
+                user = userDetails
+            )
 
         assertNotNull(response.body)
         assertEquals("file.pdf", response.body!!.fileName)
@@ -140,20 +146,21 @@ class TaskResourceControllerTest {
 
     @Test
     fun `should list attachments`() {
-        val attachments = listOf(
-            TaskAttachmentDTO(
-                1L,
-                "a.txt",
-                "https://cdn.synchtask.com/a.txt",
-                LocalDateTime.now()
-            ),
-            TaskAttachmentDTO(
-                2L,
-                "b.txt",
-                "https://cdn.synchtask.com/b.txt",
-                LocalDateTime.now()
+        val attachments =
+            listOf(
+                TaskAttachmentDTO(
+                    1L,
+                    "a.txt",
+                    "https://cdn.synchtask.com/a.txt",
+                    LocalDateTime.now()
+                ),
+                TaskAttachmentDTO(
+                    2L,
+                    "b.txt",
+                    "https://cdn.synchtask.com/b.txt",
+                    LocalDateTime.now()
+                )
             )
-        )
 
         every {
             attachmentService.listAttachments(10L, actor)
@@ -175,11 +182,12 @@ class TaskResourceControllerTest {
             attachmentService.deleteAttachment(10L, 3L, actor)
         } just Runs
 
-        val response = controller.deleteAttachment(
-            taskId = 10L,
-            attachmentId = 3L,
-            user = userDetails
-        )
+        val response =
+            controller.deleteAttachment(
+                taskId = 10L,
+                attachmentId = 3L,
+                user = userDetails
+            )
 
         assertEquals(204, response.statusCode.value())
 

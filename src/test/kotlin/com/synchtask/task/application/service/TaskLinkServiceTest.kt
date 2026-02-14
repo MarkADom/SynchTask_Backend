@@ -20,7 +20,6 @@ import java.util.Optional
 import kotlin.test.*
 
 class TaskLinkServiceTest {
-
     private lateinit var taskRepository: TaskRepository
     private lateinit var taskLinkRepository: TaskLinkRepository
     private lateinit var activityService: ActivityService
@@ -43,34 +42,31 @@ class TaskLinkServiceTest {
         task = newTask(id = 10L, owner = owner, board = board)
     }
 
-    private fun newUser(id: Long, email: String): User =
-        User(
-            id = id,
-            name = "User",
-            email = email,
-            passwordHash = "hash",
-            role = UserRole.USER
-        )
+    private fun newUser(id: Long, email: String): User = User(
+        id = id,
+        name = "User",
+        email = email,
+        passwordHash = "hash",
+        role = UserRole.USER
+    )
 
-    private fun newBoard(id: Long, owner: User): Board =
-        Board(
-            id = id,
-            name = "Board",
-            owner = owner
-        )
+    private fun newBoard(id: Long, owner: User): Board = Board(
+        id = id,
+        name = "Board",
+        owner = owner
+    )
 
-    private fun newTask(id: Long, owner: User, board: Board): Task =
-        Task(
-            id = id,
-            title = "Task",
-            description = "Desc",
-            owner = owner,
-            collaborators = mutableSetOf(),
-            labels = mutableSetOf(),
-            status = TaskStatus.TODO,
-            priority = TaskPriority.MID,
-            board = board
-        )
+    private fun newTask(id: Long, owner: User, board: Board): Task = Task(
+        id = id,
+        title = "Task",
+        description = "Desc",
+        owner = owner,
+        collaborators = mutableSetOf(),
+        labels = mutableSetOf(),
+        status = TaskStatus.TODO,
+        priority = TaskPriority.MID,
+        board = board
+    )
 
     @Test
     fun `should add link when user is owner`() {
@@ -78,23 +74,25 @@ class TaskLinkServiceTest {
         val url = "https://example.com"
         val now = LocalDateTime.of(2026, 2, 4, 0, 0, 0)
 
-        val savedLink = TaskLink(
-            id = 100L,
-            task = task,
-            title = title,
-            url = url,
-            createdAt = now
-        )
+        val savedLink =
+            TaskLink(
+                id = 100L,
+                task = task,
+                title = title,
+                url = url,
+                createdAt = now
+            )
 
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskLinkRepository.save(any()) } returns savedLink
 
-        val result = service.addLink(
-            taskId = task.id!!,
-            title = title,
-            url = url,
-            user = owner
-        )
+        val result =
+            service.addLink(
+                taskId = task.id!!,
+                title = title,
+                url = url,
+                user = owner
+            )
 
         assertEquals(100L, result.id)
         assertEquals(title, result.title)

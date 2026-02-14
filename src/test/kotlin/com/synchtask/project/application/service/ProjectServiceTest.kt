@@ -17,7 +17,6 @@ import java.util.Optional
 import kotlin.test.*
 
 class ProjectServiceTest {
-
     private lateinit var projectRepository: ProjectRepository
     private lateinit var boardRepository: BoardRepository
     private lateinit var activityService: ActivityService
@@ -69,14 +68,15 @@ class ProjectServiceTest {
     fun `should create project and assign boards`() {
         val boards = listOf(newBoard(1), newBoard(2))
 
-        val dto = ProjectCreateDTO(
-            name = "My Project",
-            description = "Desc",
-            tag = "tag",
-            color = "#111",
-            dueDate = LocalDate.now(),
-            boardIds = listOf(1, 2)
-        )
+        val dto =
+            ProjectCreateDTO(
+                name = "My Project",
+                description = "Desc",
+                tag = "tag",
+                color = "#111",
+                dueDate = LocalDate.now(),
+                boardIds = listOf(1, 2)
+            )
 
         every {
             boardRepository.findAllWithCollaboratorsById(dto.boardIds)
@@ -113,17 +113,17 @@ class ProjectServiceTest {
         verify(exactly = 2) { boardRepository.save(any()) }
     }
 
-
     @Test
     fun `should throw when some boards do not exist on create`() {
-        val dto = ProjectCreateDTO(
-            name = "X",
-            description = "blabla",
-            tag = null,
-            color = null,
-            dueDate = null,
-            boardIds = listOf(1, 2)
-        )
+        val dto =
+            ProjectCreateDTO(
+                name = "X",
+                description = "blabla",
+                tag = null,
+                color = null,
+                dueDate = null,
+                boardIds = listOf(1, 2)
+            )
 
         every { boardRepository.findAllWithCollaboratorsById(dto.boardIds) } returns listOf(newBoard(1))
 
@@ -172,14 +172,15 @@ class ProjectServiceTest {
         every { projectRepository.findById(project.id!!) } returns Optional.of(project)
         every { projectRepository.save(any()) } answers { firstArg() }
 
-        val dto = ProjectUpdateDTO(
-            name = "Updated",
-            description = "New desc",
-            tag = null,
-            color = null,
-            dueDate = null,
-            boardIds = null
-        )
+        val dto =
+            ProjectUpdateDTO(
+                name = "Updated",
+                description = "New desc",
+                tag = null,
+                color = null,
+                dueDate = null,
+                boardIds = null
+            )
 
         val result = service.update(project.id!!, dto, owner)
 
@@ -196,14 +197,15 @@ class ProjectServiceTest {
         every { boardRepository.findAllWithCollaboratorsById(listOf(1L, 2L)) } returns boards
         every { projectRepository.save(any()) } answers { firstArg() }
 
-        val dto = ProjectUpdateDTO(
-            name = null,
-            description = null,
-            tag = null,
-            color = null,
-            dueDate = null,
-            boardIds = listOf(1L, 2L)
-        )
+        val dto =
+            ProjectUpdateDTO(
+                name = null,
+                description = null,
+                tag = null,
+                color = null,
+                dueDate = null,
+                boardIds = listOf(1L, 2L)
+            )
 
         service.update(project.id!!, dto, owner)
 

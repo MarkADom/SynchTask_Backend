@@ -2,21 +2,20 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.domain.model.ActivityType
-import com.synchtask.task.application.dto.TaskCreateDTO
-import com.synchtask.task.application.dto.TaskResponseDTO
-import com.synchtask.task.application.dto.TaskUpdateDTO
-import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.task.domain.entity.Task
-import com.synchtask.task.domain.entity.TaskStatus
-import com.synchtask.user.domain.entity.User
-import com.synchtask.shared.exception.ResourceNotFoundException
-import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.friend.application.port.FriendshipChecker
-import com.synchtask.task.domain.repository.TaskRepository
-import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.notification.application.service.NotificationService
+import com.synchtask.notification.domain.entity.NotificationType
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.task.application.dto.TaskCreateDTO
+import com.synchtask.task.application.dto.TaskUpdateDTO
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskStatus
+import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.task.presentation.mapper.TaskMapper
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.websocket.application.service.TaskWebSocketService
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
@@ -35,27 +34,30 @@ class TaskService(
     private val friendshipChecker: FriendshipChecker,
     private val activityService: ActivityService,
 ) {
-
     private val logger = LoggerFactory.getLogger(TaskService::class.java)
 
     @Transactional
     fun createTask(owner: User, request: TaskCreateDTO): Task {
-        val board = boardRepository.findById(request.boardId)
-            .orElseThrow { ResourceNotFoundException("Board not found: ${request.boardId}") }
+        val board =
+            boardRepository.findById(request.boardId)
+                .orElseThrow { ResourceNotFoundException("Board not found: ${request.boardId}") }
 
         if (!board.hasAccess(owner)) {
-            throw UnauthorizedAccessException("User ${owner.email} is not allowed to create tasks in board ${board.id}.")
+            throw UnauthorizedAccessException(
+                "User ${owner.email} is not allowed to create tasks in board ${board.id}."
+            )
         }
 
-        val newTask = Task(
-            owner = owner,
-            title = request.title,
-            description = request.description,
-            labels = request.labels.toMutableSet(),
-            status = request.status,
-            board = board,
-            priority = request.priority,
-        )
+        val newTask =
+            Task(
+                owner = owner,
+                title = request.title,
+                description = request.description,
+                labels = request.labels.toMutableSet(),
+                status = request.status,
+                board = board,
+                priority = request.priority,
+            )
 
         val savedTask = taskRepository.save(newTask)
 
@@ -70,9 +72,8 @@ class TaskService(
         return savedTask
     }
 
-    fun findTaskById(taskId: Long): Task =
-        taskRepository.findById(taskId)
-            .orElseThrow { ResourceNotFoundException("Task not found with ID: $taskId") }
+    fun findTaskById(taskId: Long): Task = taskRepository.findById(taskId)
+        .orElseThrow { ResourceNotFoundException("Task not found with ID: $taskId") }
 
     fun getTasksWithFilters(
         user: User,
@@ -81,8 +82,7 @@ class TaskService(
         assigneeId: Long?,
         boardId: Long?,
         pageable: Pageable,
-    ): Page<Task> =
-        taskSpecificationService.findTasksByFilters(user, status, label, assigneeId, boardId, pageable)
+    ): Page<Task> = taskSpecificationService.findTasksByFilters(user, status, label, assigneeId, boardId, pageable)
 
     @Transactional
     fun updateTask(taskId: Long, request: TaskUpdateDTO, user: User): Task {
@@ -204,8 +204,9 @@ class TaskService(
             throw UnauthorizedAccessException("Not allowed to assign collaborators")
         }
 
-        val collaborator = userRepository.findByEmail(collaboratorEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $collaboratorEmail") }
+        val collaborator =
+            userRepository.findByEmail(collaboratorEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $collaboratorEmail") }
 
         if (!friendshipChecker.areFriends(task.owner.id!!, collaborator.id!!)) {
             throw UnauthorizedAccessException("You can only assign friends as collaborators.")

@@ -42,13 +42,11 @@ class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     private val rateLimitFilter: RateLimitFilter,
 ) {
-
     @Bean
     fun passwordEncoder(): BCryptPasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
-    fun authenticationManager(config: AuthenticationConfiguration): AuthenticationManager =
-        config.authenticationManager
+    fun authenticationManager(config: AuthenticationConfiguration): AuthenticationManager = config.authenticationManager
 
     @Bean
     fun securityFilterChain(http: HttpSecurity, userDetailsService: UserDetailsService): SecurityFilterChain {
@@ -57,10 +55,8 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-
                     // Allow CORS preflight requests for the test endpoint
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
                     // Allow Public Access to Swagger & API Docs
                     .requestMatchers(
                         "/swagger-ui/**",
@@ -76,7 +72,6 @@ class SecurityConfig(
                         "/ws/**",
                         "/ws-notifications/**",
                     ).permitAll()
-
                     // Public Endpoints (Accessible Without Authentication)
                     .requestMatchers(
                         // TODO(dev-security): restrict actuator exposure outside dev/demo | keep public now for local diagnostics
@@ -90,13 +85,10 @@ class SecurityConfig(
                         "/auth/logout",
                         "/error"
                     ).permitAll()
-
                     // OAuth2 Endpoints
                     .requestMatchers("/oauth2/**").permitAll()
-
                     // Protected Endpoints (Require Authentication)
                     .requestMatchers("/notifications/**").authenticated()
-
                     // All other requests require authentication
                     .anyRequest().authenticated()
             }
@@ -129,8 +121,6 @@ class SecurityConfig(
             .headers { headers ->
                 headers.frameOptions { it.disable() }
             }
-
-
             // Security Filters (Rate Limiting & JWT)
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(jwtAuthenticationFilter, BearerTokenAuthenticationFilter::class.java)
@@ -140,9 +130,10 @@ class SecurityConfig(
     @Bean
     fun jwtDecoder(): JwtDecoder {
         // TODO(config-security): externalize JWK set URI to env/property | localhost default kept for local portfolio setup
-        val decoder = NimbusJwtDecoder
-            .withJwkSetUri("http://localhost:8081/jwks")
-            .build()
+        val decoder =
+            NimbusJwtDecoder
+                .withJwkSetUri("http://localhost:8081/jwks")
+                .build()
 
         val timestampValidator = JwtTimestampValidator(Duration.ofMinutes(5))
 
@@ -156,8 +147,9 @@ class SecurityConfig(
     }
 
     @Bean
-
-    fun jwtAuthenticationConverter(userDetailsService: UserDetailsService): Converter<Jwt, out AbstractAuthenticationToken> {
+    fun jwtAuthenticationConverter(
+        userDetailsService: UserDetailsService
+    ): Converter<Jwt, out AbstractAuthenticationToken> {
         return CustomJwtAuthenticationConverter(userDetailsService)
     }
 
@@ -170,7 +162,9 @@ class SecurityConfig(
 
             object : OAuth2User {
                 override fun getAuthorities() = authorities
+
                 override fun getAttributes() = user.attributes
+
                 override fun getName() = user.attributes["name"]?.toString() ?: "Unknown"
             }
         }

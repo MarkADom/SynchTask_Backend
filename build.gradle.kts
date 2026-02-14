@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     // ───── Code Quality ─────
     id("io.gitlab.arturbosch.detekt") version "1.23.5"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
     id("org.sonarqube") version "5.0.0.4638"
     id("jacoco")
 
@@ -15,7 +16,6 @@ plugins {
     kotlin("plugin.spring") version "1.9.22"
     kotlin("plugin.jpa") version "1.9.22"
 }
-
 group = "com.synchtask"
 version = "0.0.1-SNAPSHOT"
 
@@ -109,10 +109,11 @@ dependencies {
 // ───── Kotlin Compiler ─────
 tasks.withType<KotlinCompile> {
     kotlinOptions {
-        freeCompilerArgs = listOf(
-            "-Xjsr305=strict",
-            "-opt-in=kotlin.RequiresOptIn"
-        )
+        freeCompilerArgs =
+            listOf(
+                "-Xjsr305=strict",
+                "-opt-in=kotlin.RequiresOptIn"
+            )
         jvmTarget = "21"
     }
 }
@@ -202,5 +203,3 @@ sonarqube {
         )
     }
 }
-
-

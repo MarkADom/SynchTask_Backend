@@ -1,9 +1,9 @@
 package com.synchtask.security.application.service
 
 import com.synchtask.security.domain.entity.RefreshToken
+import com.synchtask.security.domain.repository.RefreshTokenRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.security.domain.repository.RefreshTokenRepository
 import io.mockk.*
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -16,7 +16,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 class LogoutServiceTest {
-
     private lateinit var refreshTokenRepository: RefreshTokenRepository
     private lateinit var logoutService: LogoutService
     private lateinit var request: HttpServletRequest
@@ -37,7 +36,14 @@ class LogoutServiceTest {
     fun `should revoke token and return success`() {
         val token = "valid-token"
         val user = User(id = 1L, name = "John", email = "john@email.com", passwordHash = "hash", role = UserRole.USER)
-        val refreshToken = RefreshToken(id = 1L, token = token, user = user, expiryDate = LocalDateTime.now().plusDays(7), isRevoked = false)
+        val refreshToken =
+            RefreshToken(
+                id = 1L,
+                token = token,
+                user = user,
+                expiryDate = LocalDateTime.now().plusDays(7),
+                isRevoked = false
+            )
 
         every { request.getHeader("Authorization") } returns "Bearer $token"
         every { refreshTokenRepository.findByToken(token) } returns Optional.of(refreshToken)

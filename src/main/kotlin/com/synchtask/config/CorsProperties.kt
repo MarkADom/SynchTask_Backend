@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component
 @Component
 @ConfigurationProperties(prefix = "cors.allowed")
 class CorsProperties {
-
     var origins: List<String> = listOf()
 
     fun getResolvedOrigins(): List<String> {
@@ -22,5 +21,4 @@ class CorsProperties {
         }
         return origins
     }
-
 }

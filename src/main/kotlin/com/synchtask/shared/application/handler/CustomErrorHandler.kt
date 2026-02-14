@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
  */
 @RestControllerAdvice
 class CustomErrorHandler {
-
     private val logger = LoggerFactory.getLogger(CustomErrorHandler::class.java)
 
     @ExceptionHandler(ExpiredJwtException::class)
@@ -91,10 +90,11 @@ class CustomErrorHandler {
 
     @ExceptionHandler(FriendRequestAlreadySentException::class)
     fun handleFriendRequestAlreadySent(ex: FriendRequestAlreadySentException): ResponseEntity<ErrorResponseDTO> {
-        val errorResponse = ErrorResponseDTO(
-            message = ex.message ?: "Friend request already sent.",
-            error = "Conflict"
-        )
+        val errorResponse =
+            ErrorResponseDTO(
+                message = ex.message ?: "Friend request already sent.",
+                error = "Conflict"
+            )
         return ResponseEntity(errorResponse, HttpStatus.CONFLICT)
     }
 }

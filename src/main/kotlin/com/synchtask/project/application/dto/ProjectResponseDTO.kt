@@ -3,7 +3,6 @@ package com.synchtask.project.application.dto
 import com.synchtask.board.application.dto.BoardSimpleDTO
 import java.time.LocalDate
 
-
 data class ProjectResponseDTO(
     val id: Long,
     val name: String,

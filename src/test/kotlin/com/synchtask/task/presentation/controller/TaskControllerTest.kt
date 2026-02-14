@@ -22,7 +22,6 @@ import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
 class TaskControllerTest {
-
     private lateinit var taskService: TaskService
     private lateinit var userService: UserService
     private lateinit var controller: TaskController
@@ -37,26 +36,29 @@ class TaskControllerTest {
         userService = mockk()
         controller = TaskController(taskService, userService)
 
-        userEntity = com.synchtask.user.domain.entity.User(
-            id = 1L,
-            email = "user@synchtask.com",
-            name = "User",
-            passwordHash = "hash",
-            role = UserRole.USER
-        )
+        userEntity =
+            com.synchtask.user.domain.entity.User(
+                id = 1L,
+                email = "user@synchtask.com",
+                name = "User",
+                passwordHash = "hash",
+                role = UserRole.USER
+            )
 
-        userDetails = User(
-            userEntity.email,
-            "hash",
-            emptyList()
-        )
+        userDetails =
+            User(
+                userEntity.email,
+                "hash",
+                emptyList()
+            )
 
-        board = Board(
-            id = 10L,
-            name = "Main Board",
-            owner = userEntity,
-            project = null
-        )
+        board =
+            Board(
+                id = 10L,
+                name = "Main Board",
+                owner = userEntity,
+                project = null
+            )
     }
 
     private fun newTask(id: Long, title: String) = Task(
@@ -75,13 +77,14 @@ class TaskControllerTest {
 
     @Test
     fun `should create task successfully`() {
-        val request = TaskCreateDTO(
-            title = "Test Task",
-            description = "Test Description",
-            assignees = emptyList(),
-            labels = listOf("backend"),
-            boardId = board.id!!
-        )
+        val request =
+            TaskCreateDTO(
+                title = "Test Task",
+                description = "Test Description",
+                assignees = emptyList(),
+                labels = listOf("backend"),
+                boardId = board.id!!
+            )
 
         val task = newTask(1L, request.title)
 
@@ -111,14 +114,15 @@ class TaskControllerTest {
             )
         } returns PageImpl(listOf(task))
 
-        val result = controller.getTasks(
-            userDetails,
-            null,
-            null,
-            null,
-            null,
-            PageRequest.of(0, 10)
-        )
+        val result =
+            controller.getTasks(
+                userDetails,
+                null,
+                null,
+                null,
+                null,
+                PageRequest.of(0, 10)
+            )
 
         assertEquals(1, result.totalElements)
         assertEquals(task.id, result.content.first().id)
@@ -140,7 +144,6 @@ class TaskControllerTest {
         }
     }
 
-
     @Test
     fun `should return task detail when user has access`() {
         val task = newTask(5L, "Detail Task")
@@ -154,37 +157,38 @@ class TaskControllerTest {
 
     @Test
     fun `should throw UnauthorizedAccessException when user cannot access task`() {
-        val otherOwner = com.synchtask.user.domain.entity.User(
-            id = 99L,
-            email = "other@test.com",
-            name = userEntity.name,
-            passwordHash = userEntity.passwordHash,
-            profilePictureUrl = userEntity.profilePictureUrl,
-            role = userEntity.role,
-            createdAt = userEntity.createdAt,
-            lastLogin = userEntity.lastLogin,
-            lastActivity = userEntity.lastActivity,
-            isActive = userEntity.isActive,
-            isOnline = userEntity.isOnline,
-            onboardingNotified = userEntity.onboardingNotified
-        )
+        val otherOwner =
+            com.synchtask.user.domain.entity.User(
+                id = 99L,
+                email = "other@test.com",
+                name = userEntity.name,
+                passwordHash = userEntity.passwordHash,
+                profilePictureUrl = userEntity.profilePictureUrl,
+                role = userEntity.role,
+                createdAt = userEntity.createdAt,
+                lastLogin = userEntity.lastLogin,
+                lastActivity = userEntity.lastActivity,
+                isActive = userEntity.isActive,
+                isOnline = userEntity.isOnline,
+                onboardingNotified = userEntity.onboardingNotified
+            )
 
         val base = newTask(5L, "Detail Task")
-        val task = Task(
-            id = base.id,
-            title = base.title,
-            description = base.description,
-            owner = otherOwner,
-            collaborators = base.collaborators,
-            labels = base.labels,
-            status = base.status,
-            priority = base.priority,
-            comments = base.comments,
-            createdAt = base.createdAt,
-            updatedAt = base.updatedAt,
-            board = base.board
-        )
-
+        val task =
+            Task(
+                id = base.id,
+                title = base.title,
+                description = base.description,
+                owner = otherOwner,
+                collaborators = base.collaborators,
+                labels = base.labels,
+                status = base.status,
+                priority = base.priority,
+                comments = base.comments,
+                createdAt = base.createdAt,
+                updatedAt = base.updatedAt,
+                board = base.board
+            )
 
         every { taskService.findTaskById(5L) } returns task
         every { userService.getUserByEmail(userEntity.email) } returns userEntity
@@ -194,15 +198,15 @@ class TaskControllerTest {
         }
     }
 
-
     @Test
     fun `should update task successfully`() {
-        val dto = TaskUpdateDTO(
-            title = "Updated",
-            description = "Updated Desc",
-            status = TaskStatus.COMPLETED,
-            priority = null
-        )
+        val dto =
+            TaskUpdateDTO(
+                title = "Updated",
+                description = "Updated Desc",
+                status = TaskStatus.COMPLETED,
+                priority = null
+            )
 
         val updatedTask = newTask(1L, "Updated")
 
@@ -223,7 +227,6 @@ class TaskControllerTest {
 
         assertEquals("Task deleted successfully", response.body)
     }
-
 
     @Test
     fun `should assign collaborator successfully`() {

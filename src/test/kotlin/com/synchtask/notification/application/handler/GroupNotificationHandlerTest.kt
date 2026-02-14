@@ -11,7 +11,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class GroupNotificationHandlerTest {
-
     private lateinit var notificationService: NotificationService
     private lateinit var handler: GroupNotificationHandler
     private lateinit var user: User
@@ -21,13 +20,14 @@ class GroupNotificationHandlerTest {
         notificationService = mockk(relaxed = true)
         handler = GroupNotificationHandler(notificationService)
 
-        user = User(
-            id = 1L,
-            name = "User",
-            email = "user@synchtask.com",
-            passwordHash = "pw",
-            role = UserRole.USER
-        )
+        user =
+            User(
+                id = 1L,
+                name = "User",
+                email = "user@synchtask.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
     }
 
     @Test

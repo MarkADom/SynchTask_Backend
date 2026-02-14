@@ -11,19 +11,15 @@ import org.springframework.stereotype.Component
 class BoardNotificationPolicy(
     private val boardRepository: BoardRepository
 ) : NotificationPolicy {
-
-    override fun supports(activity: Activity): Boolean =
-        activity.type in setOf(
+    override fun supports(activity: Activity): Boolean = activity.type in
+        setOf(
             ActivityType.BOARD_CREATED,
             ActivityType.BOARD_UPDATED,
             ActivityType.BOARD_DELETED,
             ActivityType.BOARD_COLLABORATORS_UPDATED
         )
 
-    override fun resolveRecipients(
-        activity: Activity,
-        contextSnapshot: ActivityContextSnapshot?
-    ): Set<String> {
+    override fun resolveRecipients(activity: Activity, contextSnapshot: ActivityContextSnapshot?): Set<String> {
         if (activity.type == ActivityType.BOARD_DELETED) {
             return buildSet {
                 contextSnapshot?.ownerEmail?.let(::add)
@@ -48,9 +44,7 @@ class BoardNotificationPolicy(
         }
     }
 
-    override fun buildMessage(activity: Activity): String =
-        activity.description ?: "Board updated"
+    override fun buildMessage(activity: Activity): String = activity.description ?: "Board updated"
 
-    override fun notificationType(): NotificationType =
-        NotificationType.GROUP
+    override fun notificationType(): NotificationType = NotificationType.GROUP
 }

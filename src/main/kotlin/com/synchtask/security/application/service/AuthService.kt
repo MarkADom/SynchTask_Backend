@@ -1,11 +1,11 @@
 package com.synchtask.security.application.service
 
-import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.security.domain.exception.InvalidCredentialsException
-import com.synchtask.notification.application.manager.NotificationManager
 import com.synchtask.notification.application.handler.WelcomeNotificationHandler
-import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.notification.application.manager.NotificationManager
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
+import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
@@ -26,14 +26,14 @@ class AuthService(
     private val passwordEncoder: PasswordEncoder,
     private val notificationManager: NotificationManager,
 ) {
-
     private val logger = LoggerFactory.getLogger(AuthService::class.java)
 
     fun authenticate(email: String, rawPassword: String): Map<String, String> {
         logger.info("Attempting authentication for: $email")
 
-        val userDetails: UserDetails = userDetailsService.loadUserByUsername(email)
-            ?: throw InvalidCredentialsException("Invalid email or password")
+        val userDetails: UserDetails =
+            userDetailsService.loadUserByUsername(email)
+                ?: throw InvalidCredentialsException("Invalid email or password")
 
         if (!passwordEncoder.matches(rawPassword, userDetails.password)) {
             logger.warn("Invalid credentials for user: $email")
@@ -43,8 +43,9 @@ class AuthService(
         val authentication = UsernamePasswordAuthenticationToken(userDetails, rawPassword, userDetails.authorities)
         authenticationManager.authenticate(authentication)
 
-        val user = userRepository.findByEmail(email)
-            .orElseThrow { InvalidCredentialsException("User not found") }
+        val user =
+            userRepository.findByEmail(email)
+                .orElseThrow { InvalidCredentialsException("User not found") }
 
         val accessToken = jwtTokenProvider.generateToken(userDetails)
         val refreshToken = refreshTokenService.createRefreshToken(user)
@@ -62,18 +63,20 @@ class AuthService(
             "refreshToken" to refreshToken.token
         )
     }
-    
+
     fun updateUserRole(adminEmail: String, targetUserId: Long, newRole: UserRole) {
-        val adminUser = userRepository.findByEmail(adminEmail)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found") }
+        val adminUser =
+            userRepository.findByEmail(adminEmail)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found") }
 
         if (adminUser.role != UserRole.ADMIN) {
             logger.warn("Unauthorized role update attempt by $adminEmail")
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can update roles")
         }
 
-        val targetUser = userRepository.findById(targetUserId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Target user not found") }
+        val targetUser =
+            userRepository.findById(targetUserId)
+                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Target user not found") }
 
         if (newRole == UserRole.ADMIN) {
             logger.warn("Blocked ADMIN role assignment via API")

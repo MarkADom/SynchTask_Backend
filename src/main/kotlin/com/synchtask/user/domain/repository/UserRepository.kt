@@ -13,7 +13,6 @@ import java.util.*
 
 @Repository
 interface UserRepository : JpaRepository<User, Long> {
-
     @EntityGraph(attributePaths = ["chatRooms", "receivedFriendRequests", "sentFriendRequests"])
     fun findByEmail(email: String): Optional<User>
 
@@ -39,5 +38,4 @@ interface UserRepository : JpaRepository<User, Long> {
         @Param("onlineOnly") onlineOnly: Boolean?,
         pageable: Pageable,
     ): Page<User>
-
 }

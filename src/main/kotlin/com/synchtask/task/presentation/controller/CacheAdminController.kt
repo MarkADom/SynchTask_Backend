@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController
 class CacheAdminController(
     private val entityManager: EntityManager
 ) {
-
     @PostMapping("/clear")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     fun clear(): ResponseEntity<String> {

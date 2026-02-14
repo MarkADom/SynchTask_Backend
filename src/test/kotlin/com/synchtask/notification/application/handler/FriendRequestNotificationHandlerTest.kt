@@ -11,7 +11,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class FriendRequestNotificationHandlerTest {
-
     private lateinit var notificationService: NotificationService
     private lateinit var handler: FriendRequestNotificationHandler
     private lateinit var user: User
@@ -21,13 +20,14 @@ class FriendRequestNotificationHandlerTest {
         notificationService = mockk(relaxed = true)
         handler = FriendRequestNotificationHandler(notificationService)
 
-        user = User(
-            id = 1L,
-            name = "User",
-            email = "user@synchtask.com",
-            passwordHash = "pw",
-            role = UserRole.USER
-        )
+        user =
+            User(
+                id = 1L,
+                name = "User",
+                email = "user@synchtask.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
     }
 
     @Test

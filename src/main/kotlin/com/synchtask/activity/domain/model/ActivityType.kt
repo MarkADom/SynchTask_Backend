@@ -6,7 +6,6 @@ package com.synchtask.activity.domain.model
  * This enum is part of the domain language.
  */
 enum class ActivityType {
-
     // Task related
     TASK_CREATED,
     TASK_UPDATED,

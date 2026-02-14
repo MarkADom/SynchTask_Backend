@@ -11,19 +11,21 @@ import org.springframework.web.socket.server.HandshakeInterceptor
 class CustomHandshakeInterceptor(
     private val jwtTokenProvider: JwtTokenProvider,
 ) : HandshakeInterceptor {
-
     private val logger = LoggerFactory.getLogger(CustomHandshakeInterceptor::class.java)
 
     override fun beforeHandshake(
-        request: ServerHttpRequest, response: ServerHttpResponse,
-        wsHandler: WebSocketHandler, attributes: MutableMap<String, Any>,
+        request: ServerHttpRequest,
+        response: ServerHttpResponse,
+        wsHandler: WebSocketHandler,
+        attributes: MutableMap<String, Any>,
     ): Boolean {
         logger.info("Intercepting WebSocket handshake...")
 
         val token = extractToken(request) ?: return rejectConnection("Missing authentication token")
 
-        val userDetails: UserDetails = jwtTokenProvider.validateAndExtractUser(token)
-            ?: return rejectConnection("Invalid or expired JWT token")
+        val userDetails: UserDetails =
+            jwtTokenProvider.validateAndExtractUser(token)
+                ?: return rejectConnection("Invalid or expired JWT token")
 
         attributes["username"] = userDetails.username
         logger.info("WebSocket authentication successful for user: ${userDetails.username}")
@@ -41,7 +43,6 @@ class CustomHandshakeInterceptor(
     }
 
     private fun extractToken(request: ServerHttpRequest): String? {
-
         val authHeader = request.headers.getFirst("Authorization")
         if (!authHeader.isNullOrBlank() && authHeader.startsWith("Bearer ")) {
             val token = authHeader.removePrefix("Bearer ").trim()
@@ -53,11 +54,11 @@ class CustomHandshakeInterceptor(
 
         val query = request.uri.query ?: return null
 
-        val token = query.split("&").firstNotNullOfOrNull { param ->
-            val parts = param.split("=")
-            if (parts.size == 2 && parts[0] == "token") parts[1] else null
-        }
-
+        val token =
+            query.split("&").firstNotNullOfOrNull { param ->
+                val parts = param.split("=")
+                if (parts.size == 2 && parts[0] == "token") parts[1] else null
+            }
 
         if (token.isNullOrBlank()) {
             logger.warn("JWT token not found in query parameters")

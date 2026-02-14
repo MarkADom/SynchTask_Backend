@@ -26,7 +26,6 @@ import kotlin.test.assertEquals
 
 @Suppress("UNCHECKED_CAST")
 class TaskSpecificationQueryBuilderTest {
-
     private lateinit var entityManager: EntityManager
     private lateinit var criteriaBuilder: CriteriaBuilder
     private lateinit var taskQuery: CriteriaQuery<Task>
@@ -70,13 +69,14 @@ class TaskSpecificationQueryBuilderTest {
 
     @Test
     fun `should execute query and clear persistence context with basic filters`() {
-        val task = Task(
-            id = 5L,
-            title = "Task",
-            description = "Desc",
-            owner = actor,
-            board = board
-        )
+        val task =
+            Task(
+                id = 5L,
+                title = "Task",
+                description = "Desc",
+                owner = actor,
+                board = board
+            )
         val typedTaskQuery = mockk<TypedQuery<Task>>(relaxed = true)
         val typedCountQuery = mockk<TypedQuery<Long>>(relaxed = true)
 
@@ -85,14 +85,15 @@ class TaskSpecificationQueryBuilderTest {
         every { typedTaskQuery.resultList } returns listOf(task)
         every { typedCountQuery.singleResult } returns 1L
 
-        val result = builder.execute(
-            user = actor,
-            status = null,
-            label = null,
-            assigneeId = null,
-            boardId = null,
-            pageable = PageRequest.of(0, 20)
-        )
+        val result =
+            builder.execute(
+                user = actor,
+                status = null,
+                label = null,
+                assigneeId = null,
+                boardId = null,
+                pageable = PageRequest.of(0, 20)
+            )
 
         assertEquals(1, result.totalElements)
         assertEquals("Task", result.content.first().title)
@@ -120,14 +121,15 @@ class TaskSpecificationQueryBuilderTest {
         every { typedTaskQuery.resultList } returns emptyList()
         every { typedCountQuery.singleResult } returns 0L
 
-        val result = builder.execute(
-            user = actor,
-            status = TaskStatus.TODO,
-            label = "backend",
-            assigneeId = 2L,
-            boardId = 10L,
-            pageable = PageRequest.of(0, 10)
-        )
+        val result =
+            builder.execute(
+                user = actor,
+                status = TaskStatus.TODO,
+                label = "backend",
+                assigneeId = 2L,
+                boardId = 10L,
+                pageable = PageRequest.of(0, 10)
+            )
 
         assertEquals(0, result.totalElements)
         verify(atLeast = 1) { taskRoot.joinSet<Task, String>("labels", JoinType.LEFT) }

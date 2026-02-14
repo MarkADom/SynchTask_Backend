@@ -10,7 +10,6 @@ import kotlin.reflect.KClass
 class NotificationManager(
     private val applicationContext: ApplicationContext
 ) {
-
     fun handle(user: User, handlerClass: KClass<out NotificationHandler>) {
         val handler = applicationContext.getBean(handlerClass.java)
         handler.handle(user)

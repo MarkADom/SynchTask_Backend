@@ -11,12 +11,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.security.core.userdetails.User as SpringUser
 import java.time.LocalDate
 import kotlin.test.assertEquals
+import org.springframework.security.core.userdetails.User as SpringUser
 
 class ProjectControllerTest {
-
     private lateinit var projectService: ProjectService
     private lateinit var userService: UserService
     private lateinit var controller: ProjectController
@@ -30,24 +29,23 @@ class ProjectControllerTest {
         userService = mockk()
         controller = ProjectController(projectService, userService)
 
-        userEntity = User(
-            id = 1L,
-            name = "User",
-            email = "user@test.com",
-            passwordHash = "hash"
-        )
+        userEntity =
+            User(
+                id = 1L,
+                name = "User",
+                email = "user@test.com",
+                passwordHash = "hash"
+            )
 
-        userDetails = SpringUser(
-            userEntity.email,
-            "hash",
-            emptyList()
-        )
+        userDetails =
+            SpringUser(
+                userEntity.email,
+                "hash",
+                emptyList()
+            )
     }
 
-    private fun newProjectResponse(
-        id: Long = 1L,
-        name: String = "Project $id"
-    ) = ProjectResponseDTO(
+    private fun newProjectResponse(id: Long = 1L, name: String = "Project $id") = ProjectResponseDTO(
         id = id,
         name = name,
         description = "Desc",
@@ -60,14 +58,15 @@ class ProjectControllerTest {
 
     @Test
     fun `should create project`() {
-        val dto = ProjectCreateDTO(
-            name = "My Project",
-            description = "Desc",
-            tag = "tag",
-            color = "#111",
-            dueDate = LocalDate.now(),
-            boardIds = emptyList()
-        )
+        val dto =
+            ProjectCreateDTO(
+                name = "My Project",
+                description = "Desc",
+                tag = "tag",
+                color = "#111",
+                dueDate = LocalDate.now(),
+                boardIds = emptyList()
+            )
 
         val response = newProjectResponse()
 
@@ -86,10 +85,11 @@ class ProjectControllerTest {
 
     @Test
     fun `should list projects`() {
-        val projects = listOf(
-            newProjectResponse(1),
-            newProjectResponse(2)
-        )
+        val projects =
+            listOf(
+                newProjectResponse(1),
+                newProjectResponse(2)
+            )
 
         every { userService.getUserByEmail(userEntity.email) } returns userEntity
         every { projectService.listAll(userEntity) } returns projects
@@ -123,14 +123,15 @@ class ProjectControllerTest {
 
     @Test
     fun `should update project`() {
-        val dto = ProjectUpdateDTO(
-            name = "Updated",
-            description = "Updated desc",
-            tag = "new",
-            color = "#000",
-            dueDate = LocalDate.now(),
-            boardIds = emptyList()
-        )
+        val dto =
+            ProjectUpdateDTO(
+                name = "Updated",
+                description = "Updated desc",
+                tag = "new",
+                color = "#000",
+                dueDate = LocalDate.now(),
+                boardIds = emptyList()
+            )
 
         val response = newProjectResponse(10, "Updated")
 

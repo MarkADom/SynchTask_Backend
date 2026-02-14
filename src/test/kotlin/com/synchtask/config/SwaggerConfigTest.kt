@@ -6,9 +6,9 @@ import org.springdoc.core.models.GroupedOpenApi
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 
 class SwaggerConfigTest {
-
-    private val contextRunner = ApplicationContextRunner()
-        .withUserConfiguration(SwaggerConfig::class.java)
+    private val contextRunner =
+        ApplicationContextRunner()
+            .withUserConfiguration(SwaggerConfig::class.java)
 
     @Test
     fun `should load GroupedOpenApi bean from SwaggerConfig`() {

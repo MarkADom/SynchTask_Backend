@@ -14,7 +14,6 @@ import kotlin.test.assertNull
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class JwtAuthenticationFilterTest {
-
     private lateinit var jwtTokenProvider: JwtTokenProvider
     private lateinit var jwtAuthenticationFilter: TestableJwtAuthenticationFilter
     private lateinit var request: HttpServletRequest
@@ -108,11 +107,17 @@ class JwtAuthenticationFilterTest {
     // Realistic implementation of UserDetails for isolated test
     class FakeUserDetails(private val username: String) : UserDetails {
         override fun getUsername() = username
+
         override fun getAuthorities() = emptyList<GrantedAuthority>()
+
         override fun getPassword() = null
+
         override fun isAccountNonExpired() = true
+
         override fun isAccountNonLocked() = true
+
         override fun isCredentialsNonExpired() = true
+
         override fun isEnabled() = true
     }
 }

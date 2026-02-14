@@ -8,7 +8,6 @@ import java.security.interfaces.RSAPublicKey
 import kotlin.collections.get
 
 class JwtKeyManagerTest {
-
     @Test
     fun `should load RSA key pair from PEM files`() {
         val manager = JwtKeyManager()
@@ -60,9 +59,10 @@ class JwtKeyManagerTest {
     fun `should throw when rotating keys`() {
         val manager = JwtKeyManager()
 
-        val ex = assertThrows(UnsupportedOperationException::class.java) {
-            manager.rotateKeys()
-        }
+        val ex =
+            assertThrows(UnsupportedOperationException::class.java) {
+                manager.rotateKeys()
+            }
 
         assertTrue(ex.message!!.contains("Manual rotation not supported"))
     }

@@ -20,7 +20,6 @@ import org.springframework.web.filter.OncePerRequestFilter
 class JwtAuthenticationFilter(
     private val jwtTokenProvider: JwtTokenProvider
 ) : OncePerRequestFilter() {
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -52,11 +51,12 @@ class JwtAuthenticationFilter(
             return
         }
 
-        val authentication = UsernamePasswordAuthenticationToken(
-            userDetails,
-            null,
-            userDetails.authorities
-        )
+        val authentication =
+            UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.authorities
+            )
         SecurityContextHolder.getContext().authentication = authentication
         log.info("User authenticated: ${userDetails.username}")
 
@@ -65,23 +65,25 @@ class JwtAuthenticationFilter(
 
     private fun isPublicEndpoint(path: String): Boolean {
         return SWAGGER_ENDPOINTS.any { path.startsWith(it) } ||
-                PUBLIC_ENDPOINTS.any { path.startsWith(it) }
+            PUBLIC_ENDPOINTS.any { path.startsWith(it) }
     }
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
 
-        private val PUBLIC_ENDPOINTS = listOf(
-            "/auth/login",
-            "/auth/register",
-            "/oauth2/"
-        )
+        private val PUBLIC_ENDPOINTS =
+            listOf(
+                "/auth/login",
+                "/auth/register",
+                "/oauth2/"
+            )
 
-        private val SWAGGER_ENDPOINTS = listOf(
-            "/swagger-ui",
-            "/v3/api-docs",
-            "/swagger-resources",
-            "/webjars"
-        )
+        private val SWAGGER_ENDPOINTS =
+            listOf(
+                "/swagger-ui",
+                "/v3/api-docs",
+                "/swagger-resources",
+                "/webjars"
+            )
     }
 }

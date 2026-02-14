@@ -11,14 +11,9 @@ import org.springframework.stereotype.Component
 class TaskStatusChangedNotificationPolicy(
     private val taskRepository: TaskRepository,
 ) : NotificationPolicy {
+    override fun supports(activity: Activity): Boolean = activity.type == ActivityType.TASK_STATUS_CHANGED
 
-    override fun supports(activity: Activity): Boolean =
-        activity.type == ActivityType.TASK_STATUS_CHANGED
-
-    override fun resolveRecipients(
-        activity: Activity,
-        contextSnapshot: ActivityContextSnapshot?,
-    ): Set<String> {
+    override fun resolveRecipients(activity: Activity, contextSnapshot: ActivityContextSnapshot?,): Set<String> {
         val taskId = activity.referenceId ?: return emptySet()
         val task = taskRepository.findById(taskId).orElse(null) ?: return emptySet()
 
@@ -27,10 +22,7 @@ class TaskStatusChangedNotificationPolicy(
             .toSet()
     }
 
-    override fun buildMessage(activity: Activity): String =
-        activity.description ?: "Task status updated"
+    override fun buildMessage(activity: Activity): String = activity.description ?: "Task status updated"
 
-    override fun notificationType(): NotificationType =
-        NotificationType.TASK_UPDATE
+    override fun notificationType(): NotificationType = NotificationType.TASK_UPDATE
 }
-

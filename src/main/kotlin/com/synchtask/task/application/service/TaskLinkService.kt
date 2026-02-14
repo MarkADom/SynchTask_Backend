@@ -2,10 +2,10 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.domain.model.ActivityType
-import com.synchtask.task.application.dto.TaskLinkDTO
-import com.synchtask.task.domain.entity.TaskLink
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.task.application.dto.TaskLinkDTO
+import com.synchtask.task.domain.entity.TaskLink
 import com.synchtask.task.domain.repository.TaskLinkRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.task.presentation.mapper.TaskMapper
@@ -20,31 +20,26 @@ class TaskLinkService(
     private val taskLinkRepository: TaskLinkRepository,
     private val activityService: ActivityService,
 ) {
-
     private val logger = LoggerFactory.getLogger(TaskLinkService::class.java)
 
     @Transactional
-    fun addLink(
-        taskId: Long,
-        title: String,
-        url: String,
-        user: User
-    ): TaskLinkDTO {
-
-        val task = taskRepository.findById(taskId)
-            .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
+    fun addLink(taskId: Long, title: String, url: String, user: User): TaskLinkDTO {
+        val task =
+            taskRepository.findById(taskId)
+                .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
         if (!task.canBeEditedBy(user)) {
             throw UnauthorizedAccessException("User ${user.email} is not allowed to modify this task")
         }
 
-        val link = taskLinkRepository.save(
-            TaskLink(
-                task = task,
-                title = title,
-                url = url
+        val link =
+            taskLinkRepository.save(
+                TaskLink(
+                    task = task,
+                    title = title,
+                    url = url
+                )
             )
-        )
 
         activityService.record(
             actor = user,
@@ -59,13 +54,10 @@ class TaskLinkService(
     }
 
     @Transactional(readOnly = true)
-    fun listLinks(
-        taskId: Long,
-        user: User
-    ): List<TaskLinkDTO> {
-
-        val task = taskRepository.findById(taskId)
-            .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
+    fun listLinks(taskId: Long, user: User): List<TaskLinkDTO> {
+        val task =
+            taskRepository.findById(taskId)
+                .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
         if (!task.canBeAccessedBy(user)) {
             throw UnauthorizedAccessException("User ${user.email} is not allowed to view links for this task")
@@ -77,14 +69,10 @@ class TaskLinkService(
     }
 
     @Transactional
-    fun removeLink(
-        taskId: Long,
-        linkId: Long,
-        user: User
-    ) {
-
-        val task = taskRepository.findById(taskId)
-            .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
+    fun removeLink(taskId: Long, linkId: Long, user: User) {
+        val task =
+            taskRepository.findById(taskId)
+                .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
         if (!task.canBeEditedBy(user)) {
             throw UnauthorizedAccessException("User ${user.email} is not allowed to modify this task")

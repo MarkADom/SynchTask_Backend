@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 
 class CustomErrorHandlerTest {
-
     private val handler = CustomErrorHandler()
 
     @Test

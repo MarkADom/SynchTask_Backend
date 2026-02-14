@@ -29,55 +29,41 @@ import java.time.LocalDateTime
     ]
 )
 class User(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Column(nullable = false, length = 150)
     var name: String,
-
     @Column(nullable = false, unique = true, length = 255)
     var email: String,
-
     @JsonIgnore
     @Column(name = "password_hash", nullable = false, length = 255)
     var passwordHash: String,
-
     @Column(name = "profile_picture_url", length = 2048)
     var profilePictureUrl: String? = null,
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var role: UserRole = UserRole.USER,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "last_login")
     var lastLogin: LocalDateTime? = null,
-
     @Column(name = "last_activity")
     var lastActivity: LocalDateTime? = null,
-
     @Column(name = "is_active", nullable = false)
     var isActive: Boolean = true,
-
     @Column(name = "is_online", nullable = false)
     var isOnline: Boolean = false,
-
     @Column(name = "onboarding_notified", nullable = false)
     var onboardingNotified: Boolean = false
 ) {
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is User) return false
         return id == other.id
     }
 
-    override fun hashCode(): Int =
-        id?.hashCode() ?: 0
+    override fun hashCode(): Int = id?.hashCode() ?: 0
 }
 
 /**

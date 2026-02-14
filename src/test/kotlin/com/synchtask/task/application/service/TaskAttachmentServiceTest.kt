@@ -21,43 +21,46 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class TaskAttachmentServiceTest {
-
     private lateinit var taskRepository: TaskRepository
     private lateinit var taskAttachmentRepository: TaskAttachmentRepository
     private lateinit var activityService: ActivityService
     private lateinit var service: TaskAttachmentService
 
-    private val owner = User(
-        id = 1L,
-        name = "Owner",
-        email = "owner@test.com",
-        passwordHash = "hash",
-        role = UserRole.USER
-    )
+    private val owner =
+        User(
+            id = 1L,
+            name = "Owner",
+            email = "owner@test.com",
+            passwordHash = "hash",
+            role = UserRole.USER
+        )
 
-    private val other = User(
-        id = 2L,
-        name = "Other",
-        email = "other@test.com",
-        passwordHash = "hash",
-        role = UserRole.USER
-    )
+    private val other =
+        User(
+            id = 2L,
+            name = "Other",
+            email = "other@test.com",
+            passwordHash = "hash",
+            role = UserRole.USER
+        )
 
-    private val board = Board(
-        id = 1L,
-        name = "Board",
-        owner = owner
-    )
+    private val board =
+        Board(
+            id = 1L,
+            name = "Board",
+            owner = owner
+        )
 
-    private val task = Task(
-        id = 10L,
-        title = "Task",
-        description = "Desc",
-        owner = owner,
-        board = board,
-        status = TaskStatus.TODO,
-        priority = TaskPriority.MID
-    )
+    private val task =
+        Task(
+            id = 10L,
+            title = "Task",
+            description = "Desc",
+            owner = owner,
+            board = board,
+            status = TaskStatus.TODO,
+            priority = TaskPriority.MID
+        )
 
     @BeforeEach
     fun setup() {
@@ -104,12 +107,13 @@ class TaskAttachmentServiceTest {
 
     @Test
     fun `should list attachments when user is owner`() {
-        val attachment = TaskAttachment(
-            id = 1L,
-            task = task,
-            fileName = "doc.pdf",
-            fileUrl = "url"
-        )
+        val attachment =
+            TaskAttachment(
+                id = 1L,
+                task = task,
+                fileName = "doc.pdf",
+                fileUrl = "url"
+            )
 
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskAttachmentRepository.findAllByTask(task) } returns listOf(attachment)

@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/test-cors")
 class CorsTestController {
-
     @GetMapping
     fun testCors(): String = "CORS is working"
 }

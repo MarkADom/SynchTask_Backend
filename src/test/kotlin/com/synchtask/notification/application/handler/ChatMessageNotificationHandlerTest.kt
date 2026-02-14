@@ -11,7 +11,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ChatMessageNotificationHandlerTest {
-
     private lateinit var notificationService: NotificationService
     private lateinit var handler: ChatMessageNotificationHandler
 
@@ -22,13 +21,14 @@ class ChatMessageNotificationHandlerTest {
         notificationService = mockk(relaxed = true)
         handler = ChatMessageNotificationHandler(notificationService)
 
-        user = User(
-            id = 1L,
-            name = "Marco",
-            email = "marco@synchtask.com",
-            passwordHash = "pw",
-            role = UserRole.USER
-        )
+        user =
+            User(
+                id = 1L,
+                name = "Marco",
+                email = "marco@synchtask.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
     }
 
     @Test

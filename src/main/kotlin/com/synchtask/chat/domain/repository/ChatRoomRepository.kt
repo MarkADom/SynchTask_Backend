@@ -8,10 +8,8 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
-
 @Repository
 interface ChatRoomRepository : JpaRepository<ChatRoom, Long> {
-
     @EntityGraph(attributePaths = ["participants"])
     @Query(
         """
@@ -20,8 +18,5 @@ interface ChatRoomRepository : JpaRepository<ChatRoom, Long> {
         AND :participant MEMBER OF c.participants
     """
     )
-    fun findByExactParticipants(
-        @Param("participant") participant: Set<User>,
-        @Param("size") size: Int
-    ): ChatRoom?
+    fun findByExactParticipants(@Param("participant") participant: Set<User>, @Param("size") size: Int): ChatRoom?
 }

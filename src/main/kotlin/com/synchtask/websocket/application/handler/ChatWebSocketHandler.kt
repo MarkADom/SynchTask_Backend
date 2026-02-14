@@ -13,7 +13,6 @@ class ChatWebSocketHandler(
     private val chatWebSocketService: ChatWebSocketService,
     private val messagingTemplate: SimpMessagingTemplate
 ) {
-
     private val logger = LoggerFactory.getLogger(ChatWebSocketHandler::class.java)
 
     @MessageMapping("/chat/send")

@@ -35,36 +35,26 @@ import java.time.LocalDateTime
     ]
 )
 class Project(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Column(nullable = false)
     var name: String,
-
     @Column(nullable = false, columnDefinition = "TEXT")
     var description: String = "",
-
     @Column(nullable = false)
     var tag: String = "",
-
     @Column(nullable = false)
     var color: String = "#60A5FA",
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     val owner: User,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "updated_at", nullable = true)
     var updatedAt: LocalDateTime? = null,
-
     @Column(name = "due_date", nullable = false)
     var dueDate: LocalDate,
-
     /**
      * Users that are members of this project.
      * A unique constraint prevents duplicated (project_id, user_id) pairs.
@@ -82,7 +72,6 @@ class Project(
         ]
     )
     val members: MutableSet<User> = mutableSetOf(),
-
     /**
      * Boards that belong to this project.
      * Orphan removal ensures consistency when boards are removed.
@@ -95,13 +84,11 @@ class Project(
     )
     val boards: MutableSet<Board> = mutableSetOf()
 ) {
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Project) return false
         return id == other.id
     }
 
-    override fun hashCode(): Int =
-        id?.hashCode() ?: 0
+    override fun hashCode(): Int = id?.hashCode() ?: 0
 }
