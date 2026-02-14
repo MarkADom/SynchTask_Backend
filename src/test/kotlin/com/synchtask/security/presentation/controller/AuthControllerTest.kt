@@ -7,6 +7,7 @@ import com.synchtask.security.infrastructure.jwt.JwtKeyManager
 import com.synchtask.user.application.dto.UserLoginDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
 import com.synchtask.user.application.dto.UserResponseDTO
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
@@ -24,6 +25,7 @@ class AuthControllerTest {
     private lateinit var jwtKeyManager: JwtKeyManager
     private lateinit var userService: UserService
     private lateinit var refreshTokenService: RefreshTokenService
+    private lateinit var authenticatedUserService: AuthenticatedUserService
     private lateinit var authService: AuthService
 
     private lateinit var authController: AuthController
@@ -34,6 +36,7 @@ class AuthControllerTest {
         jwtKeyManager = mockk(relaxed = true)
         userService = mockk(relaxed = true)
         refreshTokenService = mockk(relaxed = true)
+        authenticatedUserService = mockk(relaxed = true)
         authService = mockk(relaxed = true)
 
         authController =
@@ -41,6 +44,7 @@ class AuthControllerTest {
                 authManager = authManager,
                 jwtKeyManager = jwtKeyManager,
                 userService = userService,
+                authenticatedUserService = authenticatedUserService,
                 refreshTokenService = refreshTokenService,
                 authService = authService
             )

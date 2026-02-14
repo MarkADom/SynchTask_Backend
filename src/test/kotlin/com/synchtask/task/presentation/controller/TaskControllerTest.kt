@@ -8,7 +8,7 @@ import com.synchtask.task.application.service.TaskService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
-import com.synchtask.user.application.service.UserService
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
 
 class TaskControllerTest {
     private lateinit var taskService: TaskService
-    private lateinit var userService: UserService
+    private lateinit var authenticatedUserService: AuthenticatedUserService
     private lateinit var controller: TaskController
 
     private lateinit var userEntity: com.synchtask.user.domain.entity.User
@@ -33,8 +33,8 @@ class TaskControllerTest {
     @BeforeEach
     fun setup() {
         taskService = mockk()
-        userService = mockk()
-        controller = TaskController(taskService, userService)
+        authenticatedUserService = mockk()
+        controller = TaskController(taskService, authenticatedUserService)
 
         userEntity =
             com.synchtask.user.domain.entity.User(
@@ -88,7 +88,7 @@ class TaskControllerTest {
 
         val task = newTask(1L, request.title)
 
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { taskService.createTask(userEntity, request) } returns task
 
         val response = controller.createTask(request, userDetails)
@@ -102,7 +102,7 @@ class TaskControllerTest {
     fun `should return paginated tasks`() {
         val task = newTask(2L, "Another Task")
 
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every {
             taskService.getTasksWithFilters(
                 user = userEntity,
@@ -130,7 +130,8 @@ class TaskControllerTest {
 
     @Test
     fun `should throw ResourceNotFoundException when user not found on list`() {
-        every { userService.getUserByEmail(userDetails.username) } returns null
+        every { authenticatedUserService.requireUser(userDetails) } throws
+            ResourceNotFoundException("Authenticated user not found: ${userDetails.username}")
 
         assertThrows<ResourceNotFoundException> {
             controller.getTasks(
@@ -149,7 +150,7 @@ class TaskControllerTest {
         val task = newTask(5L, "Detail Task")
 
         every { taskService.findTaskById(5L) } returns task
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         val result = controller.getTaskDetail(5L, userDetails)
 
         assertEquals(task.id, result.id)
@@ -191,7 +192,7 @@ class TaskControllerTest {
             )
 
         every { taskService.findTaskById(5L) } returns task
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
 
         assertThrows<UnauthorizedAccessException> {
             controller.getTaskDetail(5L, userDetails)
@@ -210,7 +211,7 @@ class TaskControllerTest {
 
         val updatedTask = newTask(1L, "Updated")
 
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { taskService.updateTask(1L, dto, userEntity) } returns updatedTask
 
         val response = controller.updateTask(1L, dto, userDetails)
@@ -220,7 +221,7 @@ class TaskControllerTest {
 
     @Test
     fun `should delete task successfully`() {
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { taskService.deleteTask(1L, userEntity) } just Runs
 
         val response = controller.deleteTask(1L, userDetails)
@@ -230,7 +231,7 @@ class TaskControllerTest {
 
     @Test
     fun `should assign collaborator successfully`() {
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { taskService.assignCollaborator(1L, "collab@test.com", userEntity) } just Runs
 
         val response = controller.assignCollaborator(1L, "collab@test.com", userDetails)
@@ -242,7 +243,7 @@ class TaskControllerTest {
     fun `should update task labels successfully`() {
         val dto = TaskLabelUpdateDTO(labels = listOf("urgent"))
 
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { taskService.updateTaskLabels(1L, dto.labels, userEntity) } just Runs
 
         val response = controller.updateLabels(1L, dto, userDetails)
@@ -254,7 +255,7 @@ class TaskControllerTest {
     fun `should update task assignees successfully`() {
         val dto = TaskAssigneeUpdateDTO(userIds = listOf(2L, 3L))
 
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { taskService.updateTaskAssignees(1L, dto.userIds, userEntity) } just Runs
 
         val response = controller.updateAssignees(1L, dto, userDetails)

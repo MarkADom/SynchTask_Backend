@@ -1,9 +1,9 @@
 package com.synchtask.user.presentation.controller
 
-import com.synchtask.friend.application.service.FriendService
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.application.dto.*
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
@@ -23,7 +23,7 @@ import kotlin.test.assertFailsWith
 class UserControllerTest {
     private lateinit var userService: UserService
     private lateinit var passwordEncoder: BCryptPasswordEncoder
-    private lateinit var friendService: FriendService
+    private lateinit var authenticatedUserService: AuthenticatedUserService
     private lateinit var controller: UserController
 
     private val now = LocalDateTime.now()
@@ -33,8 +33,8 @@ class UserControllerTest {
         clearAllMocks()
         userService = mockk()
         passwordEncoder = mockk()
-        friendService = mockk()
-        controller = UserController(userService, passwordEncoder, friendService)
+        authenticatedUserService = mockk()
+        controller = UserController(userService, authenticatedUserService, passwordEncoder)
     }
 
     @Test
@@ -138,6 +138,11 @@ class UserControllerTest {
             )
 
         every { userService.getUserById(1L) } returns existing
+        every { authenticatedUserService.requireUser(authUser) } returns User(
+            email = authUser.username,
+            passwordHash = "pw",
+            name = "Auth"
+        )
         every { userService.isAuthorized(authUser.username, existing.email) } returns true
         every { userService.updateUser(1L, any()) } returns updated
 
@@ -166,6 +171,11 @@ class UserControllerTest {
             )
 
         every { userService.getUserById(1L) } returns existing
+        every { authenticatedUserService.requireUser(authUser) } returns User(
+            email = authUser.username,
+            passwordHash = "pw",
+            name = "Auth"
+        )
         every { userService.isAuthorized(authUser.username, existing.email) } returns false
 
         val response =
@@ -183,6 +193,11 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("admin@email.com", "pw", emptyList())
 
+        every { authenticatedUserService.requireUser(authUser) } returns User(
+            email = authUser.username,
+            passwordHash = "pw",
+            name = "Auth"
+        )
         every { userService.getUserById(999L) } returns null
 
         val response =
@@ -209,6 +224,11 @@ class UserControllerTest {
             )
 
         every { userService.getUserById(3L) } returns user
+        every { authenticatedUserService.requireUser(authUser) } returns User(
+            email = authUser.username,
+            passwordHash = "pw",
+            name = "Auth"
+        )
         every { userService.isAuthorized(authUser.username, user.email) } returns true
         every { userService.deleteUser(3L) } just Runs
 
@@ -231,6 +251,11 @@ class UserControllerTest {
             )
 
         every { userService.getUserById(10L) } returns user
+        every { authenticatedUserService.requireUser(authUser) } returns User(
+            email = authUser.username,
+            passwordHash = "pw",
+            name = "Auth"
+        )
         every { userService.isAuthorized(authUser.username, user.email) } returns false
 
         val ex =
@@ -270,7 +295,7 @@ class UserControllerTest {
                 onboardingNotified = existing.onboardingNotified
             )
 
-        every { userService.getUserByEmail(authUser.username) } returns existing
+        every { authenticatedUserService.requireUser(authUser) } returns existing
         every { userService.updateUser(1L, any()) } returns updated
 
         val response =
@@ -288,14 +313,15 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("ghost@email.com", "pw", emptyList())
 
-        every { userService.getUserByEmail(authUser.username) } returns null
+        every { authenticatedUserService.requireUser(authUser) } throws
+            ResourceNotFoundException("Authenticated user not found: ${authUser.username}")
 
         val ex =
             assertFailsWith<ResourceNotFoundException> {
                 controller.updateCurrentUser(UpdateUserDTO("X", "x@email.com", null, null), authUser)
             }
 
-        assertEquals("Authenticated user not found", ex.message)
+        assertEquals("Authenticated user not found: ${authUser.username}", ex.message)
     }
 
     @Test
@@ -335,7 +361,7 @@ class UserControllerTest {
                 profilePictureUrl = null
             )
 
-        every { userService.getUserByEmail(authUser.username) } returns current
+        every { authenticatedUserService.requireUser(authUser) } returns current
         every { userService.getVisibleUsers(current, emptyList()) } returns listOf(visibleDto)
 
         val response = controller.getVisibleUsers(authUser)
@@ -358,7 +384,7 @@ class UserControllerTest {
                 passwordHash = "pw"
             )
 
-        every { userService.getUserByEmail(authUser.username) } returns existing
+        every { authenticatedUserService.requireUser(authUser) } returns existing
 
         val response = controller.getCurrentUser(authUser)
 
@@ -371,14 +397,15 @@ class UserControllerTest {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("ghost@email.com", "pw", emptyList())
 
-        every { userService.getUserByEmail(authUser.username) } returns null
+        every { authenticatedUserService.requireUser(authUser) } throws
+            ResourceNotFoundException("Authenticated user not found: ${authUser.username}")
 
         val ex =
             assertFailsWith<ResourceNotFoundException> {
                 controller.getCurrentUser(authUser)
             }
 
-        assertEquals("Authenticated user not found", ex.message)
+        assertEquals("Authenticated user not found: ${authUser.username}", ex.message)
     }
 
     @Test
@@ -426,7 +453,7 @@ class UserControllerTest {
                 passwordHash = "pw",
                 profilePictureUrl = "https://cdn/img.png"
             )
-
+        every { authenticatedUserService.requireUser(authUser) } returns updatedUser
         every { userService.updateProfilePicture(authUser.username, file) } returns updatedUser
 
         val response = controller.updateProfilePicture(file, authUser)

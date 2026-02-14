@@ -3,7 +3,7 @@ package com.synchtask.task.presentation.controller
 import com.synchtask.task.application.dto.TaskCommentCreateDTO
 import com.synchtask.task.application.dto.TaskCommentResponseDTO
 import com.synchtask.task.application.service.TaskCommentService
-import com.synchtask.user.application.service.UserService
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.domain.entity.User
 import io.mockk.every
 import io.mockk.mockk
@@ -17,15 +17,15 @@ import kotlin.test.assertEquals
 
 class TaskCommentControllerTest {
     private lateinit var taskCommentService: TaskCommentService
-    private lateinit var userService: UserService
+    private lateinit var authenticatedUserService: AuthenticatedUserService
     private lateinit var controller: TaskCommentController
     private lateinit var userDetails: UserDetails
 
     @BeforeEach
     fun setup() {
         taskCommentService = mockk()
-        userService = mockk()
-        controller = TaskCommentController(taskCommentService, userService)
+        authenticatedUserService = mockk()
+        controller = TaskCommentController(taskCommentService, authenticatedUserService)
         userDetails = mockk()
     }
 
@@ -43,8 +43,7 @@ class TaskCommentControllerTest {
             )
         val actor = User(id = 101L, name = "User", email = "user@email.com", passwordHash = "hash")
 
-        every { userDetails.username } returns "user@email.com"
-        every { userService.getUserByEmail("user@email.com") } returns actor
+        every { authenticatedUserService.requireUser(userDetails) } returns actor
         every { taskCommentService.addComment(taskId, actor, request) } returns expectedResponse
 
         val response = controller.addComment(taskId, request, userDetails)

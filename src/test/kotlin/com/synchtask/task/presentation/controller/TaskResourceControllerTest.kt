@@ -4,7 +4,7 @@ import com.synchtask.task.application.dto.TaskAttachmentDTO
 import com.synchtask.task.application.dto.TaskLinkDTO
 import com.synchtask.task.application.service.TaskAttachmentService
 import com.synchtask.task.application.service.TaskLinkService
-import com.synchtask.user.application.service.UserService
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.domain.entity.User
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
@@ -19,7 +19,7 @@ import org.springframework.security.core.userdetails.User as SpringUser
 class TaskResourceControllerTest {
     private lateinit var linkService: TaskLinkService
     private lateinit var attachmentService: TaskAttachmentService
-    private lateinit var userService: UserService
+    private lateinit var authenticatedUserService: AuthenticatedUserService
     private lateinit var controller: TaskResourceController
 
     private lateinit var userDetails: UserDetails
@@ -29,8 +29,8 @@ class TaskResourceControllerTest {
     fun setup() {
         linkService = mockk(relaxed = true)
         attachmentService = mockk(relaxed = true)
-        userService = mockk(relaxed = true)
-        controller = TaskResourceController(linkService, attachmentService, userService)
+        authenticatedUserService = mockk(relaxed = true)
+        controller = TaskResourceController(linkService, attachmentService, authenticatedUserService)
 
         userDetails =
             SpringUser(
@@ -40,7 +40,7 @@ class TaskResourceControllerTest {
             )
         actor = User(id = 1L, name = "User", email = "user@synchtask.com", passwordHash = "hash")
 
-        every { userService.getUserByEmail(userDetails.username) } returns actor
+        every { authenticatedUserService.requireUser(userDetails) } returns actor
     }
 
     @Test

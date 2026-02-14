@@ -4,7 +4,8 @@ import com.synchtask.project.application.dto.ProjectCreateDTO
 import com.synchtask.project.application.dto.ProjectResponseDTO
 import com.synchtask.project.application.dto.ProjectUpdateDTO
 import com.synchtask.project.application.service.ProjectService
-import com.synchtask.user.application.service.UserService
+import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.domain.entity.User
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
@@ -17,7 +18,7 @@ import org.springframework.security.core.userdetails.User as SpringUser
 
 class ProjectControllerTest {
     private lateinit var projectService: ProjectService
-    private lateinit var userService: UserService
+    private lateinit var authenticatedUserService: AuthenticatedUserService
     private lateinit var controller: ProjectController
 
     private lateinit var userEntity: User
@@ -26,8 +27,8 @@ class ProjectControllerTest {
     @BeforeEach
     fun setup() {
         projectService = mockk()
-        userService = mockk()
-        controller = ProjectController(projectService, userService)
+        authenticatedUserService = mockk()
+        controller = ProjectController(projectService, authenticatedUserService)
 
         userEntity =
             User(
@@ -70,7 +71,7 @@ class ProjectControllerTest {
 
         val response = newProjectResponse()
 
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { projectService.create(dto, userEntity) } returns response
 
         val result = controller.createProject(dto, userDetails)
@@ -91,7 +92,7 @@ class ProjectControllerTest {
                 newProjectResponse(2)
             )
 
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { projectService.listAll(userEntity) } returns projects
 
         val result = controller.listProjects(userDetails)
@@ -108,7 +109,7 @@ class ProjectControllerTest {
     fun `should get project by id`() {
         val response = newProjectResponse(10)
 
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { projectService.getById(10L, userEntity) } returns response
 
         val result = controller.getProject(10L, userDetails)
@@ -135,7 +136,7 @@ class ProjectControllerTest {
 
         val response = newProjectResponse(10, "Updated")
 
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { projectService.update(10L, dto, userEntity) } returns response
 
         val result = controller.updateProject(10L, dto, userDetails)
@@ -149,7 +150,7 @@ class ProjectControllerTest {
 
     @Test
     fun `should delete project`() {
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
         every { projectService.delete(10L, userEntity) } just Runs
 
         controller.deleteProject(10L, userDetails)
@@ -161,10 +162,12 @@ class ProjectControllerTest {
 
     @Test
     fun `should throw when user not found`() {
-        every { userService.getUserByEmail(userDetails.username) } returns null
+        every { authenticatedUserService.requireUser(userDetails) } throws
+            ResourceNotFoundException("Authenticated user not found: ${userDetails.username}")
 
-        assertThrows<IllegalArgumentException> {
+        assertThrows<ResourceNotFoundException> {
             controller.listProjects(userDetails)
         }
     }
 }
+
