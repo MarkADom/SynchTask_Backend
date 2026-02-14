@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Configuration
 @ConditionalOnProperty(
     name = ["websocket.enabled"],
     havingValue = "true",
-    matchIfMissing = true)
-
+    matchIfMissing = true
+)
 @Configuration
 @ConfigurationProperties(prefix = "websocket")
 class WebSocketProperties(

@@ -4,8 +4,8 @@ import com.synchtask.notification.application.dto.NotificationRedisDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.user.domain.entity.User
 import com.synchtask.notification.presentation.mapper.NotificationMapper
+import com.synchtask.user.domain.entity.User
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,7 +14,6 @@ import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
 class NotificationServiceTest {
-
     private lateinit var storageService: NotificationStorageService
     private lateinit var webSocketService: NotificationWebSocketService
     private lateinit var notificationService: NotificationService
@@ -28,19 +27,21 @@ class NotificationServiceTest {
 
     @Test
     fun `should send notification`() {
-        val user = User(
-            id = 1L,
-            name = "Test User",
-            email = "test@example.com",
-            passwordHash = "123456"
-        )
+        val user =
+            User(
+                id = 1L,
+                name = "Test User",
+                email = "test@example.com",
+                passwordHash = "123456"
+            )
 
-        val notification = Notification(
-            id = 100L,
-            recipient = user,
-            message = "New Task",
-            type = NotificationType.TASK_UPDATE
-        )
+        val notification =
+            Notification(
+                id = 100L,
+                recipient = user,
+                message = "New Task",
+                type = NotificationType.TASK_UPDATE
+            )
 
         every {
             storageService.storeNotification(
@@ -77,21 +78,23 @@ class NotificationServiceTest {
 
     @Test
     fun `should send onboarding notifications`() {
-        val user = User(
-            id = 1L,
-            name = "Test",
-            email = "test@example.com",
-            passwordHash = "pw"
-        )
+        val user =
+            User(
+                id = 1L,
+                name = "Test",
+                email = "test@example.com",
+                passwordHash = "pw"
+            )
 
         every {
             storageService.storeNotification(any(), any(), any(), any())
-        } returns Notification(
-            id = 1L,
-            recipient = user,
-            message = "msg",
-            type = NotificationType.SYSTEM
-        )
+        } returns
+            Notification(
+                id = 1L,
+                recipient = user,
+                message = "msg",
+                type = NotificationType.SYSTEM
+            )
 
         every { webSocketService.sendNotification(any(), any()) } just Runs
         every { storageService.updateDeliveryStatus(any()) } just Runs
@@ -110,13 +113,14 @@ class NotificationServiceTest {
 
     @Test
     fun `should get unread notifications`() {
-        val redisNotification = NotificationRedisDTO(
-            id = 200L,
-            recipientEmail = "user@example.com",
-            message = "You have a new message",
-            createdAt = LocalDateTime.now(),
-            type = NotificationType.PERSONAL
-        )
+        val redisNotification =
+            NotificationRedisDTO(
+                id = 200L,
+                recipientEmail = "user@example.com",
+                message = "You have a new message",
+                createdAt = LocalDateTime.now(),
+                type = NotificationType.PERSONAL
+            )
 
         every { storageService.getCachedNotifications("user@example.com") } returns listOf(redisNotification)
 

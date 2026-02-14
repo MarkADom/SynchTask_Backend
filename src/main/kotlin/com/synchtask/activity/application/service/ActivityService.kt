@@ -15,7 +15,6 @@ class ActivityService(
     private val activityRepository: ActivityRepository,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
-
     @Transactional
     fun record(
         actor: User,
@@ -24,14 +23,15 @@ class ActivityService(
         description: String? = null,
         contextSnapshot: ActivityContextSnapshot? = null,
     ): Activity {
-        val activity = activityRepository.save(
-            Activity(
-                actor = actor,
-                type = type,
-                referenceId = referenceId,
-                description = description
+        val activity =
+            activityRepository.save(
+                Activity(
+                    actor = actor,
+                    type = type,
+                    referenceId = referenceId,
+                    description = description
+                )
             )
-        )
 
         eventPublisher.publishEvent(
             ActivityRecordedEvent(

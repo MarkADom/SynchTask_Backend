@@ -1,16 +1,15 @@
 package com.synchtask.security.application.manager
 
-import com.synchtask.user.presentation.mapper.UserCommandMapper
 import com.synchtask.security.application.context.AuthServiceContext
 import com.synchtask.user.application.dto.UserRegistrationDTO
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.presentation.mapper.UserCommandMapper
 import org.springframework.stereotype.Component
 
 @Component
 class AuthManager(
     private val authServiceContext: AuthServiceContext,
 ) {
-
     fun registerUser(userRegistrationDTO: UserRegistrationDTO): User {
         return authServiceContext.userService.createUser(
             UserCommandMapper.toNewUser(

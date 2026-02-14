@@ -14,15 +14,15 @@ import org.springframework.stereotype.Service
 class CustomUserDetailsService(
     private val userRepository: UserRepository
 ) : UserDetailsService {
-
     private val logger = LoggerFactory.getLogger(CustomUserDetailsService::class.java)
 
     override fun loadUserByUsername(username: String): UserDetails {
-        val user = userRepository.findByEmail(username)
-            .orElseThrow {
-                logger.warn("Authentication failed: user not found for email $username")
-                UsernameNotFoundException("User not found: $username")
-            }
+        val user =
+            userRepository.findByEmail(username)
+                .orElseThrow {
+                    logger.warn("Authentication failed: user not found for email $username")
+                    UsernameNotFoundException("User not found: $username")
+                }
 
         if (!user.isActive) {
             logger.warn("Authentication failed: user is disabled (${user.email})")

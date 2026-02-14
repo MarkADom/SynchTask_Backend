@@ -35,26 +35,19 @@ import java.time.LocalDateTime
     ]
 )
 class Friend(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Column(name = "requester_id", nullable = false)
     val requesterId: Long,
-
     @Column(name = "friend_id", nullable = false)
     val friendId: Long,
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var status: FriendshipStatus = FriendshipStatus.PENDING,
-
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 )
-
-
 
 /**
  * Friendship lifecycle states.

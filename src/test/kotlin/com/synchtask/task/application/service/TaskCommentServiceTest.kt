@@ -21,7 +21,6 @@ import java.util.*
 import kotlin.test.assertEquals
 
 class TaskCommentServiceTest {
-
     private lateinit var taskCommentRepository: TaskCommentRepository
     private lateinit var taskRepository: TaskRepository
     private lateinit var userRepository: UserRepository
@@ -29,42 +28,47 @@ class TaskCommentServiceTest {
     private lateinit var activityService: ActivityService
     private lateinit var service: TaskCommentService
 
-    private val user = User(
-        id = 1L,
-        name = "User",
-        email = "user@example.com",
-        passwordHash = "123"
-    )
+    private val user =
+        User(
+            id = 1L,
+            name = "User",
+            email = "user@example.com",
+            passwordHash = "123"
+        )
 
-    private val boardOwner = User(
-        id = 99L,
-        name = "Board Owner",
-        email = "owner@board.com",
-        passwordHash = "hash"
-    )
+    private val boardOwner =
+        User(
+            id = 99L,
+            name = "Board Owner",
+            email = "owner@board.com",
+            passwordHash = "hash"
+        )
 
-    private val board = Board(
-        id = 100L,
-        name = "Test Board",
-        owner = boardOwner
-    )
+    private val board =
+        Board(
+            id = 100L,
+            name = "Test Board",
+            owner = boardOwner
+        )
 
-    private val collaborator = User(
-        id = 2L,
-        name = "Collaborator",
-        email = "collab@example.com",
-        passwordHash = "456"
-    )
+    private val collaborator =
+        User(
+            id = 2L,
+            name = "Collaborator",
+            email = "collab@example.com",
+            passwordHash = "456"
+        )
 
-    private val task = Task(
-        id = 10L,
-        title = "Title",
-        description = "Desc",
-        owner = user,
-        collaborators = mutableSetOf(collaborator),
-        status = TaskStatus.TODO,
-        board = board
-    )
+    private val task =
+        Task(
+            id = 10L,
+            title = "Title",
+            description = "Desc",
+            owner = user,
+            collaborators = mutableSetOf(collaborator),
+            status = TaskStatus.TODO,
+            board = board
+        )
 
     @BeforeEach
     fun setup() {
@@ -74,13 +78,14 @@ class TaskCommentServiceTest {
         notificationService = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
-        service = TaskCommentService(
-            taskCommentRepository,
-            taskRepository,
-            userRepository,
-            notificationService,
-            activityService
-        )
+        service =
+            TaskCommentService(
+                taskCommentRepository,
+                taskRepository,
+                userRepository,
+                notificationService,
+                activityService
+            )
     }
 
     @Test
@@ -135,12 +140,13 @@ class TaskCommentServiceTest {
 
     @Test
     fun `should return all comments for a task`() {
-        val comment = TaskComment(
-            id = 1L,
-            content = "Test comment",
-            user = user,
-            task = task
-        )
+        val comment =
+            TaskComment(
+                id = 1L,
+                content = "Test comment",
+                user = user,
+                task = task
+            )
 
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskCommentRepository.findByTaskOrderByCreatedAtAsc(task) } returns listOf(comment)

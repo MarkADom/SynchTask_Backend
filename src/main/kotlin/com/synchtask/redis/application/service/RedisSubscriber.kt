@@ -16,21 +16,15 @@ class RedisSubscriber(
     private val objectMapper: ObjectMapper,
     private val webSocketManager: WebSocketManager
 ) {
-
     private val logger = LoggerFactory.getLogger(RedisSubscriber::class.java)
 
-    private fun <T> processMessage(
-        message: String,
-        type: Class<T>,
-        destinationFunction: (T) -> String
-    ) {
+    private fun <T> processMessage(message: String, type: Class<T>, destinationFunction: (T) -> String) {
         try {
             val parsedMessage: T = objectMapper.readValue(message, type)
             val destination = destinationFunction(parsedMessage)
 
             messagingTemplate.convertAndSend(destination, parsedMessage!!)
             logger.info("Message forwarded to WebSocket [{}]: {}", destination, parsedMessage)
-
         } catch (ex: JsonProcessingException) {
             logger.error("Invalid JSON format received from Redis: {}", message, ex)
         } catch (ex: MessagingException) {

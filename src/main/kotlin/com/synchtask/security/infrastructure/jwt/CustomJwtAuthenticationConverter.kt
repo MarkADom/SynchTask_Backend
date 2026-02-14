@@ -15,10 +15,10 @@ import org.springframework.security.oauth2.jwt.Jwt
 class CustomJwtAuthenticationConverter(
     private val userDetailsService: UserDetailsService
 ) : Converter<Jwt, UsernamePasswordAuthenticationToken> {
-
     override fun convert(jwt: Jwt): UsernamePasswordAuthenticationToken {
-        val username = jwt.claims["sub"] as String?
-            ?: throw IllegalArgumentException("JWT does not contain 'sub' claim")
+        val username =
+            jwt.claims["sub"] as String?
+                ?: throw IllegalArgumentException("JWT does not contain 'sub' claim")
 
         val userDetails = userDetailsService.loadUserByUsername(username)
 

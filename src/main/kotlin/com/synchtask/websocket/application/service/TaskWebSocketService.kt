@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service
 class TaskWebSocketService(
     private val messagingTemplate: SimpMessagingTemplate
 ) {
-
     private val logger = LoggerFactory.getLogger(TaskWebSocketService::class.java)
 
     fun sendTaskUpdate(task: TaskResponseDTO) {

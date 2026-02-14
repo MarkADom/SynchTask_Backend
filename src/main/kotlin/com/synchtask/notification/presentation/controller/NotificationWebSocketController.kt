@@ -15,13 +15,9 @@ import org.springframework.stereotype.Controller
 class NotificationWebSocketController(
     private val messagingTemplate: SimpMessagingTemplate
 ) {
-
     private val logger = LoggerFactory.getLogger(NotificationWebSocketController::class.java)
 
-    fun notifyUser(
-        userEmail: String,
-        notification: NotificationDTO
-    ) {
+    fun notifyUser(userEmail: String, notification: NotificationDTO) {
         val authenticatedEmail = SecurityContextHolder.getContext().authentication?.name
 
         if (authenticatedEmail != userEmail) {

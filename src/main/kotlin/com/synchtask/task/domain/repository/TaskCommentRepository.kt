@@ -8,8 +8,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface TaskCommentRepository : JpaRepository<TaskComment, Long> {
-
     @EntityGraph(attributePaths = ["user"])
     fun findByTaskOrderByCreatedAtAsc(task: Task): List<TaskComment>
-
 }

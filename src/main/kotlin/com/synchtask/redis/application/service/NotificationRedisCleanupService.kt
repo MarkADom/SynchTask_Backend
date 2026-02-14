@@ -12,7 +12,6 @@ import java.time.LocalDateTime
 class NotificationRedisCleanupService(
     private val redisTemplate: RedisTemplate<String, NotificationRedisDTO>
 ) {
-
     private val logger = LoggerFactory.getLogger(NotificationRedisCleanupService::class.java)
 
     companion object {
@@ -32,9 +31,10 @@ class NotificationRedisCleanupService(
 
         keys.forEach { redisKey ->
             val entries = redisTemplate.opsForHash<String, NotificationRedisDTO>().entries(redisKey)
-            val expiredFields = entries.filter { (_, value) ->
-                Duration.between(value.createdAt, now) > EXPIRATION_THRESHOLD
-            }.map { it.key }
+            val expiredFields =
+                entries.filter { (_, value) ->
+                    Duration.between(value.createdAt, now) > EXPIRATION_THRESHOLD
+                }.map { it.key }
 
             if (expiredFields.isNotEmpty()) {
                 redisTemplate.opsForHash<String, NotificationRedisDTO>().delete(redisKey, *expiredFields.toTypedArray())

@@ -18,16 +18,16 @@ import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
 class ChatControllerTest {
-
     private lateinit var chatService: ChatService
     private lateinit var keyExchangeService: KeyExchangeService
     private lateinit var controller: ChatController
 
-    private val testUser = User(
-        "user@example.com",
-        "password",
-        emptyList()
-    )
+    private val testUser =
+        User(
+            "user@example.com",
+            "password",
+            emptyList()
+        )
 
     @BeforeEach
     fun setup() {
@@ -39,10 +39,11 @@ class ChatControllerTest {
     @Test
     fun `should get or create chat room`() {
         val friendEmail = "friend@example.com"
-        val roomDto = ChatRoomDTO(
-            id = 1L,
-            participants = listOf("user@example.com", friendEmail)
-        )
+        val roomDto =
+            ChatRoomDTO(
+                id = 1L,
+                participants = listOf("user@example.com", friendEmail)
+            )
 
         every {
             chatService.getOrCreateChatRoom(listOf("user@example.com", friendEmail))
@@ -61,13 +62,14 @@ class ChatControllerTest {
         val chatRoomId = 10L
         val message = "Hello"
 
-        val messageDto = ChatMessageDTO(
-            id = 1L,
-            chatRoomId = chatRoomId,
-            senderEmail = "user@example.com",
-            message = message,
-            timestamp = LocalDateTime.now()
-        )
+        val messageDto =
+            ChatMessageDTO(
+                id = 1L,
+                chatRoomId = chatRoomId,
+                senderEmail = "user@example.com",
+                message = message,
+                timestamp = LocalDateTime.now()
+            )
 
         every {
             chatService.sendMessage(chatRoomId, "user@example.com", message)
@@ -84,10 +86,11 @@ class ChatControllerTest {
     @Test
     fun `should return chat history`() {
         val chatRoomId = 5L
-        val history = listOf(
-            ChatMessageDTO(1L, chatRoomId, "user@example.com", "Hello", LocalDateTime.now()),
-            ChatMessageDTO(2L, chatRoomId, "friend@example.com", "Hi", LocalDateTime.now())
-        )
+        val history =
+            listOf(
+                ChatMessageDTO(1L, chatRoomId, "user@example.com", "Hello", LocalDateTime.now()),
+                ChatMessageDTO(2L, chatRoomId, "friend@example.com", "Hi", LocalDateTime.now())
+            )
 
         every {
             chatService.getChatHistory(chatRoomId)

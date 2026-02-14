@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface BoardRepository : JpaRepository<Board, Long> {
-
     fun findByOwner(user: User): List<Board>
 
     fun findByCollaboratorsContaining(user: User): List<Board>

@@ -11,14 +11,9 @@ import org.springframework.stereotype.Component
 class TaskCommentNotificationPolicy(
     private val taskRepository: TaskRepository
 ) : NotificationPolicy {
+    override fun supports(activity: Activity): Boolean = activity.type == ActivityType.TASK_COMMENTED
 
-    override fun supports(activity: Activity): Boolean =
-        activity.type == ActivityType.TASK_COMMENTED
-
-    override fun resolveRecipients(
-        activity: Activity,
-        contextSnapshot: ActivityContextSnapshot?
-    ): Set<String> {
+    override fun resolveRecipients(activity: Activity, contextSnapshot: ActivityContextSnapshot?): Set<String> {
         val taskId = activity.referenceId ?: return emptySet()
         val task = taskRepository.findById(taskId).orElse(null) ?: return emptySet()
 
@@ -27,9 +22,7 @@ class TaskCommentNotificationPolicy(
             .toSet()
     }
 
-    override fun buildMessage(activity: Activity): String =
-        activity.description ?: "New comment on a task"
+    override fun buildMessage(activity: Activity): String = activity.description ?: "New comment on a task"
 
-    override fun notificationType(): NotificationType =
-        NotificationType.TASK_UPDATE
+    override fun notificationType(): NotificationType = NotificationType.TASK_UPDATE
 }

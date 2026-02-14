@@ -3,9 +3,9 @@ package com.synchtask.notification.application.service
 import com.synchtask.notification.application.dto.NotificationRedisDTO
 import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.notification.domain.repository.NotificationRepository
 import com.synchtask.notification.presentation.mapper.NotificationMapper
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisTemplate
@@ -19,7 +19,6 @@ class NotificationStorageService(
     private val userRepository: UserRepository,
     private val redisTemplate: RedisTemplate<String, NotificationRedisDTO>,
 ) {
-
     private val logger = LoggerFactory.getLogger(NotificationStorageService::class.java)
 
     companion object {
@@ -32,15 +31,17 @@ class NotificationStorageService(
         type: NotificationType,
         groupId: Long? = null,
     ): Notification {
-        val user = userRepository.findByEmail(recipientEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $recipientEmail") }
+        val user =
+            userRepository.findByEmail(recipientEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $recipientEmail") }
 
-        val notification = Notification(
-            recipient = user,
-            message = message,
-            type = type,
-            groupId = groupId
-        )
+        val notification =
+            Notification(
+                recipient = user,
+                message = message,
+                type = type,
+                groupId = groupId
+            )
 
         val savedNotification = notificationRepository.save(notification)
         val redisKey = "notifications:$recipientEmail"
@@ -65,8 +66,7 @@ class NotificationStorageService(
     }
 
     fun getRedisKeys(pattern: String): Set<String> {
-        val keys: Set<String?> = redisTemplate.keys(pattern)
-        return keys.filterNotNull().toSet()
+        return redisTemplate.keys(pattern) ?: emptySet()
     }
 
     fun deleteRedisKeys(keys: Collection<String>) {
@@ -83,8 +83,9 @@ class NotificationStorageService(
 
     @Transactional
     fun markAllAsRead(userEmail: String) {
-        val user = userRepository.findByEmail(userEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
+        val user =
+            userRepository.findByEmail(userEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
 
         val updated = notificationRepository.markAllAsReadByRecipient(user)
         logger.info("Marked $updated notifications as read for user: $userEmail")

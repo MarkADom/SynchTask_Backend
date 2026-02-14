@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController
 class JwksController(
     private val jwtKeyManager: JwtKeyManager
 ) {
-
     private val logger =
         LoggerFactory.getLogger(JwksController::class.java)
 

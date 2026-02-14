@@ -16,21 +16,20 @@ import org.springframework.security.core.userdetails.User
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FriendControllerTest {
-
     private lateinit var friendService: FriendService
     private lateinit var controller: FriendController
 
-    private val testUser = User(
-        "user@email.com",
-        "password",
-        emptyList()
-    )
+    private val testUser =
+        User(
+            "user@email.com",
+            "password",
+            emptyList()
+        )
 
     @BeforeEach
     fun setup() {
         friendService = mockk(relaxed = true)
         controller = FriendController(friendService)
-
     }
 
     @Test
@@ -74,15 +73,16 @@ class FriendControllerTest {
 
     @Test
     fun `should list friends of current user`() {
-        every { friendService.listFriends("user@email.com") } returns listOf(
-            FriendResponseDTO(
-                id = 100L,
-                friendEmail = "friend@email.com",
-                requesterEmail = "user@email.com",
-                status = "ACCEPTED",
-                isIncoming = false
+        every { friendService.listFriends("user@email.com") } returns
+            listOf(
+                FriendResponseDTO(
+                    id = 100L,
+                    friendEmail = "friend@email.com",
+                    requesterEmail = "user@email.com",
+                    status = "ACCEPTED",
+                    isIncoming = false
+                )
             )
-        )
 
         val response = controller.listFriends(testUser)
 

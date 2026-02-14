@@ -11,7 +11,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class RedisConfigTest {
-
     private val redisHost = "localhost"
     private val redisPort = 6379
     private val redisPassword = "secret"
@@ -20,15 +19,16 @@ class RedisConfigTest {
     private val notificationTopic = "notification"
     private val taskTopic = "task"
 
-    private val redisConfig = RedisConfig(
-        redisHost,
-        redisPort,
-        redisPassword,
-        redisDatabase,
-        chatTopic,
-        notificationTopic,
-        taskTopic
-    )
+    private val redisConfig =
+        RedisConfig(
+            redisHost,
+            redisPort,
+            redisPassword,
+            redisDatabase,
+            chatTopic,
+            notificationTopic,
+            taskTopic
+        )
 
     @Test
     fun `should create RedisConnectionFactory`() {

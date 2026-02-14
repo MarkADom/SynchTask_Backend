@@ -11,10 +11,10 @@ import com.synchtask.notification.domain.entity.NotificationType
  */
 interface NotificationPolicy {
     fun supports(activity: Activity): Boolean
+
     fun buildMessage(activity: Activity): String
+
     fun notificationType(): NotificationType
-    fun resolveRecipients(
-        activity: Activity,
-        contextSnapshot: ActivityContextSnapshot? = null
-    ): Set<String>
+
+    fun resolveRecipients(activity: Activity, contextSnapshot: ActivityContextSnapshot? = null): Set<String>
 }

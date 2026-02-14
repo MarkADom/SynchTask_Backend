@@ -11,7 +11,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class WelcomeNotificationHandlerTest {
-
     private lateinit var notificationService: NotificationService
     private lateinit var handler: WelcomeNotificationHandler
 
@@ -22,13 +21,14 @@ class WelcomeNotificationHandlerTest {
         notificationService = mockk(relaxed = true)
         handler = WelcomeNotificationHandler(notificationService)
 
-        user = User(
-            id = 1L,
-            name = "Marco",
-            email = "marco@synchtask.com",
-            passwordHash = "pw",
-            role = UserRole.USER
-        )
+        user =
+            User(
+                id = 1L,
+                name = "Marco",
+                email = "marco@synchtask.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
     }
 
     @Test

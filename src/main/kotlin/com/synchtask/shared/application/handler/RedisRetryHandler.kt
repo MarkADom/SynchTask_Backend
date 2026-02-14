@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit
 class RedisRetryHandler(
     private val redisTemplate: StringRedisTemplate // Injecting Redis template to retry publishing
 ) {
-
     private val logger = LoggerFactory.getLogger(RedisRetryHandler::class.java)
     private val scheduler = Executors.newScheduledThreadPool(1)
 
@@ -23,7 +22,6 @@ class RedisRetryHandler(
                 // Redis publishing retry logic
                 redisTemplate.convertAndSend(channel, message)
                 logger.info("Successfully published message to Redis channel '$channel' after $attempt attempts.")
-
             } catch (ex: RedisConnectionFailureException) {
                 logger.error("Redis connection failure on attempt $attempt for channel '$channel': ${ex.message}")
 

@@ -10,8 +10,5 @@ class SynchTaskApplication
 
 @Suppress("SpreadOperator")
 fun main(args: Array<String>) {
-	runApplication<SynchTaskApplication>(*args)
+    runApplication<SynchTaskApplication>(*args)
 }
-
-
-

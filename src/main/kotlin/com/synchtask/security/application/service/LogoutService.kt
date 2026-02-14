@@ -13,14 +13,9 @@ import org.springframework.stereotype.Service
 class LogoutService(
     private val refreshTokenRepository: RefreshTokenRepository
 ) : LogoutHandler {
-
     private val logger = LoggerFactory.getLogger(LogoutService::class.java)
 
-    override fun logout(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        authentication: Authentication?
-    ) {
+    override fun logout(request: HttpServletRequest, response: HttpServletResponse, authentication: Authentication?) {
         val token = request.getHeader("Authorization")?.removePrefix("Bearer ")
 
         if (token.isNullOrBlank()) {

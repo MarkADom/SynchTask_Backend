@@ -1,7 +1,7 @@
 package com.synchtask.notification.application.service
 
-import com.synchtask.notification.presentation.mapper.NotificationMapper
 import com.synchtask.notification.domain.repository.NotificationRepository
+import com.synchtask.notification.presentation.mapper.NotificationMapper
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -12,7 +12,6 @@ class NotificationRetryService(
     private val notificationRepository: NotificationRepository,
     private val notificationWebSocketService: NotificationWebSocketService
 ) {
-
     private val logger = LoggerFactory.getLogger(NotificationRetryService::class.java)
 
     @Scheduled(fixedRate = 5 * 60 * 1000)

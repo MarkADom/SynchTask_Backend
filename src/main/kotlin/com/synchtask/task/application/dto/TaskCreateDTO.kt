@@ -12,4 +12,3 @@ data class TaskCreateDTO(
     val status: TaskStatus = TaskStatus.TODO,
     val priority: TaskPriority = TaskPriority.MID
 )
-

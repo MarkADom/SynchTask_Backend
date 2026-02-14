@@ -28,11 +28,9 @@ import java.time.LocalDateTime
     ]
 )
 class ChatRoom(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     /**
      * Participants of this chat room.
      * A unique constraint prevents duplicated (chat_room_id, user_id) pairs.
@@ -50,7 +48,6 @@ class ChatRoom(
         ]
     )
     var participants: MutableSet<User> = mutableSetOf(),
-
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

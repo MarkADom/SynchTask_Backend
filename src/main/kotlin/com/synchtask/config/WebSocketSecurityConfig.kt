@@ -30,7 +30,6 @@ class WebSocketSecurityConfig(
     private val environment: Environment,
     private val corsProperties: CorsProperties
 ) : WebSocketMessageBrokerConfigurer {
-
     private val logger = LoggerFactory.getLogger(WebSocketSecurityConfig::class.java)
 
     override fun registerStompEndpoints(registry: StompEndpointRegistry) {

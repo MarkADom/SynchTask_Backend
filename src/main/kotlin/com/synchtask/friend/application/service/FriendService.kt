@@ -21,31 +21,34 @@ class FriendService(
     private val userRepository: UserRepository,
     private val notificationService: NotificationService,
 ) {
-
     private val logger = LoggerFactory.getLogger(FriendService::class.java)
     private val mapper = FriendMapper(userRepository)
 
     @Transactional
     fun sendFriendRequest(requesterEmail: String, friendEmail: String): Friend {
-        val requester = userRepository.findByEmail(requesterEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $requesterEmail") }
+        val requester =
+            userRepository.findByEmail(requesterEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $requesterEmail") }
 
-        val friend = userRepository.findByEmail(friendEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $friendEmail") }
+        val friend =
+            userRepository.findByEmail(friendEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $friendEmail") }
 
-        val existing = friendRepository.findByRequesterIdAndFriendId(requester.id!!, friend.id!!)
-            ?: friendRepository.findByRequesterIdAndFriendId(friend.id!!, requester.id!!)
+        val existing =
+            friendRepository.findByRequesterIdAndFriendId(requester.id!!, friend.id!!)
+                ?: friendRepository.findByRequesterIdAndFriendId(friend.id!!, requester.id!!)
 
         if (existing != null) {
             throw FriendRequestAlreadySentException("Friend request already exists.")
         }
 
-        val saved = friendRepository.save(
-            Friend(
-                requesterId = requester.id!!,
-                friendId = friend.id!!
+        val saved =
+            friendRepository.save(
+                Friend(
+                    requesterId = requester.id!!,
+                    friendId = friend.id!!
+                )
             )
-        )
 
         notificationService.sendNotification(
             userEmail = friend.email,
@@ -59,11 +62,13 @@ class FriendService(
 
     @Transactional
     fun acceptFriendRequest(friendRequestId: Long, userEmail: String): Friend {
-        val user = userRepository.findByEmail(userEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
+        val user =
+            userRepository.findByEmail(userEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
 
-        val friendRequest = friendRepository.findById(friendRequestId)
-            .orElseThrow { ResourceNotFoundException("Friend request not found") }
+        val friendRequest =
+            friendRepository.findById(friendRequestId)
+                .orElseThrow { ResourceNotFoundException("Friend request not found") }
 
         if (friendRequest.friendId != user.id) {
             throw UnauthorizedAccessException("You are not authorized to accept this request")
@@ -82,8 +87,9 @@ class FriendService(
     }
 
     fun listFriends(email: String): List<FriendResponseDTO> {
-        val user = userRepository.findByEmail(email)
-            .orElseThrow { ResourceNotFoundException("User not found: $email") }
+        val user =
+            userRepository.findByEmail(email)
+                .orElseThrow { ResourceNotFoundException("User not found: $email") }
 
         return friendRepository
             .findAllByRequesterIdOrFriendId(user.id!!, user.id!!)
@@ -92,11 +98,13 @@ class FriendService(
 
     @Transactional
     fun removeFriend(friendRequestId: Long, userEmail: String) {
-        val user = userRepository.findByEmail(userEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
+        val user =
+            userRepository.findByEmail(userEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
 
-        val friendRequest = friendRepository.findById(friendRequestId)
-            .orElseThrow { ResourceNotFoundException("Friend request not found") }
+        val friendRequest =
+            friendRepository.findById(friendRequestId)
+                .orElseThrow { ResourceNotFoundException("Friend request not found") }
 
         if (friendRequest.requesterId != user.id && friendRequest.friendId != user.id) {
             throw UnauthorizedAccessException("Not authorized to remove this friendship")

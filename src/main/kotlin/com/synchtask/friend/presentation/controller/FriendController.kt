@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController
 class FriendController(
     private val friendService: FriendService,
 ) {
-
     @PostMapping("/request")
     @PreAuthorize("isAuthenticated()")
     fun sendFriendRequest(
@@ -58,9 +57,7 @@ class FriendController(
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    fun listFriends(
-        @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<List<FriendResponseDTO>> {
+    fun listFriends(@AuthenticationPrincipal user: UserDetails,): ResponseEntity<List<FriendResponseDTO>> {
         val friends = friendService.listFriends(user.username)
         return ResponseEntity.ok(friends)
     }

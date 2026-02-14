@@ -27,7 +27,6 @@ class ChatController(
     private val chatService: ChatService,
     private val keyExchangeService: KeyExchangeService
 ) {
-
     private val logger = LoggerFactory.getLogger(ChatController::class.java)
 
     @PostMapping("/room")
@@ -78,8 +77,9 @@ class ChatController(
     @GetMapping("/key-exchange/{email}")
     @PreAuthorize("isAuthenticated()")
     fun getPublicKey(@PathVariable email: String): ResponseEntity<String> {
-        val publicKey = keyExchangeService.getUserPublicKey(email)
-            ?: return ResponseEntity.notFound().build()
+        val publicKey =
+            keyExchangeService.getUserPublicKey(email)
+                ?: return ResponseEntity.notFound().build()
 
         return ResponseEntity.ok(publicKey)
     }

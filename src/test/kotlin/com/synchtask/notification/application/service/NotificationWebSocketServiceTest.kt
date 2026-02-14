@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.messaging.simp.SimpMessagingTemplate
 
 class NotificationWebSocketServiceTest {
-
     private lateinit var messagingTemplate: SimpMessagingTemplate
     private lateinit var webSocketManager: WebSocketManager
     private lateinit var storageService: NotificationStorageService
@@ -21,22 +20,24 @@ class NotificationWebSocketServiceTest {
         webSocketManager = mockk()
         storageService = mockk(relaxed = true)
 
-        notificationWebSocketService = NotificationWebSocketService(
-            messagingTemplate,
-            webSocketManager,
-            storageService
-        )
+        notificationWebSocketService =
+            NotificationWebSocketService(
+                messagingTemplate,
+                webSocketManager,
+                storageService
+            )
     }
 
     @Test
     fun `should send notification via WebSocket when user is online`() {
         // Arrange
         val email = "user@example.com"
-        val dto = NotificationDTO(
-            recipientEmail = email,
-            message = "You have a task",
-            type = NotificationType.TASK_UPDATE
-        )
+        val dto =
+            NotificationDTO(
+                recipientEmail = email,
+                message = "You have a task",
+                type = NotificationType.TASK_UPDATE
+            )
 
         every { webSocketManager.isUserOnline(email) } returns true
 
@@ -56,11 +57,12 @@ class NotificationWebSocketServiceTest {
     fun `should store notification when user is offline`() {
         // Arrange
         val email = "offline@example.com"
-        val dto = NotificationDTO(
-            recipientEmail = email,
-            message = "New message",
-            type = NotificationType.TASK_UPDATE
-        )
+        val dto =
+            NotificationDTO(
+                recipientEmail = email,
+                message = "New message",
+                type = NotificationType.TASK_UPDATE
+            )
 
         every { webSocketManager.isUserOnline(email) } returns false
 

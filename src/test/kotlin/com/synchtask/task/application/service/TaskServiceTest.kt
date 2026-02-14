@@ -26,7 +26,6 @@ import java.util.Optional
 import kotlin.test.assertEquals
 
 class TaskServiceTest {
-
     private lateinit var taskRepository: TaskRepository
     private lateinit var userRepository: UserRepository
     private lateinit var notificationService: NotificationService
@@ -52,16 +51,17 @@ class TaskServiceTest {
         friendshipChecker = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
-        service = TaskService(
-            taskRepository,
-            userRepository,
-            notificationService,
-            taskWebSocketService,
-            boardRepository,
-            taskSpecificationService,
-            friendshipChecker,
-            activityService
-        )
+        service =
+            TaskService(
+                taskRepository,
+                userRepository,
+                notificationService,
+                taskWebSocketService,
+                boardRepository,
+                taskSpecificationService,
+                friendshipChecker,
+                activityService
+            )
     }
 
     private fun task(id: Long = 1L, owner: User = this.owner) = Task(
@@ -116,7 +116,13 @@ class TaskServiceTest {
     @Test
     fun `should update task`() {
         val existing = task()
-        val req = TaskUpdateDTO(title = "Updated", description = "D2", status = TaskStatus.IN_PROGRESS, priority = TaskPriority.HIGH)
+        val req =
+            TaskUpdateDTO(
+                title = "Updated",
+                description = "D2",
+                status = TaskStatus.IN_PROGRESS,
+                priority = TaskPriority.HIGH
+            )
 
         every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
         every { taskRepository.save(any()) } answers { firstArg() }

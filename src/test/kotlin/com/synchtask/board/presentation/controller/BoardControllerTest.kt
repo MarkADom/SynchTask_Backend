@@ -2,9 +2,9 @@ package com.synchtask.board.presentation.controller
 
 import com.synchtask.board.application.dto.*
 import com.synchtask.board.application.service.BoardService
-import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
@@ -17,16 +17,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.security.core.userdetails.User as SpringUser
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
+import org.springframework.security.core.userdetails.User as SpringUser
 
 class BoardControllerTest {
-
     private lateinit var boardService: BoardService
     private lateinit var boardRepository: BoardRepository
     private lateinit var userService: UserService
     private lateinit var controller: BoardController
+    private lateinit var authenticatedUserService: AuthenticatedUserService
 
     private lateinit var userEntity: User
     private lateinit var userDetails: UserDetails
@@ -34,28 +34,30 @@ class BoardControllerTest {
     @BeforeEach
     fun setup() {
         boardService = mockk(relaxed = true)
-        boardRepository = mockk(relaxed = true)
-        userService = mockk(relaxed = true)
-        controller = BoardController(boardService, boardRepository, userService)
+        authenticatedUserService = mockk(relaxed = true)
+        controller = BoardController(boardService, authenticatedUserService)
 
-        userEntity = User(
-            id = 1L,
-            name = "User",
-            email = "user@test.com",
-            passwordHash = "hash",
-            role = UserRole.USER)
+        userEntity =
+            User(
+                id = 1L,
+                name = "User",
+                email = "user@test.com",
+                passwordHash = "hash",
+                role = UserRole.USER
+            )
 
         userDetails = SpringUser(userEntity.email, "hash", emptyList())
-        every { userService.getUserByEmail(userEntity.email) } returns userEntity
+        every { authenticatedUserService.requireUser(userDetails) } returns userEntity
     }
 
-    private fun newBoard(id: Long = 10L): Board =
-        Board(id = id, name = "Board $id", color = "#fff", description = "Desc", owner = userEntity,
-            collaborators = mutableSetOf(), createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
-
     private fun newBoardResponse(id: Long = 10L) = BoardResponseDTO(
-        id = id, name = "Board $id", color = "#fff", description = "Desc",
-        createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now(), ownerName = userEntity.name
+        id = id,
+        name = "Board $id",
+        color = "#fff",
+        description = "Desc",
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now(),
+        ownerName = userEntity.name
     )
 
     @Test
@@ -127,8 +129,11 @@ class BoardControllerTest {
 
     @Test
     fun `should return simple boards`() {
-        every { boardRepository.findAll() } returns listOf(newBoard(1), newBoard(2))
-        val result = controller.getSimpleBoards()
+        every { boardService.getSimpleBoardsForUser(userEntity) } returns listOf(
+            BoardSimpleDTO(1L, "Board 1"),
+            BoardSimpleDTO(2L, "Board 2")
+        )
+        val result = controller.getSimpleBoards(userDetails)
         assertEquals(2, result.size)
     }
 }

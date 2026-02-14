@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-
 @Service
 class ChatLoggingService(
     private val chatMessageRepository: ChatMessageRepository,
@@ -19,7 +18,7 @@ class ChatLoggingService(
             chatMessageRepository.save(chatMessage)
             logger.info(
                 "Chat message logged from user: ${chatMessage.sender.email} " +
-                        "in chat room ${chatMessage.chatRoom.id}"
+                    "in chat room ${chatMessage.chatRoom.id}"
             )
         } catch (ex: Exception) {
             logger.error("Failed to log chat message for user: ${chatMessage.sender.email}", ex)

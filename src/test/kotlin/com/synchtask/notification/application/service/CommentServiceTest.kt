@@ -21,7 +21,6 @@ import java.util.*
 import kotlin.test.assertEquals
 
 class CommentServiceTest {
-
     private lateinit var taskCommentRepository: TaskCommentRepository
     private lateinit var taskRepository: TaskRepository
     private lateinit var userRepository: UserRepository
@@ -29,36 +28,40 @@ class CommentServiceTest {
     private lateinit var activityService: ActivityService
     private lateinit var commentService: TaskCommentService
 
-    private val owner = User(
-        id = 1L,
-        name = "Owner",
-        email = "owner@test.com",
-        passwordHash = "hash",
-        role = UserRole.USER
-    )
+    private val owner =
+        User(
+            id = 1L,
+            name = "Owner",
+            email = "owner@test.com",
+            passwordHash = "hash",
+            role = UserRole.USER
+        )
 
-    private val board = Board(
-        id = 10L,
-        name = "Test Board",
-        owner = owner
-    )
+    private val board =
+        Board(
+            id = 10L,
+            name = "Test Board",
+            owner = owner
+        )
 
-    private val user = User(
-        id = 2L,
-        name = "Alice",
-        email = "alice@example.com",
-        passwordHash = "123456",
-        role = UserRole.USER
-    )
+    private val user =
+        User(
+            id = 2L,
+            name = "Alice",
+            email = "alice@example.com",
+            passwordHash = "123456",
+            role = UserRole.USER
+        )
 
-    private val task = Task(
-        id = 1L,
-        title = "Test Task",
-        description = "A task for testing",
-        owner = owner,
-        board = board,
-        collaborators = mutableSetOf(user)
-    )
+    private val task =
+        Task(
+            id = 1L,
+            title = "Test Task",
+            description = "A task for testing",
+            owner = owner,
+            board = board,
+            collaborators = mutableSetOf(user)
+        )
 
     @BeforeEach
     fun setup() {
@@ -67,13 +70,14 @@ class CommentServiceTest {
         userRepository = mockk(relaxed = true)
         notificationService = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
-        commentService = TaskCommentService(
-            taskCommentRepository,
-            taskRepository,
-            userRepository,
-            notificationService,
-            activityService
-        )
+        commentService =
+            TaskCommentService(
+                taskCommentRepository,
+                taskRepository,
+                userRepository,
+                notificationService,
+                activityService
+            )
     }
 
     @Test

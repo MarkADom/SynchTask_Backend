@@ -5,8 +5,8 @@ import com.synchtask.user.application.dto.UserStatusDTO
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.exception.UserAlreadyExistsException
-import com.synchtask.user.presentation.mapper.UserMapper
 import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.user.presentation.mapper.UserMapper
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -17,7 +17,6 @@ import kotlin.test.Test
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserServiceTest {
-
     private lateinit var userRepository: UserRepository
     private lateinit var passwordEncoder: BCryptPasswordEncoder
     private lateinit var userService: UserService
@@ -90,20 +89,21 @@ class UserServiceTest {
     @Test
     fun `should update user data and hash new password`() {
         val existing = buildUser()
-        val updates = User(
-            id = existing.id,
-            name = "New Name",
-            email = existing.email,
-            passwordHash = "newpass",
-            profilePictureUrl = existing.profilePictureUrl,
-            role = existing.role,
-            createdAt = existing.createdAt,
-            lastLogin = existing.lastLogin,
-            lastActivity = existing.lastActivity,
-            isActive = existing.isActive,
-            isOnline = existing.isOnline,
-            onboardingNotified = existing.onboardingNotified
-        )
+        val updates =
+            User(
+                id = existing.id,
+                name = "New Name",
+                email = existing.email,
+                passwordHash = "newpass",
+                profilePictureUrl = existing.profilePictureUrl,
+                role = existing.role,
+                createdAt = existing.createdAt,
+                lastLogin = existing.lastLogin,
+                lastActivity = existing.lastActivity,
+                isActive = existing.isActive,
+                isOnline = existing.isOnline,
+                onboardingNotified = existing.onboardingNotified
+            )
 
         every { userRepository.findById(existing.id!!) } returns Optional.of(existing)
         every { passwordEncoder.encode("newpass") } returns "new-hash"
@@ -118,20 +118,21 @@ class UserServiceTest {
     @Test
     fun `should not hash password again on update if already hashed`() {
         val existing = buildUser(passwordHash = "old-value-will-be-kept")
-        val updates = User(
-            id = existing.id,
-            name = existing.name,
-            email = existing.email,
-            passwordHash = "\$2a\$existinghash",
-            profilePictureUrl = existing.profilePictureUrl,
-            role = existing.role,
-            createdAt = existing.createdAt,
-            lastLogin = existing.lastLogin,
-            lastActivity = existing.lastActivity,
-            isActive = existing.isActive,
-            isOnline = existing.isOnline,
-            onboardingNotified = existing.onboardingNotified
-        )
+        val updates =
+            User(
+                id = existing.id,
+                name = existing.name,
+                email = existing.email,
+                passwordHash = "\$2a\$existinghash",
+                profilePictureUrl = existing.profilePictureUrl,
+                role = existing.role,
+                createdAt = existing.createdAt,
+                lastLogin = existing.lastLogin,
+                lastActivity = existing.lastActivity,
+                isActive = existing.isActive,
+                isOnline = existing.isOnline,
+                onboardingNotified = existing.onboardingNotified
+            )
 
         every { userRepository.findById(existing.id!!) } returns Optional.of(existing)
         every { userRepository.save(any()) } answers { firstArg() }
@@ -141,7 +142,6 @@ class UserServiceTest {
         assertEquals("old-value-will-be-kept", result?.passwordHash)
         verify(exactly = 0) { passwordEncoder.encode(any()) }
     }
-
 
     @Test
     fun `should return user by ID or null`() {
@@ -239,11 +239,12 @@ class UserServiceTest {
 
     @Test
     fun `should return assignable users`() {
-        val users = listOf(
-            buildUser(role = UserRole.ADMIN),
-            buildUser(id = 2L, role = UserRole.USER),
-            buildUser(id = 3L, role = UserRole.COLLABORATOR)
-        )
+        val users =
+            listOf(
+                buildUser(role = UserRole.ADMIN),
+                buildUser(id = 2L, role = UserRole.USER),
+                buildUser(id = 3L, role = UserRole.COLLABORATOR)
+            )
 
         every { userRepository.findAll() } returns users
 
@@ -339,12 +340,13 @@ class UserServiceTest {
         val user = buildUser()
         every { userRepository.findAll() } returns listOf(user)
         mockkObject(UserMapper)
-        every { UserMapper.toResponseDTO(user) } returns UserResponseDTO(
-            id = user.id!!,
-            name = user.name,
-            email = user.email,
-            profilePictureUrl = "N/A"
-        )
+        every { UserMapper.toResponseDTO(user) } returns
+            UserResponseDTO(
+                id = user.id!!,
+                name = user.name,
+                email = user.email,
+                profilePictureUrl = "N/A"
+            )
 
         val result = userService.getAllUsers()
 

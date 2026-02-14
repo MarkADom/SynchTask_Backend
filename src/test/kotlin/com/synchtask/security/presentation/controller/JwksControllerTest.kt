@@ -12,7 +12,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class JwksControllerTest {
-
     private lateinit var jwtKeyManager: JwtKeyManager
     private lateinit var controller: JwksController
 

@@ -1,13 +1,10 @@
 package com.synchtask.config
 
-
 import io.github.bucket4j.Bucket
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-
 class RateLimitConfigTest {
-
     private val userLimit = 100L
     private val userWindow = 1L // 1 minute
     private val anonLimit = 5L
@@ -15,14 +12,15 @@ class RateLimitConfigTest {
     private val publicLimit = 500L
     private val publicWindow = 10L
 
-    private val config = RateLimitConfig(
-        userRequestLimit = userLimit,
-        userTimeWindow = userWindow,
-        anonRequestLimit = anonLimit,
-        anonTimeWindow = anonWindow,
-        publicRequestLimit = publicLimit,
-        publicTimeWindow = publicWindow
-    )
+    private val config =
+        RateLimitConfig(
+            userRequestLimit = userLimit,
+            userTimeWindow = userWindow,
+            anonRequestLimit = anonLimit,
+            anonTimeWindow = anonWindow,
+            publicRequestLimit = publicLimit,
+            publicTimeWindow = publicWindow
+        )
 
     @Test
     fun `should create bucket for authenticated user`() {

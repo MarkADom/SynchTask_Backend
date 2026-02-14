@@ -3,8 +3,8 @@ package com.synchtask.notification.application.service
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.user.domain.entity.User
 import com.synchtask.notification.presentation.mapper.NotificationMapper
+import com.synchtask.user.domain.entity.User
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.messaging.MessagingException
@@ -15,16 +15,10 @@ class NotificationService(
     private val notificationStorageService: NotificationStorageService,
     private val notificationWebSocketService: NotificationWebSocketService,
 ) {
-
     private val logger = LoggerFactory.getLogger(NotificationService::class.java)
 
     @Transactional
-    fun sendNotification(
-        userEmail: String,
-        message: String,
-        type: NotificationType,
-        groupId: Long? = null,
-    ) {
+    fun sendNotification(userEmail: String, message: String, type: NotificationType, groupId: Long? = null,) {
         val notification = notificationStorageService.storeNotification(userEmail, message, type, groupId)
         try {
             val dto = NotificationMapper.toWebSocketDTO(notification)
@@ -58,12 +52,13 @@ class NotificationService(
     }
 
     fun sendFirstLoginNotifications(user: User) {
-        val onboardingMessages = listOf(
-            "Welcome to SynchTask, ${user.name}!",
-            "Here's a tip: you can create boards and invite collaborators.",
-            "Try adding your first task now!",
-            "Check out our roadmap to see what’s coming next!"
-        )
+        val onboardingMessages =
+            listOf(
+                "Welcome to SynchTask, ${user.name}!",
+                "Here's a tip: you can create boards and invite collaborators.",
+                "Try adding your first task now!",
+                "Check out our roadmap to see what’s coming next!"
+            )
 
         onboardingMessages.forEach { message ->
             sendNotification(user.email, message, NotificationType.SYSTEM)

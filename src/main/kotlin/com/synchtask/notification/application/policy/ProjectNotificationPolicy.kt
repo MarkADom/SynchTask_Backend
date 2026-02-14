@@ -11,18 +11,14 @@ import org.springframework.stereotype.Component
 class ProjectNotificationPolicy(
     private val projectRepository: ProjectRepository
 ) : NotificationPolicy {
-
-    override fun supports(activity: Activity): Boolean =
-        activity.type in setOf(
+    override fun supports(activity: Activity): Boolean = activity.type in
+        setOf(
             ActivityType.PROJECT_CREATED,
             ActivityType.PROJECT_UPDATED,
             ActivityType.PROJECT_DELETED
         )
 
-    override fun resolveRecipients(
-        activity: Activity,
-        contextSnapshot: ActivityContextSnapshot?
-    ): Set<String> {
+    override fun resolveRecipients(activity: Activity, contextSnapshot: ActivityContextSnapshot?): Set<String> {
         if (activity.type == ActivityType.PROJECT_DELETED) {
             return buildSet {
                 contextSnapshot?.ownerEmail?.let(::add)
@@ -46,9 +42,7 @@ class ProjectNotificationPolicy(
         }
     }
 
-    override fun buildMessage(activity: Activity): String =
-        activity.description ?: "Project updated"
+    override fun buildMessage(activity: Activity): String = activity.description ?: "Project updated"
 
-    override fun notificationType(): NotificationType =
-        NotificationType.GROUP
+    override fun notificationType(): NotificationType = NotificationType.GROUP
 }

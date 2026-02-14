@@ -16,7 +16,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 class WebSocketReconnectionHandlerTest {
-
     private lateinit var webSocketManager: WebSocketManager
     private lateinit var messagingTemplate: SimpMessagingTemplate
     private lateinit var scheduler: ScheduledExecutorService

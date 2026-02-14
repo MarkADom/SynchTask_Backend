@@ -34,7 +34,6 @@ class RedisConfig(
     @Value("\${spring.redis.pubsub.notification-topic}") private val notificationTopic: String,
     @Value("\${spring.redis.pubsub.task-topic}") private val taskTopic: String,
 ) {
-
     private val logger = LoggerFactory.getLogger(RedisConfig::class.java)
 
     @Bean
@@ -54,10 +53,11 @@ class RedisConfig(
         val template = RedisTemplate<String, NotificationRedisDTO>()
         template.connectionFactory = connectionFactory
 
-        val objectMapper = ObjectMapper().apply {
-            registerModule(JavaTimeModule()) // Needed for LocalDateTime
-            findAndRegisterModules()
-        }
+        val objectMapper =
+            ObjectMapper().apply {
+                registerModule(JavaTimeModule()) // Needed for LocalDateTime
+                findAndRegisterModules()
+            }
 
         val serializer = Jackson2JsonRedisSerializer(objectMapper, NotificationRedisDTO::class.java)
 
@@ -74,13 +74,12 @@ class RedisConfig(
     fun redisMessageListenerContainer(
         connectionFactory: RedisConnectionFactory,
         redisSubscriber: RedisSubscriber,
-    ): RedisMessageListenerContainer =
-        RedisMessageListenerContainer().apply {
-            setConnectionFactory(connectionFactory)
-            addMessageListener(messageListenerAdapter(redisSubscriber), PatternTopic(chatTopic))
-            addMessageListener(messageListenerAdapter(redisSubscriber), PatternTopic(notificationTopic))
-            addMessageListener(messageListenerAdapter(redisSubscriber), PatternTopic(taskTopic))
-        }
+    ): RedisMessageListenerContainer = RedisMessageListenerContainer().apply {
+        setConnectionFactory(connectionFactory)
+        addMessageListener(messageListenerAdapter(redisSubscriber), PatternTopic(chatTopic))
+        addMessageListener(messageListenerAdapter(redisSubscriber), PatternTopic(notificationTopic))
+        addMessageListener(messageListenerAdapter(redisSubscriber), PatternTopic(taskTopic))
+    }
 
     @Bean
     fun messageListenerAdapter(subscriber: RedisSubscriber): MessageListenerAdapter =

@@ -40,21 +40,16 @@ import java.time.LocalDateTime
     ]
 )
 class Task(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Column(nullable = false)
     var title: String,
-
     @Column(nullable = false, length = 1000)
     var description: String,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     val owner: User,
-
     /**
      * Users collaborating on this task.
      * A unique constraint prevents duplicated (task_id, user_id) pairs.
@@ -72,7 +67,6 @@ class Task(
         ]
     )
     val collaborators: MutableSet<User> = mutableSetOf(),
-
     /**
      * Simple labels associated with the task.
      * Stored as an element collection with a unique constraint per task.
@@ -90,15 +84,12 @@ class Task(
     )
     @Column(name = "label", nullable = false, length = 100)
     var labels: MutableSet<String> = mutableSetOf(),
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var status: TaskStatus = TaskStatus.TODO,
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var priority: TaskPriority = TaskPriority.MID,
-
     @OneToMany(
         mappedBy = "task",
         cascade = [CascadeType.ALL],
@@ -106,13 +97,10 @@ class Task(
         fetch = FetchType.LAZY
     )
     val comments: MutableSet<TaskComment> = mutableSetOf(),
-
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "updated_at", nullable = true)
     var updatedAt: LocalDateTime? = null,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id", nullable = false)
     var board: Board,
@@ -169,13 +157,14 @@ class Task(
     }
 
     private fun canTransitionTo(target: TaskStatus): Boolean {
-        val allowedTransitions = mapOf(
-            TaskStatus.TODO to setOf(TaskStatus.IN_PROGRESS),
-            TaskStatus.IN_PROGRESS to setOf(TaskStatus.REVIEW),
-            TaskStatus.REVIEW to setOf(TaskStatus.COMPLETED, TaskStatus.BLOCKED),
-            TaskStatus.BLOCKED to setOf(TaskStatus.IN_PROGRESS),
-            TaskStatus.COMPLETED to emptySet()
-        )
+        val allowedTransitions =
+            mapOf(
+                TaskStatus.TODO to setOf(TaskStatus.IN_PROGRESS),
+                TaskStatus.IN_PROGRESS to setOf(TaskStatus.REVIEW),
+                TaskStatus.REVIEW to setOf(TaskStatus.COMPLETED, TaskStatus.BLOCKED),
+                TaskStatus.BLOCKED to setOf(TaskStatus.IN_PROGRESS),
+                TaskStatus.COMPLETED to emptySet()
+            )
 
         return allowedTransitions[this.status]?.contains(target) ?: false
     }

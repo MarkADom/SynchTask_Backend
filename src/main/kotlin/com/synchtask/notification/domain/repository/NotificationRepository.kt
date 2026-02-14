@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional
 
 @Repository
 interface NotificationRepository : JpaRepository<Notification, Long> {
-
     @EntityGraph(attributePaths = ["recipient"])
     fun findByRecipientAndIsReadFalse(user: User): List<Notification>
 
@@ -25,9 +24,7 @@ interface NotificationRepository : JpaRepository<Notification, Long> {
         WHERE n.recipient = :user
         """
     )
-    fun markAllAsReadByRecipient(
-        @Param("user") user: User
-    ): Int
+    fun markAllAsReadByRecipient(@Param("user") user: User): Int
 
     @Modifying
     @Transactional

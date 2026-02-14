@@ -1,14 +1,15 @@
 package com.synchtask.security.presentation.controller
 
+import com.synchtask.security.application.manager.AuthManager
+import com.synchtask.security.application.service.AuthService
+import com.synchtask.security.application.service.RefreshTokenService
+import com.synchtask.security.infrastructure.jwt.JwtKeyManager
 import com.synchtask.user.application.dto.UserLoginDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
 import com.synchtask.user.application.dto.UserResponseDTO
-import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.security.application.manager.AuthManager
-import com.synchtask.security.infrastructure.jwt.JwtKeyManager
-import com.synchtask.security.application.service.AuthService
-import com.synchtask.security.application.service.RefreshTokenService
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
+import com.synchtask.user.domain.entity.UserRole
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.Logger
@@ -45,6 +46,7 @@ class AuthController(
     private val authManager: AuthManager,
     private val jwtKeyManager: JwtKeyManager,
     private val userService: UserService,
+    private val authenticatedUserService: AuthenticatedUserService,
     private val refreshTokenService: RefreshTokenService,
     private val authService: AuthService
 ) {
@@ -75,21 +77,24 @@ class AuthController(
 
         return try {
             val tokens = authManager.authenticateUser(loginRequest.email, loginRequest.password)
-            val user = userService.getUserByEmail(loginRequest.email)
-                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+            val user =
+                userService.getUserByEmail(loginRequest.email)
+                    ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
 
-            val userDto = UserResponseDTO(
-                id = user.id ?: throw IllegalArgumentException("User ID cannot be null"),
-                name = user.name,
-                email = user.email,
-                profilePictureUrl = user.profilePictureUrl ?: "N/A"
-            )
+            val userDto =
+                UserResponseDTO(
+                    id = user.id ?: throw IllegalArgumentException("User ID cannot be null"),
+                    name = user.name,
+                    email = user.email,
+                    profilePictureUrl = user.profilePictureUrl ?: "N/A"
+                )
 
-            val responseBody = mapOf(
-                "accessToken" to tokens["accessToken"]!!,
-                "refreshToken" to tokens["refreshToken"]!!,
-                "com/synchtask/user" to userDto
-            )
+            val responseBody =
+                mapOf(
+                    "accessToken" to tokens["accessToken"]!!,
+                    "refreshToken" to tokens["refreshToken"]!!,
+                    "com/synchtask/user" to userDto
+                )
 
             ResponseEntity.ok(responseBody)
         } catch (e: SecurityException) {
@@ -112,20 +117,8 @@ class AuthController(
 
     @DeleteMapping("/logout")
     @PreAuthorize("isAuthenticated()")
-    fun logout(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        @AuthenticationPrincipal user: UserDetails
-    ) {
-        val email = user.username
-        val userEntity = userService.getUserByEmail(email)
-
-        if (userEntity != null) {
-            refreshTokenService.revokeTokensForUser(userEntity)
-            logger.info("User logged out, refresh tokens revoked: $email")
-        } else {
-            logger.warn("Logout attempted but user not found: $email")
-        }
+    fun logout(request: HttpServletRequest, response: HttpServletResponse, @AuthenticationPrincipal user: UserDetails) {
+        val userEntity = authenticatedUserService.requireUser(user)
 
         SecurityContextLogoutHandler().logout(request, response, null)
         response.status = HttpServletResponse.SC_OK
@@ -136,8 +129,9 @@ class AuthController(
 
     @PostMapping("/refresh")
     fun refresh(@RequestBody request: Map<String, String>): ResponseEntity<Map<String, String>> {
-        val refreshToken = request["refreshToken"]
-            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Refresh token is required")
+        val refreshToken =
+            request["refreshToken"]
+                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Refresh token is required")
 
         val newAccessToken = authManager.refreshJwt(refreshToken)
         return ResponseEntity.ok(mapOf("accessToken" to newAccessToken))

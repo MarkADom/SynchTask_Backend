@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/auth")
 class AuthAdminController(private val jwtKeyManager: JwtKeyManager) {
-
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping("/rotate-keys")
     fun rotateKeys(): Map<String, String> {

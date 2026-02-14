@@ -10,7 +10,6 @@ import org.springframework.transaction.event.TransactionalEventListener
 class ActivityRecordedListener(
     private val activityNotificationService: ActivityNotificationService
 ) {
-
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun onActivityRecorded(event: ActivityRecordedEvent) {
         activityNotificationService.handle(event.activity, event.contextSnapshot)

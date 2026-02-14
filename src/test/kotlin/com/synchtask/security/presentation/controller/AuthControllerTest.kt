@@ -1,15 +1,16 @@
 package com.synchtask.security.presentation.controller
 
+import com.synchtask.security.application.manager.AuthManager
+import com.synchtask.security.application.service.AuthService
+import com.synchtask.security.application.service.RefreshTokenService
+import com.synchtask.security.infrastructure.jwt.JwtKeyManager
 import com.synchtask.user.application.dto.UserLoginDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
 import com.synchtask.user.application.dto.UserResponseDTO
+import com.synchtask.user.application.service.AuthenticatedUserService
+import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.security.application.manager.AuthManager
-import com.synchtask.security.infrastructure.jwt.JwtKeyManager
-import com.synchtask.security.application.service.AuthService
-import com.synchtask.security.application.service.RefreshTokenService
-import com.synchtask.user.application.service.UserService
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
@@ -19,13 +20,12 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.web.server.ResponseStatusException
 
-
 class AuthControllerTest {
-
     private lateinit var authManager: AuthManager
     private lateinit var jwtKeyManager: JwtKeyManager
     private lateinit var userService: UserService
     private lateinit var refreshTokenService: RefreshTokenService
+    private lateinit var authenticatedUserService: AuthenticatedUserService
     private lateinit var authService: AuthService
 
     private lateinit var authController: AuthController
@@ -36,21 +36,25 @@ class AuthControllerTest {
         jwtKeyManager = mockk(relaxed = true)
         userService = mockk(relaxed = true)
         refreshTokenService = mockk(relaxed = true)
+        authenticatedUserService = mockk(relaxed = true)
         authService = mockk(relaxed = true)
 
-        authController = AuthController(
-            authManager = authManager,
-            jwtKeyManager = jwtKeyManager,
-            userService = userService,
-            refreshTokenService = refreshTokenService,
-            authService = authService
-        )
+        authController =
+            AuthController(
+                authManager = authManager,
+                jwtKeyManager = jwtKeyManager,
+                userService = userService,
+                authenticatedUserService = authenticatedUserService,
+                refreshTokenService = refreshTokenService,
+                authService = authService
+            )
     }
 
     @Test
     fun `should register new user and return UserResponseDTO`() {
         val dto = UserRegistrationDTO(name = "John Doe", email = "john@example.com", password = "1234")
-        val savedUser = User(id = 1L, name = dto.name, email = dto.email, passwordHash = "hashed123", role = UserRole.USER)
+        val savedUser =
+            User(id = 1L, name = dto.name, email = dto.email, passwordHash = "hashed123", role = UserRole.USER)
 
         every { authManager.registerUser(dto) } returns savedUser
 
@@ -65,19 +69,21 @@ class AuthControllerTest {
     fun `should authenticate and return JWT token`() {
         val loginDto = UserLoginDTO(email = "test@email.com", password = "secure123")
 
-        val tokens = mapOf(
-            "accessToken" to "jwt-access-token",
-            "refreshToken" to "jwt-refresh-token"
-        )
+        val tokens =
+            mapOf(
+                "accessToken" to "jwt-access-token",
+                "refreshToken" to "jwt-refresh-token"
+            )
 
-        val user = User(
-            id = 1L,
-            name = "Test User",
-            email = "test@email.com",
-            passwordHash = "hashed",
-            role = UserRole.USER,
-            profilePictureUrl = null
-        )
+        val user =
+            User(
+                id = 1L,
+                name = "Test User",
+                email = "test@email.com",
+                passwordHash = "hashed",
+                role = UserRole.USER,
+                profilePictureUrl = null
+            )
 
         every {
             authManager.authenticateUser(loginDto.email, loginDto.password)
@@ -110,9 +116,10 @@ class AuthControllerTest {
         val loginDto = UserLoginDTO(email = "fake@email.com", password = "wrong")
         every { authManager.authenticateUser(any(), any()) } throws SecurityException("Invalid credentials")
 
-        val exception = assertThrows<ResponseStatusException> {
-            authController.login(loginDto)
-        }
+        val exception =
+            assertThrows<ResponseStatusException> {
+                authController.login(loginDto)
+            }
 
         assertEquals(HttpStatus.UNAUTHORIZED, exception.statusCode)
         assertEquals("Invalid credentials", exception.reason)

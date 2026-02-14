@@ -20,25 +20,19 @@ import java.time.LocalDateTime
     ]
 )
 class Activity(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id", nullable = false)
     val actor: User,
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val type: ActivityType,
-
     @Column(name = "reference_id")
     val referenceId: Long? = null,
-
     @Column(length = 1000)
     val description: String? = null,
-
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

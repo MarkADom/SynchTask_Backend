@@ -17,7 +17,6 @@ import java.util.Optional
 import kotlin.test.*
 
 class BoardServiceTest {
-
     private lateinit var boardRepository: BoardRepository
     private lateinit var userRepository: UserRepository
     private lateinit var activityService: ActivityService
@@ -43,20 +42,16 @@ class BoardServiceTest {
         passwordHash = "hash"
     )
 
-    private fun newBoard(
-        id: Long = 10L,
-        owner: User = this.owner,
-    ): Board =
-        Board(
-            id = id,
-            name = "Board",
-            color = "#fff",
-            description = "Desc",
-            owner = owner,
-            collaborators = mutableSetOf(),
-            createdAt = java.time.LocalDateTime.now(),
-            updatedAt = java.time.LocalDateTime.now()
-        )
+    private fun newBoard(id: Long = 10L, owner: User = this.owner,): Board = Board(
+        id = id,
+        name = "Board",
+        color = "#fff",
+        description = "Desc",
+        owner = owner,
+        collaborators = mutableSetOf(),
+        createdAt = java.time.LocalDateTime.now(),
+        updatedAt = java.time.LocalDateTime.now()
+    )
 
     @Test
     fun `should create board`() {
@@ -129,11 +124,12 @@ class BoardServiceTest {
         every { boardRepository.findById(any()) } returns Optional.of(board)
         every { boardRepository.save(any()) } answers { firstArg() }
 
-        val dto = BoardUpdateDTO(
-            name = "New",
-            color = "#111",
-            description = "Updated"
-        )
+        val dto =
+            BoardUpdateDTO(
+                name = "New",
+                color = "#111",
+                description = "Updated"
+            )
 
         val result = service.updateBoard(board.id!!, dto, owner)
 

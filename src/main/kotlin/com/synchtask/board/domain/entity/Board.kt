@@ -36,30 +36,22 @@ import java.time.LocalDateTime
     ]
 )
 class Board(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Column(nullable = false)
     var name: String,
-
     @Column(nullable = false)
     var color: String = "#60A5FA",
-
     @Column(nullable = false, length = 1000)
     var description: String = "",
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     val owner: User,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "updated_at", nullable = true)
     var updatedAt: LocalDateTime? = null,
-
     /**
      * Users collaborating on this board.
      * A unique constraint prevents duplicated (board_id, user_id) pairs.
@@ -77,7 +69,6 @@ class Board(
         ]
     )
     val collaborators: MutableSet<User> = mutableSetOf(),
-
     /**
      * Tasks that belong to this board.
      * Orphan removal ensures consistency when tasks are deleted.
@@ -89,7 +80,6 @@ class Board(
         fetch = FetchType.LAZY
     )
     val tasks: MutableSet<Task> = mutableSetOf(),
-
     /**
      * Optional project that groups this board.
      */
@@ -104,11 +94,9 @@ class Board(
         updatedAt = LocalDateTime.now()
     }
 
-    fun isOwnedBy(user: User): Boolean =
-        owner.id == user.id
+    fun isOwnedBy(user: User): Boolean = owner.id == user.id
 
-    fun hasAccess(user: User): Boolean =
-        owner.id == user.id || collaborators.any { it.id == user.id }
+    fun hasAccess(user: User): Boolean = owner.id == user.id || collaborators.any { it.id == user.id }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -116,6 +104,5 @@ class Board(
         return id == other.id
     }
 
-    override fun hashCode(): Int =
-        id?.hashCode() ?: 0
+    override fun hashCode(): Int = id?.hashCode() ?: 0
 }

@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
  */
 @ExtendWith(MockKExtension::class)
 class TestControllerTest {
-
     private val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(TestController()).build()
 
     @Test

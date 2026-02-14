@@ -2,8 +2,8 @@ package com.synchtask.notification.presentation.controller
 
 import com.synchtask.notification.application.dto.NotificationRequestDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
-import com.synchtask.redis.application.service.NotificationRedisCleanupService
 import com.synchtask.notification.application.service.NotificationService
+import com.synchtask.redis.application.service.NotificationRedisCleanupService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -21,7 +21,6 @@ class NotificationController(
     private val notificationService: NotificationService,
     private val redisCleanupService: NotificationRedisCleanupService
 ) {
-
     @PostMapping("/send")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_COLLABORATOR')")
     fun sendNotification(@RequestBody request: NotificationRequestDTO): ResponseEntity<String> {
