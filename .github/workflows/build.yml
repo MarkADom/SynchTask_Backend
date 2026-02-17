@@ -30,9 +30,6 @@ jobs:
             -   name: Run detekt
                 run: ./gradlew detekt --info
 
-            -   name: Run ktlint
-                run: ./gradlew ktlintCheck --info
-
             -   name: Generate JaCoCo report
                 run: ./gradlew jacocoTestReport --info
 

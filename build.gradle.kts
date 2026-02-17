@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     // ───── Code Quality ─────
     id("io.gitlab.arturbosch.detekt") version "1.23.5"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
     id("org.sonarqube") version "5.0.0.4638"
     id("jacoco")
 

@@ -57,7 +57,7 @@ class FriendController(
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    fun listFriends(@AuthenticationPrincipal user: UserDetails,): ResponseEntity<List<FriendResponseDTO>> {
+    fun listFriends(@AuthenticationPrincipal user: UserDetails): ResponseEntity<List<FriendResponseDTO>> {
         val friends = friendService.listFriends(user.username)
         return ResponseEntity.ok(friends)
     }

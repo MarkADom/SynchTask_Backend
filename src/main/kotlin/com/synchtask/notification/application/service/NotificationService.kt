@@ -18,7 +18,7 @@ class NotificationService(
     private val logger = LoggerFactory.getLogger(NotificationService::class.java)
 
     @Transactional
-    fun sendNotification(userEmail: String, message: String, type: NotificationType, groupId: Long? = null,) {
+    fun sendNotification(userEmail: String, message: String, type: NotificationType, groupId: Long? = null) {
         val notification = notificationStorageService.storeNotification(userEmail, message, type, groupId)
         try {
             val dto = NotificationMapper.toWebSocketDTO(notification)

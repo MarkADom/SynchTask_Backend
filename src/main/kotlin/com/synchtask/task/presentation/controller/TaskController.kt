@@ -18,7 +18,15 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 
 /**
  * Task HTTP endpoints.
@@ -32,7 +40,7 @@ class TaskController(
     private val authenticatedUserService: AuthenticatedUserService,
 ) {
     @PostMapping
-    fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
+    fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
         val creator = authenticatedUserService.requireUser(user)
         val created = taskService.createTask(creator, request)
         return TaskMapper.toResponse(created)
@@ -65,7 +73,7 @@ class TaskController(
 
     @GetMapping("/{taskId}")
     @Transactional(readOnly = true)
-    fun getTaskDetail(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
+    fun getTaskDetail(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
         val task = taskService.findTaskById(taskId)
         val userEntity = authenticatedUserService.requireUser(user)
 
@@ -109,7 +117,7 @@ class TaskController(
 
     @DeleteMapping("/{taskId}")
     @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
-    fun deleteTask(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): ResponseEntity<String> {
+    fun deleteTask(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails): ResponseEntity<String> {
         val userEntity = authenticatedUserService.requireUser(user)
 
         taskService.deleteTask(taskId, userEntity)
