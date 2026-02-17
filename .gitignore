@@ -1,7 +1,7 @@
 # Build & Gradle
 /build
 /.gradle
-uploads
+/uploads
 
 # IntelliJ / IDE
 /.idea
@@ -9,7 +9,6 @@ uploads
 
 # Environment / secrets
 .env
-.env.*
 .envrc
 
 # OS
@@ -22,3 +21,6 @@ config/keys/
 *.jks
 
 
+
+# Bruno local environment (contains credentials)
+/docs/bruno/environments/local.bru

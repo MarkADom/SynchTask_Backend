@@ -101,7 +101,7 @@ The API is fully documented using **OpenAPI 3**.
 
 ### Prerequisites
 
-- JDK 17+
+- JDK 21+
 - Gradle 8+
 - MySQL
 - Redis
@@ -135,8 +135,11 @@ Enable it in your shell and allow the project environment:
 ```bash
   direnv allow
 ```
+> ⚠️ Never commit real credentials in `.envrc`. If any secret was exposed, 
+> rotate it immediately in the provider (DB/Redis/OAuth/Sonar).
 
 ---
+
 
 ### Run Locally
 
@@ -145,6 +148,56 @@ Ensure the database schema is created automatically on startup via JPA/Hibernate
 ```bash
   ./gradlew bootRun
 ```
+---
+
+### Run in 5 minutes (local)
+
+1. Copy environment template and adjust values if needed:
+
+```bash
+
+direnv allow
+```
+cp .envrc.example .envrc
+# edit .envrc with your local secrets
+
+
+2. Start MySQL and Redis locally (or via your preferred Docker setup).
+
+3. Start backend 
+
+```bash
+./gradlew bootRun
+```
+
+4. Open API docs:
+
+- Swagger UI: `http://localhost:8081/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:8081/v3/api-docs`
+
+---
+
+### Production profile (recommended for release)
+
+Use the hardened production profile:
+
+```bash
+SPRING_PROFILES_ACTIVE=prod ./gradlew bootRun
+```
+
+The `prod` profile disables SQL debug verbosity, narrows actuator exposure, and enforces stricter runtime defaults.
+
+---
+
+# API tests (JSON format)
+
+> Note: since this project uses **Bruno**, the primary collection is now the native one in `docs/bruno/SynchTask`.
+
+This folder keeps the JSON collection (`SynchTask.Bruno_collection.json`) for compatibility/import only.
+
+## Recommended
+Use the `.bru` files in:
+- `docs/bruno/SynchTask/`
 
 ---
 

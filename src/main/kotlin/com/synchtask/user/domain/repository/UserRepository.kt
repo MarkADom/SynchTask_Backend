@@ -13,17 +13,17 @@ import java.util.*
 
 @Repository
 interface UserRepository : JpaRepository<User, Long> {
-    @EntityGraph(attributePaths = ["chatRooms", "receivedFriendRequests", "sentFriendRequests"])
+    @EntityGraph(attributePaths = ["receivedFriendRequests", "sentFriendRequests"])
     fun findByEmail(email: String): Optional<User>
 
-    @EntityGraph(attributePaths = ["chatRooms", "receivedFriendRequests", "sentFriendRequests"])
+    @EntityGraph(attributePaths = ["receivedFriendRequests", "sentFriendRequests"])
     fun findByEmailIn(emails: List<String>): List<User>
 
-    @EntityGraph(attributePaths = ["chatRooms", "receivedFriendRequests"])
+    @EntityGraph(attributePaths = ["receivedFriendRequests"])
     @Query("SELECT u FROM User u WHERE u.lastActivity > :since")
     fun findAllByLastActivityAfter(since: LocalDateTime): List<User>
 
-    @EntityGraph(attributePaths = ["chatRooms", "receivedFriendRequests"])
+    @EntityGraph(attributePaths = ["receivedFriendRequests"])
     fun findAllByIsOnlineTrue(): List<User>
 
     @Query(

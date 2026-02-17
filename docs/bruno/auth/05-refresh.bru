@@ -1,0 +1,32 @@
+meta {
+  name: Auth - POST /auth/refresh
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "refreshToken": "{{refreshToken}}"
+  }
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("returns new accessToken", function () {
+    const json = res.getBody({ parse: true });
+    expect(json.accessToken).to.exist;
+  });
+}
