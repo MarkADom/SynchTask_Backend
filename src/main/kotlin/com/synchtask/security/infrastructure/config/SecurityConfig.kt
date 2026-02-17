@@ -79,10 +79,10 @@ class SecurityConfig(
                         "/auth/.well-known/openid-configuration",
                         "/auth/.well-known/oauth-authorization-server",
                         "/jwks",
-                        "/auth/**",
                         "/auth/register",
                         "/auth/login",
-                        "/auth/logout",
+                        "/auth/refresh",
+                        "/auth/jwks",
                         "/error"
                     ).permitAll()
                     // OAuth2 Endpoints
