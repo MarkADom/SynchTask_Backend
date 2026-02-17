@@ -46,6 +46,7 @@ class TaskResourceController(
     }
 
     @GetMapping("/links")
+    @PreAuthorize("isAuthenticated()")
     fun listLinks(
         @PathVariable taskId: Long,
         @AuthenticationPrincipal user: UserDetails
@@ -83,6 +84,7 @@ class TaskResourceController(
     }
 
     @GetMapping("/attachments")
+    @PreAuthorize("isAuthenticated()")
     fun listAttachments(
         @PathVariable taskId: Long,
         @AuthenticationPrincipal user: UserDetails

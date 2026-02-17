@@ -40,6 +40,7 @@ class TaskController(
     private val authenticatedUserService: AuthenticatedUserService,
 ) {
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
         val creator = authenticatedUserService.requireUser(user)
         val created = taskService.createTask(creator, request)
@@ -72,6 +73,7 @@ class TaskController(
     }
 
     @GetMapping("/{taskId}")
+    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun getTaskDetail(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
         val task = taskService.findTaskById(taskId)

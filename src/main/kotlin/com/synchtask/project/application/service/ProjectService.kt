@@ -84,8 +84,14 @@ class ProjectService(
             val boardsFromDB = boardRepository.findAllWithCollaboratorsById(ids)
             validateBoardsExist(ids, boardsFromDB)
 
+            project.boards.forEach { it.project = null }
             project.boards.clear()
-            project.boards.addAll(boardsFromDB)
+
+            boardsFromDB.forEach { board ->
+                board.project = project
+                project.boards.add(board)
+            }
+
             boardsUpdated = true
         }
 
