@@ -24,6 +24,12 @@ jobs:
                     java-version: '21'
                     cache: gradle
 
+            -   name: Generate test RSA keys
+                run: |
+                    mkdir -p config/keys
+                    openssl genpkey -algorithm RSA -out config/keys/private.pem -pkeyopt rsa_keygen_bits:2048
+                    openssl rsa -pubout -in config/keys/private.pem -out config/keys/public.pem
+
             -   name: Run tests
                 run: ./gradlew test --info
 
