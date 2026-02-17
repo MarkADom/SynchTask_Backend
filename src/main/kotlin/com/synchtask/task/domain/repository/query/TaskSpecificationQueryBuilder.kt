@@ -42,8 +42,7 @@ class TaskSpecificationQueryBuilder(
         val root = query.from(Task::class.java)
 
         root.fetch<Task, Any>("owner", JoinType.LEFT)
-        val boardFetch = root.fetch<Task, Any>("board", JoinType.LEFT)
-        boardFetch.fetch<Any, Any>("project", JoinType.LEFT)
+        root.fetch<Task, Any>("board", JoinType.LEFT)
         root.fetch<Task, Any>("collaborators", JoinType.LEFT)
 
         val predicates = buildPredicates(cb, root, user, status, label, assigneeId, boardId)

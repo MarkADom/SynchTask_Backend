@@ -3,14 +3,20 @@ package com.synchtask.task.presentation.controller
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
-import com.synchtask.task.application.dto.*
+import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
+import com.synchtask.task.application.dto.TaskCreateDTO
+import com.synchtask.task.application.dto.TaskLabelUpdateDTO
+import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.task.application.service.TaskService
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.domain.entity.UserRole
-import io.mockk.*
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -99,7 +105,7 @@ class TaskControllerTest {
     }
 
     @Test
-    fun `should return paginated tasks`() {
+    fun `should return paginated task list items`() {
         val task = newTask(2L, "Another Task")
 
         every { authenticatedUserService.requireUser(userDetails) } returns userEntity
@@ -126,6 +132,7 @@ class TaskControllerTest {
 
         assertEquals(1, result.totalElements)
         assertEquals(task.id, result.content.first().id)
+        assertEquals(task.title, result.content.first().title)
     }
 
     @Test

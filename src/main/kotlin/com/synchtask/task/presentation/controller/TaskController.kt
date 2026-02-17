@@ -4,6 +4,7 @@ import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskLabelUpdateDTO
+import com.synchtask.task.application.dto.TaskListItemDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.task.application.service.TaskService
@@ -18,15 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 /**
  * Task HTTP endpoints.
@@ -41,7 +34,7 @@ class TaskController(
 ) {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
+    fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
         val creator = authenticatedUserService.requireUser(user)
         val created = taskService.createTask(creator, request)
         return TaskMapper.toResponse(created)
@@ -57,7 +50,7 @@ class TaskController(
         @RequestParam(required = false) assigneeId: Long?,
         @RequestParam(required = false) boardId: Long?,
         @PageableDefault(size = 20, sort = ["createdAt"]) pageable: Pageable,
-    ): Page<TaskResponseDTO> {
+    ): Page<TaskListItemDTO> {
         val userEntity = authenticatedUserService.requireUser(user)
         val tasks =
             taskService.getTasksWithFilters(
@@ -69,13 +62,13 @@ class TaskController(
                 pageable = pageable
             )
 
-        return tasks.map { TaskMapper.toResponse(it) }
+        return tasks.map { TaskMapper.toListItem(it) }
     }
 
     @GetMapping("/{taskId}")
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
-    fun getTaskDetail(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
+    fun getTaskDetail(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
         val task = taskService.findTaskById(taskId)
         val userEntity = authenticatedUserService.requireUser(user)
 
@@ -119,7 +112,7 @@ class TaskController(
 
     @DeleteMapping("/{taskId}")
     @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
-    fun deleteTask(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails): ResponseEntity<String> {
+    fun deleteTask(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): ResponseEntity<String> {
         val userEntity = authenticatedUserService.requireUser(user)
 
         taskService.deleteTask(taskId, userEntity)

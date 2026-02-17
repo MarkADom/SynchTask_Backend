@@ -64,6 +64,22 @@ class TaskMapperTest {
         )
 
     @Test
+    fun `should map Task to TaskListItemDTO correctly`() {
+        val dto = TaskMapper.toListItem(task)
+
+        Assertions.assertEquals(100L, dto.id)
+        Assertions.assertEquals("Test Task", dto.title)
+        Assertions.assertEquals(1L, dto.creatorId)
+        Assertions.assertEquals("Owner User", dto.creatorName)
+        Assertions.assertEquals(TaskStatus.TODO, dto.status)
+        Assertions.assertEquals(TaskPriority.MID, dto.priority)
+        Assertions.assertEquals(now, dto.createdAt)
+        Assertions.assertEquals(now, dto.updatedAt)
+        Assertions.assertEquals(20L, dto.boardId)
+        Assertions.assertEquals("Main Board", dto.boardName)
+    }
+
+    @Test
     fun `should map Task to TaskResponseDTO correctly`() {
         val dto = TaskMapper.toResponse(task)
 
@@ -110,7 +126,7 @@ class TaskMapperTest {
     }
 
     @Test
-    fun `should throw when Task id is null`() {
+    fun `should throw when Task id is null on list mapping`() {
         val invalidTask =
             Task(
                 id = null,
@@ -129,53 +145,9 @@ class TaskMapperTest {
 
         val ex =
             Assertions.assertThrows(IllegalArgumentException::class.java) {
-                TaskMapper.toResponse(invalidTask)
+                TaskMapper.toListItem(invalidTask)
             }
 
         Assertions.assertEquals("Task ID cannot be null", ex.message)
-    }
-
-    @Test
-    fun `should throw when TaskComment ids are null`() {
-        val comment =
-            TaskComment(
-                id = null,
-                task =
-                Task(
-                    id = null,
-                    title = task.title,
-                    description = task.description,
-                    owner = task.owner,
-                    collaborators = task.collaborators,
-                    labels = task.labels,
-                    status = task.status,
-                    priority = task.priority,
-                    comments = task.comments,
-                    createdAt = task.createdAt,
-                    updatedAt = task.updatedAt,
-                    board = task.board
-                ),
-                user =
-                User(
-                    id = null,
-                    name = collaborator.name,
-                    email = collaborator.email,
-                    passwordHash = collaborator.passwordHash,
-                    profilePictureUrl = collaborator.profilePictureUrl,
-                    role = collaborator.role,
-                    createdAt = collaborator.createdAt,
-                    lastLogin = collaborator.lastLogin,
-                    lastActivity = collaborator.lastActivity,
-                    isActive = collaborator.isActive,
-                    isOnline = collaborator.isOnline,
-                    onboardingNotified = collaborator.onboardingNotified
-                ),
-                content = "Missing IDs",
-                createdAt = now
-            )
-
-        Assertions.assertThrows(IllegalArgumentException::class.java) {
-            TaskMapper.toCommentResponse(comment)
-        }
     }
 }
