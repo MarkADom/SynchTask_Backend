@@ -23,6 +23,12 @@ interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE RefreshToken r SET r.isRevoked = true WHERE r.token = :token")
+    @Query(
+        """
+        UPDATE RefreshToken r 
+        SET r.isRevoked = true 
+        WHERE r.token = :token
+        """
+    )
     fun revokeByToken(token: String): Int
 }

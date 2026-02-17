@@ -84,7 +84,7 @@ class BoardServiceTest {
 
     @Test
     fun `should return boards for user`() {
-        every { boardRepository.findByOwner(owner) } returns listOf(newBoard())
+        every { boardRepository.findByOwnerWithOwnerFetched(owner) } returns listOf(newBoard())
 
         val result = service.getBoardsForUser(owner)
 
@@ -183,7 +183,7 @@ class BoardServiceTest {
 
     @Test
     fun `should get boards shared with user`() {
-        every { boardRepository.findByCollaboratorsContaining(other) } returns listOf(newBoard())
+        every { boardRepository.findByCollaboratorsContainingWithOwnerFetched(other) } returns listOf(newBoard())
 
         val result = service.getBoardsSharedWithUser(other)
 
