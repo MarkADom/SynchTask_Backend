@@ -136,7 +136,7 @@ class ProjectServiceTest {
 
     @Test
     fun `should list projects by owner`() {
-        every { projectRepository.findAllByOwner(owner) } returns listOf(newProject())
+        every { projectRepository.findAllByOwnerWithMembersAndBoards(owner) } returns listOf(newProject())
 
         val result = service.listAll(owner)
 
@@ -189,8 +189,10 @@ class ProjectServiceTest {
     }
 
     @Test
-    fun `should update project boards`() {
+    fun `should update project boards and synchronize owning side`() {
         val project = newProject()
+        val existingBoard = newBoard(99).apply { this.project = project }
+        project.boards.add(existingBoard)
         val boards = listOf(newBoard(1), newBoard(2))
 
         every { projectRepository.findById(project.id!!) } returns Optional.of(project)
@@ -210,6 +212,8 @@ class ProjectServiceTest {
         service.update(project.id!!, dto, owner)
 
         assertEquals(2, project.boards.size)
+        assertNull(existingBoard.project)
+        assertTrue(project.boards.all { it.project == project })
     }
 
     @Test

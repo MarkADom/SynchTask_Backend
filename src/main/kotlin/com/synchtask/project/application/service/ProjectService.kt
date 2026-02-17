@@ -56,11 +56,13 @@ class ProjectService(
     }
 
     @Transactional(readOnly = true)
-    fun listAll(owner: User): List<ProjectResponseDTO> = projectRepository.findAllByOwner(owner)
+    fun listAll(owner: User): List<ProjectResponseDTO> =
+        projectRepository.findAllByOwnerWithMembersAndBoards(owner)
         .map(ProjectMapper::toResponse)
 
     @Transactional(readOnly = true)
-    fun getById(id: Long, owner: User): ProjectResponseDTO = projectRepository.findById(id)
+    fun getById(id: Long, owner: User): ProjectResponseDTO =
+        projectRepository.findById(id)
         .filter { it.owner.id == owner.id }
         .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
         .let(ProjectMapper::toResponse)
