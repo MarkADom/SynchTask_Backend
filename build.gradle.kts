@@ -173,46 +173,61 @@ tasks.withType<Jar> {
     }
 }
 
-// ───── SonarQube / SonarCloud ─────
-sonarqube {
-    properties {
-        tasks.named("sonarqube") {
+// SonarQube / SonarCloud Configuration
 
-            dependsOn("jacocoTestReport", "detekt")
+val sonarHostUrl = System.getenv("SONAR_HOST_URL")
+val sonarToken = System.getenv("SONAR_TOKEN")
+val isCI = System.getenv("CI") == "true"
 
-            doFirst {
+val effectiveSonarHost = sonarHostUrl ?: "https://sonarcloud.io"
+val isSonarCloud = effectiveSonarHost.contains("sonarcloud.io")
 
-                val sonarHost = System.getenv("SONAR_HOST_URL")
-                    ?: throw GradleException("SONAR_HOST_URL must be defined")
+tasks.named("sonar") {
+    dependsOn("test", "jacocoTestReport", "detekt")
 
-                val sonarToken = System.getenv("SONAR_TOKEN")
-                    ?: throw GradleException("SONAR_TOKEN must be defined")
-
-                extensions.configure<org.sonarqube.gradle.SonarExtension>("sonarqube") {
-
-                    properties {
-                        property("sonar.host.url", sonarHost)
-                        property("sonar.token", sonarToken)
-
-                        property("sonar.organization", "markadom")
-                        property("sonar.projectKey", "MarkADom_SynchTask_Backend")
-                        property("sonar.projectName", "SynchTask_Backend")
-
-                        property("sonar.sources", "src/main/kotlin")
-                        property("sonar.tests", "src/test/kotlin")
-
-                        property(
-                            "sonar.kotlin.detekt.reportPaths",
-                            "${layout.buildDirectory.get()}/reports/detekt/detekt.xml"
-                        )
-
-                        property(
-                            "sonar.coverage.jacoco.xmlReportPaths",
-                            "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
-                        )
-                    }
-                }
-            }
+    doFirst {
+        if (sonarToken.isNullOrBlank()) {
+            throw GradleException("SONAR_TOKEN must be defined to run Sonar analysis.")
         }
     }
 }
+
+sonar {
+    properties {
+
+        property("sonar.host.url", effectiveSonarHost)
+        property("sonar.token", sonarToken)
+
+        if (isSonarCloud) {
+            property("sonar.organization", "markadom")
+            property("sonar.projectKey", "MarkADom_SynchTask_Backend")
+            property("sonar.projectName", "SynchTask_Backend")
+        } else {
+            property("sonar.projectKey", "com.synchtask:backend")
+            property("sonar.projectName", "SynchTask")
+        }
+
+        property("sonar.sourceEncoding", "UTF-8")
+        property("sonar.sources", "src/main/kotlin")
+        property("sonar.tests", "src/test/kotlin")
+
+        property(
+            "sonar.kotlin.detekt.reportPaths",
+            layout.buildDirectory
+                .file("reports/detekt/detekt.xml")
+                .get()
+                .asFile
+                .absolutePath
+        )
+
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            layout.buildDirectory
+                .file("reports/jacoco/test/jacocoTestReport.xml")
+                .get()
+                .asFile
+                .absolutePath
+        )
+    }
+}
+
