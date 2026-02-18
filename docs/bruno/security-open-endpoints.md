@@ -23,10 +23,12 @@ This document identifies which endpoints should be treated as public for API tes
 - `GET /v3/api-docs/**`
 - `GET /actuator/**` (currently public by config, recommended to lock down outside local/dev)
 
-## Endpoints that look public by URL but are effectively protected
+## Endpoints protected despite being under `/auth/*`
 - `DELETE /auth/logout` → has `@PreAuthorize("isAuthenticated()")`.
 - `PUT /auth/users/{userId}/role` → has `@PreAuthorize("hasAuthority('ROLE_ADMIN')")`.
-- `/oauth2/**` endpoints may be `permitAll` by URL, but user-principal-dependent handlers still require an authenticated OAuth2 session to return meaningful data.
+
+## OAuth2 nuance
+- `/oauth2/**` endpoints are `permitAll` by URL, but user-principal-dependent handlers still require an authenticated OAuth2 session to return meaningful data.
 
 ## Endpoints currently protected by default (`anyRequest().authenticated()`)
 Examples:

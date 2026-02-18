@@ -26,3 +26,7 @@ complexity:
     constructorThreshold: 12
     ignoreDefaultParameters: true
     excludes: ['**/domain/entity/**']
+  ReturnCount:
+    active: true
+    max: 4
+    excludeGuardClauses: true
