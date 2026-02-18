@@ -9,8 +9,8 @@ import kotlin.collections.get
 
 class JwtKeyManagerTest {
     @Test
-    fun `should load RSA key pair from PEM files`() {
-        val manager = JwtKeyManager()
+    fun `should expose injected RSA key pair`() {
+        val manager = JwtKeyManager(TestKeyPairs.generateRsa())
 
         val privateKey: PrivateKey = manager.getPrivateKey()
         val publicKey: PublicKey = manager.getPublicKey()
@@ -21,13 +21,13 @@ class JwtKeyManagerTest {
 
     @Test
     fun `should report RSA algorithm`() {
-        val manager = JwtKeyManager()
+        val manager = JwtKeyManager(TestKeyPairs.generateRsa())
         assertTrue(manager.isRSA())
     }
 
     @Test
     fun `should expose public key as RSAPublicKey`() {
-        val manager = JwtKeyManager()
+        val manager = JwtKeyManager(TestKeyPairs.generateRsa())
         val publicKey = manager.getPublicKey()
 
         assertTrue(publicKey is RSAPublicKey)
@@ -35,7 +35,7 @@ class JwtKeyManagerTest {
 
     @Test
     fun `should return JWKS with valid structure`() {
-        val manager = JwtKeyManager()
+        val manager = JwtKeyManager(TestKeyPairs.generateRsa())
 
         val jwks = manager.getJwks()
 
@@ -57,7 +57,7 @@ class JwtKeyManagerTest {
 
     @Test
     fun `should throw when rotating keys`() {
-        val manager = JwtKeyManager()
+        val manager = JwtKeyManager(TestKeyPairs.generateRsa())
 
         val ex =
             assertThrows(UnsupportedOperationException::class.java) {
