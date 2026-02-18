@@ -183,11 +183,18 @@ tasks.named("sonarqube") {
 
 sonarqube {
     properties {
-        property("sonar.host.url", sonarHost ?: "http://localhost:9001")
+        property("sonar.host.url", sonarHost)
         sonarToken?.let { property("sonar.login", it) }
+
+        sonarToken?.let {
+            property("sonar.login", it)
+        }
+
+        property("sonar.organization", "markadom")
 
         property("sonar.projectKey", "com.synchtask:backend")
         property("sonar.projectName", "SynchTask")
+
         property("sonar.sourceEncoding", "UTF-8")
         property("sonar.sources", "src/main/kotlin")
         property("sonar.tests", "src/test/kotlin")
