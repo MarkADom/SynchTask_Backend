@@ -196,7 +196,6 @@ sonarqube {
         }
 
         if (isSonarCloud) {
-            // ----- SONARCLOUD -----
             property("sonar.organization", "markadom")
             property("sonar.projectKey", "MarkADom_SynchTask_Backend")
             property("sonar.projectName", "SynchTask_Backend")

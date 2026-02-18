@@ -1,58 +1,42 @@
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: false
-    open-in-view: false
-    database-platform: org.hibernate.dialect.H2Dialect
-
-  redis:
-    repositories:
-      enabled: false
-
-  security:
-    oauth2:
-      client:
-        registration: {}
-      resourceserver:
-        jwt:
-          issuer-uri: http://test
-          jwk-set-uri: http://test/jwks
+    datasource:
+        url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+        driver-class-name: org.h2.Driver
+        username: sa
+        password:
+    
+    jpa:
+        hibernate:
+            ddl-auto: create-drop
+        show-sql: false
+        open-in-view: false
+        database-platform: org.hibernate.dialect.H2Dialect
+    
+    data:
+        redis:
+            host: localhost
+            port: 6379
+            repositories:
+                enabled: false
+    
+    security:
+        oauth2:
+            client:
+                registration: {}
+            resourceserver:
+                jwt:
+                    issuer-uri: http://test
+                    jwk-set-uri: http://test/jwks
 
 server:
-  port: 0
+    port: 0
 
 websocket:
-  enabled: false
+    enabled: false
 
-logging:
-  level:
-    root: INFO
-    io.swagger: DEBUG
-    org.springdoc: DEBUG
-    com.synchtask: DEBUG
-    io.lettuce.core: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
-    org.springframework.web: DEBUG
-    org.springframework.data: DEBUG
-    org.springframework.context: DEBUG
-    org.springframework.core.env: DEBUG
-    org.springframework.security: TRACE
-    org.springframework.jdbc.core: DEBUG
-    org.springframework.messaging: DEBUG
-    org.springframework.web.socket: DEBUG
-    org.springframework.data.redis: DEBUG
-    org.springframework.web.client: DEBUG
-    org.springframework.transaction: DEBUG
-    org.springframework.beans.factory: DEBUG
-    org.springframework.data.redis.connection: DEBUG
-    org.springframework.web.client.RestTemplate: TRACE
-    org.springframework.jdbc.datasource.DataSourceTransactionManager: DEBUG
-    org.springframework.orm.jpa.JpaTransactionManager: DEBUG
+synchtask:
+    redis:
+        pubsub:
+            chat-topic: test-chat
+            notification-topic: test-notification
+            task-topic: test-task
