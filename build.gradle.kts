@@ -173,25 +173,30 @@ tasks.withType<Jar> {
     }
 }
 
-// ───── SonarQube / SonarCloud ─────
-val sonarToken: String? = System.getenv("SONAR_TOKEN")
-val sonarHost: String? = System.getenv("SONAR_HOST_URL")
+// SonarQube / SonarCloud Configuration
 
-val effectiveSonarHost = sonarHost ?: "https://sonarcloud.io"
+val sonarHostUrl = System.getenv("SONAR_HOST_URL")
+val sonarToken = System.getenv("SONAR_TOKEN")
+val isCI = System.getenv("CI") == "true"
+
+val effectiveSonarHost = sonarHostUrl ?: "https://sonarcloud.io"
 val isSonarCloud = effectiveSonarHost.contains("sonarcloud.io")
 
-tasks.named("sonarqube") {
-    dependsOn("jacocoTestReport", "detekt")
+tasks.named("sonar") {
+    dependsOn("test", "jacocoTestReport", "detekt")
+
+    doFirst {
+        if (sonarToken.isNullOrBlank()) {
+            throw GradleException("SONAR_TOKEN must be defined to run Sonar analysis.")
+        }
+    }
 }
 
-sonarqube {
+sonar {
     properties {
 
         property("sonar.host.url", effectiveSonarHost)
-
-        sonarToken?.let {
-            property("sonar.token", it)
-        }
+        property("sonar.token", sonarToken)
 
         if (isSonarCloud) {
             property("sonar.organization", "markadom")
@@ -208,12 +213,20 @@ sonarqube {
 
         property(
             "sonar.kotlin.detekt.reportPaths",
-            "${layout.buildDirectory.get()}/reports/detekt/detekt.xml"
+            layout.buildDirectory
+                .file("reports/detekt/detekt.xml")
+                .get()
+                .asFile
+                .absolutePath
         )
 
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
-            "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
+            layout.buildDirectory
+                .file("reports/jacoco/test/jacocoTestReport.xml")
+                .get()
+                .asFile
+                .absolutePath
         )
     }
 }
