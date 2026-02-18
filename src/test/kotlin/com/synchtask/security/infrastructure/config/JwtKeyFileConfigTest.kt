@@ -3,37 +3,36 @@ package com.synchtask.security.infrastructure.config
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.security.KeyPairGenerator
-import java.util.Base64
+import kotlin.io.path.writeText
 import kotlin.test.assertNotNull
 
 class JwtKeyFileConfigTest {
 
     @Test
     fun `should load RSA key pair from PEM files`() {
-
-        // Generate RSA key pair in memory
+        // Generate real RSA key pair for test
         val generator = KeyPairGenerator.getInstance("RSA")
         generator.initialize(2048)
-        val originalKeyPair = generator.generateKeyPair()
+        val keyPair = generator.generateKeyPair()
 
-        // Convert to PEM format
+        // Convert keys to PEM format
         val privatePem = toPem(
-            "PRIVATE KEY",
-            originalKeyPair.private.encoded
+            keyPair.private.encoded,
+            "PRIVATE KEY"
         )
         val publicPem = toPem(
-            "PUBLIC KEY",
-            originalKeyPair.public.encoded
+            keyPair.public.encoded,
+            "PUBLIC KEY"
         )
 
-        // Write to temp files
+        // Create temporary files
         val privateFile = Files.createTempFile("private", ".pem")
         val publicFile = Files.createTempFile("public", ".pem")
 
-        Files.writeString(privateFile, privatePem)
-        Files.writeString(publicFile, publicPem)
+        privateFile.writeText(privatePem)
+        publicFile.writeText(publicPem)
 
-        // Instantiate config with injected paths
+        // Instantiate config with temp paths
         val config = JwtKeyFileConfig(
             privateKeyPath = privateFile.toString(),
             publicKeyPath = publicFile.toString()
@@ -45,12 +44,12 @@ class JwtKeyFileConfigTest {
         assertNotNull(loadedKeyPair.public)
     }
 
-    private fun toPem(type: String, bytes: ByteArray): String {
-        val base64 = Base64.getEncoder().encodeToString(bytes)
-        return """
-            -----BEGIN $type-----
-            $base64
-            -----END $type-----
-        """.trimIndent()
+    private fun toPem(encoded: ByteArray, type: String): String {
+        val base64 = java.util.Base64.getEncoder().encodeToString(encoded)
+        return buildString {
+            append("-----BEGIN $type-----\n")
+            append(base64.chunked(64).joinToString("\n"))
+            append("\n-----END $type-----")
+        }
     }
 }
