@@ -9,10 +9,36 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface BoardRepository : JpaRepository<Board, Long> {
-    fun findByOwner(user: User): List<Board>
 
-    fun findByCollaboratorsContaining(user: User): List<Board>
+    @Query(
+        """
+        SELECT b
+        FROM Board b
+        JOIN FETCH b.owner
+        WHERE b.owner = :user
+        """
+    )
+    fun findByOwnerWithOwnerFetched(@Param("user") user: User): List<Board>
 
-    @Query("SELECT b FROM Board b LEFT JOIN FETCH b.collaborators WHERE b.id IN :ids")
+    @Query(
+        """
+        SELECT DISTINCT b
+        FROM Board b
+        JOIN FETCH b.owner
+        JOIN b.collaborators c
+        WHERE c = :user
+        """
+    )
+    fun findByCollaboratorsContainingWithOwnerFetched(@Param("user") user: User): List<Board>
+
+    @Query(
+        """
+            SELECT b 
+            FROM Board b 
+            LEFT JOIN 
+            FETCH b.collaborators 
+            WHERE b.id 
+            IN :ids"""
+    )
     fun findAllWithCollaboratorsById(@Param("ids") ids: List<Long>): List<Board>
 }

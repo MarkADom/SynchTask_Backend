@@ -4,6 +4,7 @@ import com.synchtask.shared.presentation.mapper.MapperSupport.requireId
 import com.synchtask.task.application.dto.TaskAttachmentDTO
 import com.synchtask.task.application.dto.TaskCommentResponseDTO
 import com.synchtask.task.application.dto.TaskLinkDTO
+import com.synchtask.task.application.dto.TaskListItemDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskAttachment
@@ -11,6 +12,19 @@ import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.task.domain.entity.TaskLink
 
 object TaskMapper {
+    fun toListItem(task: Task): TaskListItemDTO = TaskListItemDTO(
+        id = requireId(task.id, "Task"),
+        title = task.title,
+        creatorId = requireId(task.owner.id, "User"),
+        creatorName = task.owner.name,
+        status = task.status,
+        priority = task.priority,
+        createdAt = task.createdAt,
+        updatedAt = task.updatedAt,
+        boardId = requireId(task.board.id, "Board"),
+        boardName = task.board.name
+    )
+
     fun toResponse(task: Task): TaskResponseDTO = TaskResponseDTO(
         id = requireId(task.id, "Task"),
         title = task.title,

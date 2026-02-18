@@ -13,7 +13,7 @@ class TaskStatusChangedNotificationPolicy(
 ) : NotificationPolicy {
     override fun supports(activity: Activity): Boolean = activity.type == ActivityType.TASK_STATUS_CHANGED
 
-    override fun resolveRecipients(activity: Activity, contextSnapshot: ActivityContextSnapshot?,): Set<String> {
+    override fun resolveRecipients(activity: Activity, contextSnapshot: ActivityContextSnapshot?): Set<String> {
         val taskId = activity.referenceId ?: return emptySet()
         val task = taskRepository.findById(taskId).orElse(null) ?: return emptySet()
 

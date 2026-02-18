@@ -25,7 +25,7 @@ class TaskAttachmentService(
     private val logger = LoggerFactory.getLogger(TaskAttachmentService::class.java)
 
     @Transactional
-    fun uploadFile(taskId: Long, file: MultipartFile, user: User,): TaskAttachmentDTO {
+    fun uploadFile(taskId: Long, file: MultipartFile, user: User): TaskAttachmentDTO {
         val task =
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
@@ -64,7 +64,7 @@ class TaskAttachmentService(
     }
 
     @Transactional(readOnly = true)
-    fun listAttachments(taskId: Long, user: User,): List<TaskAttachmentDTO> {
+    fun listAttachments(taskId: Long, user: User): List<TaskAttachmentDTO> {
         val task =
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
@@ -81,7 +81,7 @@ class TaskAttachmentService(
     }
 
     @Transactional
-    fun deleteAttachment(taskId: Long, attachmentId: Long, user: User,) {
+    fun deleteAttachment(taskId: Long, attachmentId: Long, user: User) {
         val task =
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }

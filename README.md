@@ -197,7 +197,7 @@ This folder keeps the JSON collection (`SynchTask.Bruno_collection.json`) for co
 
 ## Recommended
 Use the `.bru` files in:
-- `docs/bruno/SynchTask/`
+- `docs/bruno/`
 
 ---
 

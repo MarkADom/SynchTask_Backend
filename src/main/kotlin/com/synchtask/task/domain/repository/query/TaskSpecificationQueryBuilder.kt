@@ -41,6 +41,7 @@ class TaskSpecificationQueryBuilder(
         val query = cb.createQuery(Task::class.java)
         val root = query.from(Task::class.java)
 
+        root.fetch<Task, Any>("owner", JoinType.LEFT)
         root.fetch<Task, Any>("board", JoinType.LEFT)
         root.fetch<Task, Any>("collaborators", JoinType.LEFT)
 

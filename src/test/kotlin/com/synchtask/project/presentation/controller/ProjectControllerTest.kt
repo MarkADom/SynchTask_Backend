@@ -7,7 +7,11 @@ import com.synchtask.project.application.service.ProjectService
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.domain.entity.User
-import io.mockk.*
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -170,4 +174,3 @@ class ProjectControllerTest {
         }
     }
 }
-

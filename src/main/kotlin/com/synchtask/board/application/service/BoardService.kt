@@ -52,7 +52,7 @@ class BoardService(
     }
 
     @Transactional(readOnly = true)
-    fun getBoardsForUser(actor: User): List<BoardResponseDTO> = boardRepository.findByOwner(actor)
+    fun getBoardsForUser(actor: User): List<BoardResponseDTO> = boardRepository.findByOwnerWithOwnerFetched(actor)
         .map(BoardMapper::toResponse)
 
     @Transactional(readOnly = true)
@@ -125,13 +125,13 @@ class BoardService(
 
     @Transactional(readOnly = true)
     fun getBoardsSharedWithUser(actor: User): List<BoardResponseDTO> =
-        boardRepository.findByCollaboratorsContaining(actor)
+        boardRepository.findByCollaboratorsContainingWithOwnerFetched(actor)
             .map(BoardMapper::toResponse)
 
     @Transactional(readOnly = true)
     fun getSimpleBoardsForUser(actor: User): List<BoardSimpleDTO> {
-        val owned = boardRepository.findByOwner(actor)
-        val shared = boardRepository.findByCollaboratorsContaining(actor)
+        val owned = boardRepository.findByOwnerWithOwnerFetched(actor)
+        val shared = boardRepository.findByCollaboratorsContainingWithOwnerFetched(actor)
 
         return (owned + shared)
             .distinctBy { it.id }

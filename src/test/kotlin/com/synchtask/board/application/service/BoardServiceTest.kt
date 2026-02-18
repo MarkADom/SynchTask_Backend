@@ -10,7 +10,12 @@ import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.repository.UserRepository
-import io.mockk.*
+import io.mockk.Runs
+import io.mockk.clearAllMocks
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.Optional
@@ -79,7 +84,7 @@ class BoardServiceTest {
 
     @Test
     fun `should return boards for user`() {
-        every { boardRepository.findByOwner(owner) } returns listOf(newBoard())
+        every { boardRepository.findByOwnerWithOwnerFetched(owner) } returns listOf(newBoard())
 
         val result = service.getBoardsForUser(owner)
 
@@ -178,7 +183,7 @@ class BoardServiceTest {
 
     @Test
     fun `should get boards shared with user`() {
-        every { boardRepository.findByCollaboratorsContaining(other) } returns listOf(newBoard())
+        every { boardRepository.findByCollaboratorsContainingWithOwnerFetched(other) } returns listOf(newBoard())
 
         val result = service.getBoardsSharedWithUser(other)
 

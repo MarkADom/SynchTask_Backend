@@ -9,13 +9,13 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface FriendRepository : JpaRepository<Friend, Long> {
-    fun findByRequesterIdAndFriendId(requesterId: Long, friendId: Long,): Friend?
+    fun findByRequesterIdAndFriendId(requesterId: Long, friendId: Long): Friend?
 
-    fun findAllByRequesterIdOrFriendId(requesterId: Long, friendId: Long,): List<Friend>
+    fun findAllByRequesterIdOrFriendId(requesterId: Long, friendId: Long): List<Friend>
 
-    fun findByRequesterIdAndStatus(requesterId: Long, status: FriendshipStatus,): List<Friend>
+    fun findByRequesterIdAndStatus(requesterId: Long, status: FriendshipStatus): List<Friend>
 
-    fun findByFriendIdAndStatus(friendId: Long, status: FriendshipStatus,): List<Friend>
+    fun findByFriendIdAndStatus(friendId: Long, status: FriendshipStatus): List<Friend>
 
     @Query(
         """

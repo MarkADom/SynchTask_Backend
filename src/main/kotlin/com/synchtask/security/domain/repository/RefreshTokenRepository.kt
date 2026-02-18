@@ -14,7 +14,7 @@ import java.util.*
 interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {
     fun findByToken(token: String): Optional<RefreshToken>
 
-    @EntityGraph(attributePaths = ["com/synchtask/user"])
+    @EntityGraph(attributePaths = ["user"])
     fun findAllByUserAndIsRevokedFalse(user: User): List<RefreshToken>
 
     @Modifying
@@ -23,6 +23,12 @@ interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE RefreshToken r SET r.isRevoked = true WHERE r.token = :token")
+    @Query(
+        """
+        UPDATE RefreshToken r 
+        SET r.isRevoked = true 
+        WHERE r.token = :token
+        """
+    )
     fun revokeByToken(token: String): Int
 }

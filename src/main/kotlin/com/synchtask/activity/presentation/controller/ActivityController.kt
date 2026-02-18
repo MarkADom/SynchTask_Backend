@@ -4,6 +4,7 @@ import com.synchtask.activity.application.dto.ActivityResponseDTO
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.presentation.mapper.ActivityMapper
 import com.synchtask.user.application.service.AuthenticatedUserService
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.GetMapping
@@ -17,6 +18,7 @@ class ActivityController(
     private val authenticatedUserService: AuthenticatedUserService
 ) {
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     fun getMyActivities(@AuthenticationPrincipal user: UserDetails): List<ActivityResponseDTO> {
         val userEntity = authenticatedUserService.requireUser(user)
 

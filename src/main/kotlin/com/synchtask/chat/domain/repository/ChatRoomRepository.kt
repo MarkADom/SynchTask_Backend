@@ -14,9 +14,12 @@ interface ChatRoomRepository : JpaRepository<ChatRoom, Long> {
     @Query(
         """
         SELECT c FROM ChatRoom c
-        WHERE SIZE(c.participants) = :size 
-        AND :participant MEMBER OF c.participants
+        JOIN c.participants p
+        WHERE p IN :participants
+        GROUP BY c
+        HAVING COUNT(DISTINCT p) = :size
+        AND SIZE(c.participants) = :size
     """
     )
-    fun findByExactParticipants(@Param("participant") participant: Set<User>, @Param("size") size: Int): ChatRoom?
+    fun findByExactParticipants(@Param("participants") participants: Set<User>, @Param("size") size: Int): ChatRoom?
 }

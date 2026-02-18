@@ -4,6 +4,7 @@ import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskLabelUpdateDTO
+import com.synchtask.task.application.dto.TaskListItemDTO
 import com.synchtask.task.application.dto.TaskResponseDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.task.application.service.TaskService
@@ -32,6 +33,7 @@ class TaskController(
     private val authenticatedUserService: AuthenticatedUserService,
 ) {
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
         val creator = authenticatedUserService.requireUser(user)
         val created = taskService.createTask(creator, request)
@@ -48,7 +50,7 @@ class TaskController(
         @RequestParam(required = false) assigneeId: Long?,
         @RequestParam(required = false) boardId: Long?,
         @PageableDefault(size = 20, sort = ["createdAt"]) pageable: Pageable,
-    ): Page<TaskResponseDTO> {
+    ): Page<TaskListItemDTO> {
         val userEntity = authenticatedUserService.requireUser(user)
         val tasks =
             taskService.getTasksWithFilters(
@@ -60,10 +62,11 @@ class TaskController(
                 pageable = pageable
             )
 
-        return tasks.map { TaskMapper.toResponse(it) }
+        return tasks.map { TaskMapper.toListItem(it) }
     }
 
     @GetMapping("/{taskId}")
+    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     fun getTaskDetail(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
         val task = taskService.findTaskById(taskId)

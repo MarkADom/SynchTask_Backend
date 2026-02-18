@@ -116,7 +116,7 @@ class UserController(
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id == authentication.principal.id")
-    fun deleteUser(@PathVariable id: Long, @AuthenticationPrincipal user: UserDetails,): ResponseEntity<Void> {
+    fun deleteUser(@PathVariable id: Long, @AuthenticationPrincipal user: UserDetails): ResponseEntity<Void> {
         val userEmail = authenticatedUserService.requireUser(user).email
         val userToDelete =
             userService.getUserById(id)
