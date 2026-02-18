@@ -173,12 +173,11 @@ tasks.withType<Jar> {
     }
 }
 
-// ───── SonarQube / SonarCloud ─────
 val sonarToken: String? = System.getenv("SONAR_TOKEN")
 val sonarHost: String? = System.getenv("SONAR_HOST_URL")
 
-// Detects if it is Cloud
-val isSonarCloud = sonarHost?.contains("sonarcloud.io") == true
+val effectiveSonarHost = sonarHost ?: "https://sonarcloud.io"
+val isSonarCloud = effectiveSonarHost.contains("sonarcloud.io")
 
 tasks.named("sonarqube") {
     dependsOn("jacocoTestReport", "detekt")
@@ -187,10 +186,8 @@ tasks.named("sonarqube") {
 sonarqube {
     properties {
 
-        // Host (local or cloud)
-        property("sonar.host.url", sonarHost ?: "http://localhost:9001")
+        property("sonar.host.url", effectiveSonarHost)
 
-        // Token
         sonarToken?.let {
             property("sonar.token", it)
         }
@@ -200,7 +197,6 @@ sonarqube {
             property("sonar.projectKey", "MarkADom_SynchTask_Backend")
             property("sonar.projectName", "SynchTask_Backend")
         } else {
-            // ----- SONAR LOCAL -----
             property("sonar.projectKey", "com.synchtask:backend")
             property("sonar.projectName", "SynchTask")
         }
