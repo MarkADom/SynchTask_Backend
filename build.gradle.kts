@@ -173,9 +173,12 @@ tasks.withType<Jar> {
     }
 }
 
-// ───── SonarQube ─────
+// ───── SonarQube / SonarCloud ─────
 val sonarToken: String? = System.getenv("SONAR_TOKEN")
 val sonarHost: String? = System.getenv("SONAR_HOST_URL")
+
+// Detects if it is Cloud
+val isSonarCloud = sonarHost?.contains("sonarcloud.io") == true
 
 tasks.named("sonarqube") {
     dependsOn("jacocoTestReport", "detekt")
@@ -183,17 +186,25 @@ tasks.named("sonarqube") {
 
 sonarqube {
     properties {
-        property("sonar.host.url", sonarHost)
-        sonarToken?.let { property("sonar.login", it) }
 
+        // Host (local or cloud)
+        property("sonar.host.url", sonarHost ?: "http://localhost:9001")
+
+        // Token
         sonarToken?.let {
-            property("sonar.login", it)
+            property("sonar.token", it)
         }
 
-        property("sonar.organization", "markadom")
-
-        property("sonar.projectKey", "com.synchtask:backend")
-        property("sonar.projectName", "SynchTask")
+        if (isSonarCloud) {
+            // ----- SONARCLOUD -----
+            property("sonar.organization", "markadom")
+            property("sonar.projectKey", "MarkADom_SynchTask_Backend")
+            property("sonar.projectName", "SynchTask_Backend")
+        } else {
+            // ----- SONAR LOCAL -----
+            property("sonar.projectKey", "com.synchtask:backend")
+            property("sonar.projectName", "SynchTask")
+        }
 
         property("sonar.sourceEncoding", "UTF-8")
         property("sonar.sources", "src/main/kotlin")
@@ -203,9 +214,11 @@ sonarqube {
             "sonar.kotlin.detekt.reportPaths",
             "${layout.buildDirectory.get()}/reports/detekt/detekt.xml"
         )
+
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
             "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
         )
     }
 }
+

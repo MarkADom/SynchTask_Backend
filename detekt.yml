@@ -10,6 +10,11 @@ style:
     active: true
     maxLineLength: 140
 
+  ReturnCount:
+      active: true
+      max: 4
+      excludeGuardClauses: true
+
 naming:
   ClassNaming:
     active: true
@@ -26,7 +31,4 @@ complexity:
     constructorThreshold: 12
     ignoreDefaultParameters: true
     excludes: ['**/domain/entity/**']
-  ReturnCount:
-    active: true
-    max: 4
-    excludeGuardClauses: true
+
