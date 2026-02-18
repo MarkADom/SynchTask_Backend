@@ -49,6 +49,7 @@ class NotificationStorageService(
         val notificationDTO = NotificationMapper.toRedisDTO(savedNotification)
 
         redisTemplate.opsForHash<String, NotificationRedisDTO>().put(redisKey, redisField, notificationDTO)
+        redisTemplate.expire(redisKey, NOTIFICATION_CACHE_TTL)
 
         logger.info("Notification stored in DB and cached in Redis hash: $message for $recipientEmail")
         return savedNotification
@@ -76,9 +77,7 @@ class NotificationStorageService(
     @Transactional
     fun markAsRead(notificationId: Long) {
         val updatedCount = notificationRepository.markAsReadById(notificationId)
-        if (updatedCount == 0) {
-            throw IllegalArgumentException("Notification with ID $notificationId not found.")
-        }
+        require(updatedCount > 0) { "Notification with ID $notificationId not found." }
     }
 
     @Transactional

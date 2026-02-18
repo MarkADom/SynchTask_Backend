@@ -44,8 +44,7 @@ class NotificationController(
     @PostMapping("/mark-as-read/{id}")
     @PreAuthorize("isAuthenticated()")
     fun markNotificationAsRead(
-        @PathVariable id: Long,
-        @AuthenticationPrincipal user: UserDetails
+        @PathVariable id: Long
     ): ResponseEntity<String> {
         notificationService.markAsRead(id)
         return ResponseEntity.ok("Notification marked as read")

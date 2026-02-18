@@ -27,7 +27,7 @@ class NotificationRetryService(
         logger.info("Retrying ${undelivered.size} undelivered notifications...")
 
         undelivered.forEach { notification ->
-            try {
+            runCatching {
                 val dto = NotificationMapper.toWebSocketDTO(notification)
                 notificationWebSocketService.sendNotification(notification.recipient.email, dto)
 
@@ -35,7 +35,7 @@ class NotificationRetryService(
                 notificationRepository.save(notification)
 
                 logger.info("Successfully resent notification ${notification.id} to ${notification.recipient.email}")
-            } catch (ex: Exception) {
+            }.onFailure { ex ->
                 logger.warn("Retry failed for notification ${notification.id}: ${ex.message}", ex)
             }
         }
