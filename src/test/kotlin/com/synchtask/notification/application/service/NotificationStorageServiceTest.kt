@@ -39,6 +39,7 @@ class NotificationStorageServiceTest {
         hashOps = mockk()
 
         every { redisTemplate.opsForHash<String, NotificationRedisDTO>() } returns hashOps
+        every { redisTemplate.expire(any<String>(), any()) } returns true
 
         service =
             NotificationStorageService(
@@ -77,6 +78,7 @@ class NotificationStorageServiceTest {
                 any()
             )
         }
+        verify(exactly = 1) { redisTemplate.expire("notifications:${user.email}", any()) }
     }
 
     @Test

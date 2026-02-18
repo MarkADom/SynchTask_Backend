@@ -1,166 +1,170 @@
 spring:
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      idle-timeout: 30000
-      max-lifetime: 1800000
+    datasource:
+        url: ${DB_URL}
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        hikari:
+            maximum-pool-size: 10
+            minimum-idle: 2
+            idle-timeout: 30000
+            max-lifetime: 1800000
 
-  jpa:
-    hibernate:
-      # Uses ddl-auto=update for local development convenience.
-      # In a production-grade setup, schema migrations should be managed via Flyway or Liquibase.
-      ddl-auto: update
-    open-in-view: false
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        transaction:
-          jta:
-            platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform
+    jpa:
+        hibernate:
+            # Uses ddl-auto=update for local development convenience.
+            # In a production-grade setup, schema migrations should be managed via Flyway or Liquibase.
+            ddl-auto: update
+        open-in-view: false
+        show-sql: true
+        properties:
+            hibernate:
+                format_sql: true
+                transaction:
+                    jta:
+                        platform: org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform
 
-  output:
-    ansi:
-      enabled: ALWAYS
+    output:
+        ansi:
+            enabled: ALWAYS
 
-  redis:
-    host: ${REDIS_HOST}
-    port: ${REDIS_PORT}
-    password: ${REDIS_PASSWORD}
-    database: ${REDIS_DATABASE}
-    ssl: ${REDIS_SSL}
-    timeout: ${REDIS_TIMEOUT}
-    lettuce:
-      pool:
-        max-active: 20
-        max-idle: 10
-        min-idle: 2
-        time-between-eviction-runs: 60000
-    pubsub:
-      chat-topic: chat-messages
-      notification-topic: notifications
-      task-topic: tasks
-    repositories:
-      enabled: false
+    data:
+        redis:
+            host: ${REDIS_HOST}
+            port: ${REDIS_PORT}
+            password: ${REDIS_PASSWORD}
+            database: ${REDIS_DATABASE}
+            timeout: ${REDIS_TIMEOUT}
+            lettuce:
+                pool:
+                    max-active: 20
+                    max-idle: 10
+                    min-idle: 2
+                    time-between-eviction-runs: 60000
+            repositories:
+                enabled: false
 
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope: openid, profile, email
-            redirect-uri: ${GOOGLE_REDIRECT_URI}
-        provider:
-          google:
-            issuer-uri: https://accounts.google.com
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:${SERVER_PORT}
-          jwk-set-uri: http://localhost:${SERVER_PORT}/jwks
-          audiences: ${JWT_AUDIENCE}
+    security:
+        oauth2:
+            client:
+                registration:
+                    google:
+                        client-id: ${GOOGLE_CLIENT_ID}
+                        client-secret: ${GOOGLE_CLIENT_SECRET}
+                        scope: openid, profile, email
+                        redirect-uri: ${GOOGLE_REDIRECT_URI}
+                provider:
+                    google:
+                        issuer-uri: https://accounts.google.com
+            resourceserver:
+                jwt:
+                    issuer-uri: http://localhost:${SERVER_PORT}
+                    jwk-set-uri: http://localhost:${SERVER_PORT}/jwks
+                    audiences: ${JWT_AUDIENCE}
 
 server:
-  port: ${SERVER_PORT}
-  tomcat:
-    max-threads: 200
-    accept-count: 100
-    connection-timeout: 30s
-    compression:
-      enabled: true
-      min-response-size: 512
-      mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    port: ${SERVER_PORT}
+    tomcat:
+        max-threads: 200
+        accept-count: 100
+        connection-timeout: 30s
+        compression:
+            enabled: true
+            min-response-size: 512
+            mime-types: application/json,application/xml,text/html,text/xml,text/plain
 
 springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
-    operationsSorter: alpha
-    tagsSorter: alpha
-    persistAuthorization: true
-    oauth:
-      clientId: synchtask-client
-      clientSecret: synchtask-secret
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+        path: /swagger-ui.html
+        operationsSorter: alpha
+        tagsSorter: alpha
+        persistAuthorization: true
+        oauth:
+            clientId: synchtask-client
+            clientSecret: synchtask-secret
 
 ratelimiter:
-  user:
-    limit: 100
-    window: 1
-  anon:
-    limit: 50
-    window: 1
-  public:
-    limit: 200
-    window: 1
+    user:
+        limit: 100
+        window: 1
+    anon:
+        limit: 50
+        window: 1
+    public:
+        limit: 200
+        window: 1
 
 management:
-  endpoints:
-    web:
-      base-path: /actuator
-      exposure:
-        # TODO(dev-security): limit actuator exposure outside dev/demo | keep broad visibility now for local diagnostics
-        include: "*"
-  endpoint:
-    health:
-      show-details: always
-    redis:
-      enabled: true
-    mappings:
-      enabled: true
-  security:
-    enabled: false
+    endpoints:
+        web:
+            base-path: /actuator
+            exposure:
+                # TODO(dev-security): limit actuator exposure outside dev/demo | keep broad visibility now for local diagnostics
+                include: "*"
+    endpoint:
+        health:
+            show-details: always
+        redis:
+            enabled: true
+        mappings:
+            enabled: true
+    security:
+        enabled: false
 
 jwt:
-  expiration: ${JWT_EXPIRATION}
-  refreshExpiration: ${JWT_REFRESH_EXPIRATION}
-  issuer: ${JWT_ISSUER}
-  audience: ${JWT_AUDIENCE}
-  algorithm: ${JWT_ALGORITHM}
+    expiration: ${JWT_EXPIRATION}
+    refreshExpiration: ${JWT_REFRESH_EXPIRATION}
+    issuer: ${JWT_ISSUER}
+    audience: ${JWT_AUDIENCE}
+    algorithm: ${JWT_ALGORITHM}
 
 websocket:
-  enabled: true
-  broker:
-    prefix: /topic
-  app:
-    prefix: /app
-  heartbeat:
-    send-interval: 100000
-    receive-interval: 10000
+    enabled: true
+    broker:
+        prefix: /topic
+    app:
+        prefix: /app
+    heartbeat:
+        send-interval: 100000
+        receive-interval: 10000
 
 cors:
-  allowed:
-    origins: ${CORS_ALLOWED_ORIGINS}
+    allowed:
+        origins: ${CORS_ALLOWED_ORIGINS}
+
+# 🔥 Custom application namespace (clean separation from Spring internals)
+synchtask:
+    redis:
+        pubsub:
+            chat-topic: chat-messages
+            notification-topic: notifications
+            task-topic: tasks
 
 logging:
-  level:
-    root: INFO
-    io.swagger: DEBUG
-    org.springdoc: DEBUG
-    com.synchtask: DEBUG
-    io.lettuce.core: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
-    org.springframework.web: DEBUG
-    org.springframework.data: DEBUG
-    org.springframework.context: DEBUG
-    org.springframework.core.env: DEBUG
-    org.springframework.security: TRACE
-    org.springframework.jdbc.core: DEBUG
-    org.springframework.messaging: DEBUG
-    org.springframework.web.socket: DEBUG
-    org.springframework.data.redis: DEBUG
-    org.springframework.web.client: DEBUG
-    org.springframework.transaction: DEBUG
-    org.springframework.beans.factory: DEBUG
-    org.springframework.data.redis.connection: DEBUG
-    org.springframework.web.client.RestTemplate: TRACE
-    org.springframework.jdbc.datasource.DataSourceTransactionManager: DEBUG
-    org.springframework.orm.jpa.JpaTransactionManager: DEBUG
+    level:
+        root: INFO
+        io.swagger: DEBUG
+        org.springdoc: DEBUG
+        com.synchtask: DEBUG
+        io.lettuce.core: DEBUG
+        org.hibernate.SQL: DEBUG
+        org.hibernate.type.descriptor.sql: TRACE
+        org.springframework.web: DEBUG
+        org.springframework.data: DEBUG
+        org.springframework.context: DEBUG
+        org.springframework.core.env: DEBUG
+        org.springframework.security: TRACE
+        org.springframework.jdbc.core: DEBUG
+        org.springframework.messaging: DEBUG
+        org.springframework.web.socket: DEBUG
+        org.springframework.data.redis: DEBUG
+        org.springframework.web.client: DEBUG
+        org.springframework.transaction: DEBUG
+        org.springframework.beans.factory: DEBUG
+        org.springframework.data.redis.connection: DEBUG
+        org.springframework.web.client.RestTemplate: TRACE
+        org.springframework.jdbc.datasource.DataSourceTransactionManager: DEBUG
+        org.springframework.orm.jpa.JpaTransactionManager: DEBUG

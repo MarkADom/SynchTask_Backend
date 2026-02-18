@@ -45,7 +45,7 @@ class NotificationStorageService(
 
         val savedNotification = notificationRepository.save(notification)
         val redisKey = "notifications:$recipientEmail"
-        val redisField = savedNotification.id!!.toString()
+        val redisField = checkNotNull(savedNotification.id) { "Notification ID cannot be null" }.toString()
         val notificationDTO = NotificationMapper.toRedisDTO(savedNotification)
 
         redisTemplate.opsForHash<String, NotificationRedisDTO>().put(redisKey, redisField, notificationDTO)
