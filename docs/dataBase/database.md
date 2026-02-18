@@ -86,4 +86,4 @@ Indexes are present for common query patterns, for example:
 
 ## ER Diagram
 
-See `docs/er-diagram.png`.
+See `docs/dataBase/er-diagram.md`.
