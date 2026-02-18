@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class NotificationPoliciesTest {
+class ActivityNotificationServiceTest {
     private val actor = User(id = 1L, name = "Actor", email = "actor@test.com", passwordHash = "hash")
     private val owner = User(id = 2L, name = "Owner", email = "owner@test.com", passwordHash = "hash")
     private val collab = User(id = 3L, name = "Collab", email = "collab@test.com", passwordHash = "hash")

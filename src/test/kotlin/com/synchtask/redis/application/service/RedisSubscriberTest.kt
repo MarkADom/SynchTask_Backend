@@ -5,7 +5,9 @@ import com.synchtask.chat.application.dto.ChatMessageDTO
 import com.synchtask.notification.application.dto.NotificationDTO
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.websocket.application.manager.WebSocketManager
-import io.mockk.*
+import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger

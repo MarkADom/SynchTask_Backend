@@ -137,7 +137,7 @@ class BoardService(
             .distinctBy { it.id }
             .map {
                 BoardSimpleDTO(
-                    id = it.id ?: throw IllegalStateException("Board ID cannot be null"),
+                    id = checkNotNull(it.id) { "Board ID cannot be null" },
                     name = it.name
                 )
             }

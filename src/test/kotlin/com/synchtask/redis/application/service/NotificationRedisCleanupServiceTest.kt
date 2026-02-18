@@ -1,7 +1,10 @@
 package com.synchtask.redis.application.service
 
 import com.synchtask.notification.application.dto.NotificationRedisDTO
-import io.mockk.*
+import io.mockk.clearAllMocks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.redis.core.HashOperations

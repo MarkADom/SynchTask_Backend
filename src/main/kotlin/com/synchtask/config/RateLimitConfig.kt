@@ -3,11 +3,9 @@ package com.synchtask.config
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.Refill
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.core.context.SecurityContextHolder
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
@@ -57,13 +55,4 @@ class RateLimitConfig(
             )
         )
         .build()
-
-    private fun getUserIdentifier(request: HttpServletRequest): String {
-        val authentication = SecurityContextHolder.getContext().authentication
-        return if (authentication?.isAuthenticated == true) {
-            authentication.name
-        } else {
-            "anon-${request.remoteAddr}"
-        }
-    }
 }

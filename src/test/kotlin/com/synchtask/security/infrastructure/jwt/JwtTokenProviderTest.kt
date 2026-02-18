@@ -24,7 +24,7 @@ class JwtTokenProviderTest {
 
     @BeforeEach
     fun setup() {
-        jwtKeyManager = JwtKeyManager()
+        jwtKeyManager = JwtKeyManager(TestKeyPairs.generateRsa())
         userRepository = mockk()
         userDetailsService = mockk()
 
