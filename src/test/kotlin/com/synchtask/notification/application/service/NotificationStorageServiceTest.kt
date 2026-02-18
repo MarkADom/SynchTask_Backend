@@ -14,7 +14,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.data.redis.core.HashOperations
 import org.springframework.data.redis.core.RedisTemplate
 import java.time.LocalDateTime
-import java.util.*
+import java.time.Duration
+import java.util.Optional
 
 class NotificationStorageServiceTest {
     private lateinit var notificationRepository: NotificationRepository
@@ -39,7 +40,7 @@ class NotificationStorageServiceTest {
         hashOps = mockk()
 
         every { redisTemplate.opsForHash<String, NotificationRedisDTO>() } returns hashOps
-        every { redisTemplate.expire(any<String>(), any()) } returns true
+        every { redisTemplate.expire(any<String>(), any<Duration>()) } returns true
 
         service =
             NotificationStorageService(
@@ -78,7 +79,7 @@ class NotificationStorageServiceTest {
                 any()
             )
         }
-        verify(exactly = 1) { redisTemplate.expire("notifications:${user.email}", any()) }
+        verify(exactly = 1) { redisTemplate.expire("notifications:${user.email}", any<Duration>()) }
     }
 
     @Test
