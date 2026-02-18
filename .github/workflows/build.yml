@@ -31,5 +31,6 @@ jobs:
 
             - name: Build, Test and Analyze (SonarCloud)
               env:
+                  SONAR_HOST_URL: https://sonarcloud.io
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               run: ./gradlew clean build jacocoTestReport detekt sonarqube --info
