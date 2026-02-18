@@ -29,8 +29,7 @@ jobs:
                   openssl genpkey -algorithm RSA -out config/keys/private.pem -pkeyopt rsa_keygen_bits:2048
                   openssl rsa -pubout -in config/keys/private.pem -out config/keys/public.pem
 
-            - name: Build and Sonar
+            - name: Build, Test and Analyze (SonarCloud)
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-              run: ./gradlew build sonar -Dsonar.qualitygate.wait=true --info
+              run: ./gradlew clean build jacocoTestReport detekt sonarqube --info

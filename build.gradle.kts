@@ -173,6 +173,7 @@ tasks.withType<Jar> {
     }
 }
 
+// ───── SonarQube / SonarCloud ─────
 val sonarToken: String? = System.getenv("SONAR_TOKEN")
 val sonarHost: String? = System.getenv("SONAR_HOST_URL")
 
