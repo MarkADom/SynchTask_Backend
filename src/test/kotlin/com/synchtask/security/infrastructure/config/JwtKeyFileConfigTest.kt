@@ -3,53 +3,65 @@ package com.synchtask.security.infrastructure.config
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.security.KeyPairGenerator
-import kotlin.io.path.writeText
+import java.security.interfaces.RSAPrivateKey
+import java.security.interfaces.RSAPublicKey
+import java.util.Base64
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class JwtKeyFileConfigTest {
 
     @Test
     fun `should load RSA key pair from PEM files`() {
-        // Generate real RSA key pair for test
-        val generator = KeyPairGenerator.getInstance("RSA")
-        generator.initialize(2048)
-        val keyPair = generator.generateKeyPair()
+        // Generate real RSA key pair
+        val keyGen = KeyPairGenerator.getInstance("RSA")
+        keyGen.initialize(2048)
+        val originalKeyPair = keyGen.generateKeyPair()
 
-        // Convert keys to PEM format
-        val privatePem = toPem(
-            keyPair.private.encoded,
-            "PRIVATE KEY"
-        )
-        val publicPem = toPem(
-            keyPair.public.encoded,
-            "PUBLIC KEY"
-        )
+        val privatePem = toPrivatePem(originalKeyPair.private.encoded)
+        val publicPem = toPublicPem(originalKeyPair.public.encoded)
 
-        // Create temporary files
-        val privateFile = Files.createTempFile("private", ".pem")
-        val publicFile = Files.createTempFile("public", ".pem")
+        val privateFile = createTempFile("private", ".pem")
+        val publicFile = createTempFile("public", ".pem")
 
-        privateFile.writeText(privatePem)
-        publicFile.writeText(publicPem)
+        Files.write(privateFile.toPath(), privatePem.toByteArray())
+        Files.write(publicFile.toPath(), publicPem.toByteArray())
 
-        // Instantiate config with temp paths
         val config = JwtKeyFileConfig(
-            privateKeyPath = privateFile.toString(),
-            publicKeyPath = publicFile.toString()
+            privateFile.absolutePath,
+            publicFile.absolutePath
         )
 
         val loadedKeyPair = config.jwtKeyPair()
 
         assertNotNull(loadedKeyPair.private)
         assertNotNull(loadedKeyPair.public)
+
+        assertEquals(
+            (originalKeyPair.private as RSAPrivateKey).modulus,
+            (loadedKeyPair.private as RSAPrivateKey).modulus
+        )
+
+        assertEquals(
+            (originalKeyPair.public as RSAPublicKey).modulus,
+            (loadedKeyPair.public as RSAPublicKey).modulus
+        )
+
+        privateFile.delete()
+        publicFile.delete()
     }
 
-    private fun toPem(encoded: ByteArray, type: String): String {
-        val base64 = java.util.Base64.getEncoder().encodeToString(encoded)
-        return buildString {
-            append("-----BEGIN $type-----\n")
-            append(base64.chunked(64).joinToString("\n"))
-            append("\n-----END $type-----")
+    private fun toPrivatePem(derBytes: ByteArray): String =
+        buildString {
+            appendLine("-----BEGIN PRIVATE KEY-----")
+            appendLine(Base64.getEncoder().encodeToString(derBytes))
+            appendLine("-----END PRIVATE KEY-----")
         }
-    }
+
+    private fun toPublicPem(derBytes: ByteArray): String =
+        buildString {
+            appendLine("-----BEGIN PUBLIC KEY-----")
+            appendLine(Base64.getEncoder().encodeToString(derBytes))
+            appendLine("-----END PUBLIC KEY-----")
+        }
 }
