@@ -51,22 +51,8 @@ class CustomHandshakeInterceptor(
                 return token
             }
         }
-
-        val query = request.uri.query ?: return null
-
-        val token =
-            query.split("&").firstNotNullOfOrNull { param ->
-                val parts = param.split("=")
-                if (parts.size == 2 && parts[0] == "token") parts[1] else null
-            }
-
-        if (token.isNullOrBlank()) {
-            logger.warn("JWT token not found in query parameters")
-            return null
-        } else {
-            logger.info("JWT token successfully extracted from query parameters")
-        }
-        return token
+        logger.warn("JWT token not found in Authorization header")
+        return null
     }
 
     private fun rejectConnection(reason: String): Boolean {

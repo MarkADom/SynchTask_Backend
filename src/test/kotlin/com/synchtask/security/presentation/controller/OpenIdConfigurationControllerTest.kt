@@ -24,12 +24,12 @@ class OpenIdConfigurationControllerTest {
 
         val result = controller.openIdConfig(request)
 
-        val expectedBaseUrl = "https://example.com:443/api/auth"
+        val expectedBaseUrl = "https://example.com:443"
 
         assertEquals(expectedBaseUrl, result["issuer"])
-        assertEquals("$expectedBaseUrl/api/jwks", result["jwks_uri"])
-        assertEquals("$expectedBaseUrl/api/auth/login", result["authorization_endpoint"])
-        assertEquals("$expectedBaseUrl/api/auth/token", result["token_endpoint"])
-        assertEquals("$expectedBaseUrl/api/auth/userinfo", result["userinfo_endpoint"])
+        assertEquals("$expectedBaseUrl/jwks", result["jwks_uri"])
+        assertEquals("$expectedBaseUrl/oauth2/authorization/google", result["authorization_endpoint"])
+        assertEquals("$expectedBaseUrl/auth/refresh", result["token_endpoint"])
+        assertEquals("$expectedBaseUrl/oauth2/com/synchtask/user", result["userinfo_endpoint"])
     }
 }

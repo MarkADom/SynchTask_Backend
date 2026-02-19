@@ -74,8 +74,8 @@ class SecurityConfig(
                     ).permitAll()
                     // Public Endpoints (Accessible Without Authentication)
                     .requestMatchers(
-                        // TODO(dev-security): restrict actuator exposure outside dev/demo | keep public now for local diagnostics
-                        "/actuator/**",
+                        "/actuator/health",
+                        "/actuator/info",
                         "/auth/.well-known/openid-configuration",
                         "/auth/.well-known/oauth-authorization-server",
                         "/jwks",
@@ -87,6 +87,8 @@ class SecurityConfig(
                     ).permitAll()
                     // OAuth2 Endpoints
                     .requestMatchers("/oauth2/**").permitAll()
+                    // Actuator sensitive endpoints (admin only)
+                    .requestMatchers("/actuator/**").hasAuthority("ROLE_ADMIN")
                     // Protected Endpoints (Require Authentication)
                     .requestMatchers("/notifications/**").authenticated()
                     // All other requests require authentication

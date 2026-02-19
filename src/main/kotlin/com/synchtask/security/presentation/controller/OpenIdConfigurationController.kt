@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.RestController
 class OpenIdConfigurationController {
     @GetMapping("/openid-configuration")
     fun openIdConfig(request: HttpServletRequest): Map<String, Any> {
-        val baseUrl = "${request.scheme}://${request.serverName}:${request.serverPort}/api/auth"
+        val rootUrl = "${request.scheme}://${request.serverName}:${request.serverPort}"
         return mapOf(
-            "issuer" to baseUrl,
-            "jwks_uri" to "$baseUrl/api/jwks",
-            "authorization_endpoint" to "$baseUrl/api/auth/login",
-            "token_endpoint" to "$baseUrl/api/auth/token",
-            "userinfo_endpoint" to "$baseUrl/api/auth/userinfo"
+            "issuer" to rootUrl,
+            "jwks_uri" to "$rootUrl/jwks",
+            "authorization_endpoint" to "$rootUrl/oauth2/authorization/google",
+            "token_endpoint" to "$rootUrl/auth/refresh",
+            "userinfo_endpoint" to "$rootUrl/oauth2/com/synchtask/user"
         )
     }
 }

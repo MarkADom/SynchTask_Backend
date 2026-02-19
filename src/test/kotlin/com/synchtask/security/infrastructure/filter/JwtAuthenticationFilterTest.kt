@@ -51,7 +51,7 @@ class JwtAuthenticationFilterTest {
     fun `should continue filter if token is missing`() {
         every { request.requestURI } returns "/secure/tasks"
         every { request.method } returns "GET"
-        every { jwtTokenProvider.extractTokenFromRequest(request) } returns null
+        every { jwtTokenProvider.extractTokenFromHeader(request.getHeader("Authorization")) } returns null
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)
 
@@ -63,7 +63,7 @@ class JwtAuthenticationFilterTest {
     fun `should continue filter if token is invalid`() {
         every { request.requestURI } returns "/secure/tasks"
         every { request.method } returns "GET"
-        every { jwtTokenProvider.extractTokenFromRequest(request) } returns "invalid.token"
+        every { jwtTokenProvider.extractTokenFromHeader(request.getHeader("Authorization")) } returns "invalid.token"
         every { jwtTokenProvider.validateAndExtractUser("invalid.token") } returns null
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)
@@ -79,7 +79,7 @@ class JwtAuthenticationFilterTest {
 
         every { request.requestURI } returns "/secure/tasks"
         every { request.method } returns "GET"
-        every { jwtTokenProvider.extractTokenFromRequest(request) } returns token
+        every { jwtTokenProvider.extractTokenFromHeader(request.getHeader("Authorization")) } returns token
         every { jwtTokenProvider.validateAndExtractUser(token) } returns userDetails
 
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)

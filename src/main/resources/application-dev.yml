@@ -102,7 +102,8 @@ management:
         web:
             base-path: /actuator
             exposure:
-                include: health,info
+                # TODO(dev-security): limit actuator exposure outside dev/demo | keep broad visibility now for local diagnostics
+                include: "*"
     endpoint:
         health:
             show-details: always
@@ -145,6 +146,25 @@ synchtask:
 logging:
     level:
         root: INFO
-        com.synchtask: INFO
-        org.springframework.security: WARN
-        org.hibernate.SQL: WARN
+        io.swagger: DEBUG
+        org.springdoc: DEBUG
+        com.synchtask: DEBUG
+        io.lettuce.core: DEBUG
+        org.hibernate.SQL: DEBUG
+        org.hibernate.type.descriptor.sql: TRACE
+        org.springframework.web: DEBUG
+        org.springframework.data: DEBUG
+        org.springframework.context: DEBUG
+        org.springframework.core.env: DEBUG
+        org.springframework.security: TRACE
+        org.springframework.jdbc.core: DEBUG
+        org.springframework.messaging: DEBUG
+        org.springframework.web.socket: DEBUG
+        org.springframework.data.redis: DEBUG
+        org.springframework.web.client: DEBUG
+        org.springframework.transaction: DEBUG
+        org.springframework.beans.factory: DEBUG
+        org.springframework.data.redis.connection: DEBUG
+        org.springframework.web.client.RestTemplate: TRACE
+        org.springframework.jdbc.datasource.DataSourceTransactionManager: DEBUG
+        org.springframework.orm.jpa.JpaTransactionManager: DEBUG

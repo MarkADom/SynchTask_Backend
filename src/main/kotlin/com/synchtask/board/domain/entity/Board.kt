@@ -85,12 +85,16 @@ class Board(
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = true)
-    var project: Project? = null
+    var project: Project? = null,
 ) {
-    fun updateFrom(dto: BoardUpdateDTO) {
-        dto.name?.let { name = it }
-        dto.color?.let { color = it }
-        dto.description?.let { description = it }
+    fun update(
+        name: String?,
+        color: String?,
+        description: String?,
+    ) {
+        name?.let { this.name = it }
+        color?.let { this.color = it }
+        description?.let { this.description = it }
         updatedAt = LocalDateTime.now()
     }
 
