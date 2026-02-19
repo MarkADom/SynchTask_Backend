@@ -157,6 +157,24 @@ class BoardServiceTest {
     }
 
     @Test
+    fun `should throw when updating non existing board`() {
+        every { boardRepository.findById(any()) } returns Optional.empty()
+
+        assertFailsWith<ResourceNotFoundException> {
+            service.updateBoard(999L, BoardUpdateDTO("X", null, null), owner)
+        }
+    }
+
+    @Test
+    fun `should throw when deleting non existing board`() {
+        every { boardRepository.findById(any()) } returns Optional.empty()
+
+        assertFailsWith<ResourceNotFoundException> {
+            service.deleteBoard(999L, owner)
+        }
+    }
+
+    @Test
     fun `should delete board when owner`() {
         val board = newBoard()
 
@@ -191,6 +209,20 @@ class BoardServiceTest {
     }
 
     @Test
+    fun `should throw when some collaborators not found`() {
+        val board = newBoard()
+
+        every { boardRepository.findById(any()) } returns Optional.of(board)
+        every { userRepository.findAllById(listOf(3L)) } returns emptyList()
+
+        val dto = BoardCollaboratorUpdateDTO(listOf(3L))
+
+        assertFailsWith<ResourceNotFoundException> {
+            service.updateCollaborators(board.id!!, dto, owner)
+        }
+    }
+
+    @Test
     fun `should update collaborators when owner`() {
         val board = newBoard()
         val collaborator = newUser(3L, "c@test.com")
@@ -217,4 +249,21 @@ class BoardServiceTest {
             service.updateCollaborators(board.id!!, BoardCollaboratorUpdateDTO(emptyList()), other)
         }
     }
+
+    @Test
+    fun `should return distinct simple boards for user`() {
+        val board1 = newBoard(id = 1L)
+        val board2 = newBoard(id = 2L)
+
+        every { boardRepository.findByOwnerWithOwnerFetched(owner) } returns listOf(board1)
+        every { boardRepository.findByCollaboratorsContainingWithOwnerFetched(owner) } returns listOf(board1, board2)
+
+        val result = service.getSimpleBoardsForUser(owner)
+
+        assertEquals(2, result.size)
+        assertTrue(result.any { it.id == 1L })
+        assertTrue(result.any { it.id == 2L })
+    }
+
+
 }

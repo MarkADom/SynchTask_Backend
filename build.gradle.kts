@@ -136,7 +136,6 @@ tasks.jacocoTestReport {
     classDirectories.setFrom(
         fileTree(layout.buildDirectory.dir("classes/kotlin/main")) {
             exclude(
-                "**/config/**",
                 "**/dto/**",
                 "**/exception/**"
             )

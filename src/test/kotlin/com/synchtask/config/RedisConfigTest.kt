@@ -11,6 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class RedisConfigTest {
+
     private val redisHost = "localhost"
     private val redisPort = 6379
     private val redisPassword = "secret"
@@ -31,14 +32,32 @@ class RedisConfigTest {
         )
 
     @Test
-    fun `should create RedisConnectionFactory`() {
+    fun `should create RedisConnectionFactory with password`() {
         val factory = redisConfig.redisConnectionFactory()
+        assertNotNull(factory)
+    }
+
+    @Test
+    fun `should create RedisConnectionFactory without password when blank`() {
+        val configWithoutPassword =
+            RedisConfig(
+                redisHost,
+                redisPort,
+                "",
+                redisDatabase,
+                chatTopic,
+                notificationTopic,
+                taskTopic
+            )
+
+        val factory = configWithoutPassword.redisConnectionFactory()
         assertNotNull(factory)
     }
 
     @Test
     fun `should create configured RedisTemplate`() {
         val connectionFactory = mockk<RedisConnectionFactory>(relaxed = true)
+
         val template = redisConfig.redisTemplate(connectionFactory)
 
         assertNotNull(template)
@@ -49,6 +68,7 @@ class RedisConfigTest {
     @Test
     fun `should create MessageListenerAdapter with correct method`() {
         val subscriber = mockk<RedisSubscriber>(relaxed = true)
+
         val adapter = redisConfig.messageListenerAdapter(subscriber)
 
         assertNotNull(adapter)
@@ -64,5 +84,10 @@ class RedisConfigTest {
 
         assertNotNull(container)
         assertEquals(connectionFactory, container.connectionFactory)
+    }
+
+    @Test
+    fun `should execute logConfig without errors`() {
+        redisConfig.logConfig()
     }
 }

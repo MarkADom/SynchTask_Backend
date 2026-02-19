@@ -1,5 +1,6 @@
 package com.synchtask.security.infrastructure.config
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -15,11 +16,19 @@ import java.util.Base64
 
 @Configuration
 @Profile("!test")
-class JwtKeyFileConfig {
+class JwtKeyFileConfig(
+
+    @Value("\${synchtask.jwt.private-key-path:config/keys/private.pem}")
+    private val privateKeyPath: String,
+
+    @Value("\${synchtask.jwt.public-key-path:config/keys/public.pem}")
+    private val publicKeyPath: String,
+) {
+
     @Bean
     fun jwtKeyPair(): KeyPair {
-        val privateKey = readPrivateKey(PRIVATE_KEY_PATH)
-        val publicKey = readPublicKey(PUBLIC_KEY_PATH)
+        val privateKey = readPrivateKey(privateKeyPath)
+        val publicKey = readPublicKey(publicKeyPath)
         return KeyPair(publicKey, privateKey)
     }
 
@@ -44,10 +53,5 @@ class JwtKeyFileConfig {
                 .replace(Regex("-----END (.*?)-----"), "")
                 .replace(Regex("\\s+"), "")
         return Base64.getDecoder().decode(pemString)
-    }
-
-    companion object {
-        private const val PRIVATE_KEY_PATH = "config/keys/private.pem"
-        private const val PUBLIC_KEY_PATH = "config/keys/public.pem"
     }
 }
