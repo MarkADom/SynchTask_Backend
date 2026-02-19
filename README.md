@@ -124,6 +124,7 @@ Stop SonarQube:
 docker compose -f docker/docker-compose.sonar.yml down
 ```
 
+- SonarQube UI: http://localhost:9001/projects
 ---
 
 ## Architecture & Data Model
