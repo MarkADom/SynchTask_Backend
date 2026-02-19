@@ -78,8 +78,7 @@ class BoardService(
             throw UnauthorizedAccessException("Only the board owner can update it.")
         }
 
-        board.updateFrom(dto)
-        board.updatedAt = LocalDateTime.now()
+        board.update(dto.name, dto.color, dto.description)
 
         val updated = boardRepository.save(board)
 

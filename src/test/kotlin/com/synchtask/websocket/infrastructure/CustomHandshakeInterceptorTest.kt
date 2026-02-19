@@ -90,12 +90,8 @@ class CustomHandshakeInterceptorTest {
     }
 
     @Test
-    fun `should accept connection with valid token in query parameter`() {
+    fun `should reject connection when token is provided only via query parameter`() {
         val token = "query.jwt.token"
-        val userDetails =
-            mockk<UserDetails> {
-                every { username } returns "queryuser@example.com"
-            }
 
         request =
             mockk {
@@ -103,12 +99,9 @@ class CustomHandshakeInterceptorTest {
                 every { uri } returns URI("ws://localhost:8080/ws?token=$token")
             }
 
-        every { jwtTokenProvider.validateAndExtractUser(token) } returns userDetails
-
         val result = interceptor.beforeHandshake(request, response, wsHandler, attributes)
 
-        assertTrue(result)
-        assert(attributes["username"] == "queryuser@example.com")
+        assertFalse(result)
     }
 
     @Test

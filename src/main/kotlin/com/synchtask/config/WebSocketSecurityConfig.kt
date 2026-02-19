@@ -75,8 +75,7 @@ class WebSocketSecurityConfig(
     @Bean
     fun webSocketAuthorizationManager(): AuthorizationManager<Message<*>> {
         return MessageMatcherDelegatingAuthorizationManager.builder()
-            // TODO(dev-security): require authenticated CONNECT outside dev/demo | keep open now for handshake compatibility during portfolio validation
-            .simpTypeMatchers(SimpMessageType.CONNECT).permitAll()
+            .simpTypeMatchers(SimpMessageType.CONNECT).authenticated()
             .simpDestMatchers("/ws/**", "/ws-notifications/**").authenticated()
             .simpDestMatchers("/com/synchtask/user/queue/**").authenticated()
             .simpDestMatchers("/topic/**").permitAll()

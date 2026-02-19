@@ -35,7 +35,7 @@ class JwtAuthenticationFilter(
             return
         }
 
-        val token = jwtTokenProvider.extractTokenFromRequest(request)
+        val token = jwtTokenProvider.extractTokenFromHeader(request.getHeader("Authorization"))
 
         if (token.isNullOrBlank()) {
             log.warn("No JWT token found for: ${request.method} $path")

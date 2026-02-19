@@ -159,4 +159,25 @@ class JwtTokenProviderTest {
 
         assertNull(extracted)
     }
+
+    @Test
+    fun `should extract token from valid bearer header`() {
+        val result = tokenProvider.extractTokenFromHeader("Bearer abc.def.ghi")
+
+        assertEquals("abc.def.ghi", result)
+    }
+
+    @Test
+    fun `should return null for invalid auth scheme`() {
+        val result = tokenProvider.extractTokenFromHeader("Basic abc123")
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `should return null for blank bearer token`() {
+        val result = tokenProvider.extractTokenFromHeader("Bearer   ")
+
+        assertNull(result)
+    }
 }

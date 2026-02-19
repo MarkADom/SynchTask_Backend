@@ -25,7 +25,7 @@ class JwtTokenProvider(
     private val userRepository: UserRepository,
     @Value("\${jwt.expiration}") private val expiration: Long,
     @Value("\${jwt.issuer}") private val issuer: String,
-    @Value("\${jwt.audience}") private val audience: String
+    @Value("\${jwt.audience}") private val audience: String,
 ) {
     private val logger = LoggerFactory.getLogger(JwtTokenProvider::class.java)
     private val privateKey: PrivateKey by lazy { jwtKeyManager.getPrivateKey() }
@@ -74,17 +74,12 @@ class JwtTokenProvider(
         }
     }
 
-    fun extractTokenFromRequest(request: HttpServletRequest): String? {
-        val headerToken =
-            request.getHeader("Authorization")
-                ?.takeIf { it.startsWith(BEARER_PREFIX) }
-                ?.substring(BEARER_PREFIX_LENGTH)
+    fun extractTokenFromHeader(authorizationHeader: String?): String? {
+        return authorizationHeader
+            ?.takeIf { it.startsWith(BEARER_PREFIX) }
+            ?.substring(BEARER_PREFIX_LENGTH)
+            ?.takeIf { it.isNotBlank() }
 
-        69
-        // TODO: remove token via query param (or limit only to justified cases)
-        val queryToken = request.getParameter("token")?.takeIf { it.isNotBlank() }
-
-        return headerToken ?: queryToken
     }
 
     private fun parseToken(token: String): Jws<Claims> {
