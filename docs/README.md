@@ -1,23 +1,24 @@
 # Documentation Index
 
-This folder contains the technical documentation for SynchTask Backend.
+This folder contains technical documentation for SynchTask Backend.
+
+## Core guides
+
+- `architecture.md` — practical architecture overview (layers + request flow)
+- `configuration.md` — environment/config setup for local development
 
 ## API testing
 
-- `bruno/` — Bruno collections and local environment template.
-- `bruno/security-open-endpoints.md` — public vs protected endpoint notes used for test planning.
+- `bruno/` — Bruno collections and local environment template
+- `bruno/security-open-endpoints.md` — public vs protected endpoint notes for test planning
 
 ## Database and domain model
 
-- `dataBase/database.md` — current relational schema, constraints, indexes, and operational notes.
-- `dataBase/aggregates.md` — aggregate boundaries (DDD) and ownership rules.
-- `dataBase/er-diagram.md` — textual ER representation (Mermaid) to keep model documentation versioned.
+- `dataBase/database.md` — relational schema, constraints, indexes, release notes
+- `dataBase/aggregates.md` — DDD aggregate boundaries and ownership rules
+- `dataBase/er-diagram.md` — Mermaid ER snapshot kept in version control
 
-## Recommended maintenance flow
+## Repo-level docs
 
-When schema/domain changes:
-
-1. Update entities/migrations.
-2. Update `dataBase/database.md` and `dataBase/aggregates.md`.
-3. Update `dataBase/er-diagram.md`.
-4. Update relevant Bruno tests if endpoint contracts changed.
+- `../CONTRIBUTING.md` — contribution workflow and PR expectations
+- `../SECURITY.md` — vulnerability reporting and security guidelines
