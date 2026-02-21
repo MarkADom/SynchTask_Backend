@@ -1,0 +1,36 @@
+meta {
+  name: 05 Create Task
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/tasks
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{userAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  "title": "Task {{runId}}",
+  "description": "Task description",
+  "boardId": {{boardId}}
+}
+
+tests {
+  test("status 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("store taskId", function () {
+    const json = res.getBody({ parse: true });
+    bru.setVar("taskId", String(json.id));
+  });
+}

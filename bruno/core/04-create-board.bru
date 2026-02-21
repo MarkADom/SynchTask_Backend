@@ -1,0 +1,36 @@
+meta {
+  name: 04 Create Board
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/boards
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{userAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  "name": "Execution Board {{runId}}",
+  "color": "#2563EB",
+  "description": "Board for delivery"
+}
+
+tests {
+  test("status 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("store boardId", function () {
+    const json = res.getBody({ parse: true });
+    bru.setVar("boardId", String(json.id));
+  });
+}

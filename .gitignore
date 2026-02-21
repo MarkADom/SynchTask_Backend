@@ -23,4 +23,4 @@ config/keys/
 
 
 # Bruno local environment (contains credentials)
-/docs/bruno/environments/local.bru
+/bruno/environments/local.bru
