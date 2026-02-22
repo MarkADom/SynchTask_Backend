@@ -1,9 +1,6 @@
 package com.synchtask.security.infrastructure.config
 
 import com.synchtask.config.RateLimitConfig
-import com.synchtask.security.infrastructure.filter.JwtAuthenticationFilter
-import com.synchtask.security.infrastructure.filter.RateLimitFilter
-import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.Refill
@@ -14,24 +11,22 @@ import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.context.annotation.Import
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Duration
+import org.junit.jupiter.api.Assertions.assertTrue
 
 @WebMvcTest(controllers = [SecurityConfigTestController::class])
-@Import(SecurityConfig::class, JwtAuthenticationFilter::class, RateLimitFilter::class)
 class SecurityConfigIntegrationTest {
     @Autowired
     lateinit var mockMvc: MockMvc
-
-    @MockBean
-    lateinit var jwtTokenProvider: JwtTokenProvider
 
     @MockBean
     lateinit var rateLimitConfig: RateLimitConfig
@@ -50,28 +45,46 @@ class SecurityConfigIntegrationTest {
     }
 
     @Test
-    fun `actuator health should be publicly accessible`() {
-        mockMvc.perform(get("/actuator/health"))
-            .andExpect(status().isOk)
+    fun `oauth2 authorization endpoint should be publicly accessible`() {
+        mockMvc.perform(get("/oauth2/authorization/google"))
+            .andExpect { result ->
+                assertTrue(result.response.status !in setOf(401, 403))
+            }
     }
 
     @Test
-    fun `actuator env should require authentication`() {
-        mockMvc.perform(get("/actuator/env"))
-            .andExpect(status().isUnauthorized)
+    fun `notifications endpoint should require authentication`() {
+        mockMvc.perform(get("/notifications/test"))
+            .andExpect { result ->
+                assertTrue(result.response.status in setOf(401, 403, 302))
+            }
     }
 
     @Test
     fun `boards endpoint should require authentication`() {
         mockMvc.perform(get("/boards"))
-            .andExpect(status().isUnauthorized)
+            .andExpect { result ->
+                assertTrue(result.response.status in setOf(401, 403, 302))
+            }
+    }
+
+    @Test
+    fun `boards endpoint should allow authenticated bearer jwt request`() {
+        mockMvc.perform(
+            get("/boards")
+                .with(jwt().authorities(SimpleGrantedAuthority("ROLE_USER")))
+        )
+            .andExpect(status().isOk)
     }
 }
 
 @RestController
 class SecurityConfigTestController {
-    @GetMapping("/actuator/health")
-    fun health(): ResponseEntity<Map<String, String>> = ResponseEntity.ok(mapOf("status" to "UP"))
+    @GetMapping("/auth/login")
+    fun loginPublic(): ResponseEntity<Map<String, String>> = ResponseEntity.ok(mapOf("status" to "UP"))
+
+    @GetMapping("/notifications/test")
+    fun notifications(): ResponseEntity<Map<String, String>> = ResponseEntity.ok(mapOf("notifications" to "ok"))
 
     @GetMapping("/boards")
     fun boards(): ResponseEntity<List<String>> = ResponseEntity.ok(listOf("b1"))

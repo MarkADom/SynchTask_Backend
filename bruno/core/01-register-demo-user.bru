@@ -1,0 +1,34 @@
+meta {
+  name: 01 Register Demo User
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const runId = Date.now();
+  bru.setVar("runId", String(runId));
+  bru.setVar("demoUserEmail", `portfolio.${runId}@example.com`);
+  bru.setVar("demoUserPassword", "StrongPass123!");
+}
+
+body:json {
+  "name": "Portfolio User",
+  "email": "{{demoUserEmail}}",
+  "password": "{{demoUserPassword}}"
+}
+
+tests {
+  test("status 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+}

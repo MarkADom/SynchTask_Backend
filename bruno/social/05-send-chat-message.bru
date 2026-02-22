@@ -1,0 +1,29 @@
+meta {
+  name: 05 Send Chat Message
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/chat/rooms/{{chatRoomId}}/messages
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{userAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  "content": "Hello {{runId}}"
+}
+
+tests {
+  test("status 200 or 201", function () {
+    expect([200,201]).to.include(res.getStatus());
+  });
+}

@@ -1,0 +1,20 @@
+meta {
+  name: 03 Rotate Keys
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/rotate-keys
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminAccessToken}}
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

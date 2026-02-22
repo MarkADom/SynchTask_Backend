@@ -1,11 +1,11 @@
 meta {
-  name: Auth - POST /auth/refresh
+  name: 01 Login Admin
   type: http
-  seq: 5
+  seq: 1
 }
 
 post {
-  url: {{baseUrl}}/auth/refresh
+  url: {{baseUrl}}/auth/login
   body: json
   auth: none
 }
@@ -15,9 +15,8 @@ headers {
 }
 
 body:json {
-  {
-    "refreshToken": "{{refreshToken}}"
-  }
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
 }
 
 tests {
@@ -25,8 +24,8 @@ tests {
     expect(res.getStatus()).to.equal(200);
   });
 
-  test("returns new accessToken", function () {
+  test("store admin token", function () {
     const json = res.getBody({ parse: true });
-    expect(json.accessToken).to.exist;
+    bru.setVar("adminAccessToken", json.accessToken);
   });
 }

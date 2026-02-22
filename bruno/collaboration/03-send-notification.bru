@@ -1,0 +1,30 @@
+meta {
+  name: 03 Send Notification
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/notifications
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{userAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  "userId": {{projectId}},
+  "message": "Test notification {{runId}}"
+}
+
+tests {
+  test("status 200 or 201", function () {
+    expect([200,201]).to.include(res.getStatus());
+  });
+}
