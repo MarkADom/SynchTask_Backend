@@ -3,6 +3,7 @@ package com.synchtask.security.infrastructure.config
 import com.synchtask.security.infrastructure.filter.RateLimitFilter
 import com.synchtask.security.infrastructure.jwt.CustomJwtAuthenticationConverter
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
@@ -19,17 +20,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.JwtTimestampValidator
-import org.springframework.security.oauth2.jwt.JwtValidators
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
-import java.time.Duration
 
 /**
  * Central security configuration for HTTP APIs and WebSocket access.
@@ -71,8 +66,6 @@ class SecurityConfig(
                     ).permitAll()
                     // Public Endpoints (Accessible Without Authentication)
                     .requestMatchers(
-                        "/actuator/health",
-                        "/actuator/info",
                         "/auth/.well-known/openid-configuration",
                         "/auth/.well-known/oauth-authorization-server",
                         "/jwks",
@@ -84,8 +77,9 @@ class SecurityConfig(
                     ).permitAll()
                     // OAuth2 Endpoints
                     .requestMatchers("/oauth2/**").permitAll()
-                    // Actuator sensitive endpoints (admin only)
-                    .requestMatchers("/actuator/**").hasAuthority("ROLE_ADMIN")
+                    // Actuator endpoints
+                    .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                    .requestMatchers("/actuator/**").hasRole("ADMIN")
                     // Protected Endpoints (Require Authentication)
                     .requestMatchers("/notifications/**").authenticated()
                     // All other requests require authentication
@@ -123,25 +117,6 @@ class SecurityConfig(
             // Security Filters (Rate Limiting)
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter::class.java)
             .build()
-    }
-
-    @Bean
-    fun jwtDecoder(): JwtDecoder {
-        // TODO(config-security): externalize JWK set URI to env/property | localhost default kept for local portfolio setup
-        val decoder =
-            NimbusJwtDecoder
-                .withJwkSetUri("http://localhost:8081/jwks")
-                .build()
-
-        val timestampValidator = JwtTimestampValidator(Duration.ofMinutes(5))
-
-        // Standard JWT validations + custom timestamp validator
-        val defaultValidator = JwtValidators.createDefault()
-        val compositeValidator = DelegatingOAuth2TokenValidator(timestampValidator, defaultValidator)
-
-        decoder.setJwtValidator(compositeValidator)
-
-        return decoder
     }
 
     @Bean

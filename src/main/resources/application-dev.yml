@@ -111,8 +111,6 @@ management:
             enabled: true
         mappings:
             enabled: true
-    security:
-        enabled: false
 
 jwt:
     expiration: ${JWT_EXPIRATION}
