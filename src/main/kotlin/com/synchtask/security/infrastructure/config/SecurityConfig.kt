@@ -1,6 +1,5 @@
 package com.synchtask.security.infrastructure.config
 
-import com.synchtask.security.infrastructure.filter.JwtAuthenticationFilter
 import com.synchtask.security.infrastructure.filter.RateLimitFilter
 import com.synchtask.security.infrastructure.jwt.CustomJwtAuthenticationConverter
 import jakarta.servlet.http.HttpServletResponse
@@ -27,7 +26,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator
 import org.springframework.security.oauth2.jwt.JwtValidators
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
@@ -39,7 +37,6 @@ import java.time.Duration
 @Configuration
 @EnableMethodSecurity
 class SecurityConfig(
-    private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     private val rateLimitFilter: RateLimitFilter,
 ) {
     @Bean
@@ -123,9 +120,8 @@ class SecurityConfig(
             .headers { headers ->
                 headers.frameOptions { it.disable() }
             }
-            // Security Filters (Rate Limiting & JWT)
+            // Security Filters (Rate Limiting)
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter::class.java)
-            .addFilterBefore(jwtAuthenticationFilter, BearerTokenAuthenticationFilter::class.java)
             .build()
     }
 

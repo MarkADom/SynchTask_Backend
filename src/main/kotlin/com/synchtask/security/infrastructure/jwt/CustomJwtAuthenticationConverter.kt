@@ -24,7 +24,11 @@ class CustomJwtAuthenticationConverter(
 
         // Extract roles from the JWT (assuming the claim is "roles")
         val roles = extractRoles(jwt.claims["roles"])
-        val authorities = roles.map { SimpleGrantedAuthority("ROLE_$it") }
+        val authorities =
+            roles.map { role ->
+                val normalizedRole = if (role.startsWith("ROLE_")) role else "ROLE_$role"
+                SimpleGrantedAuthority(normalizedRole)
+            }
 
         return UsernamePasswordAuthenticationToken(userDetails, jwt.tokenValue, authorities)
     }
