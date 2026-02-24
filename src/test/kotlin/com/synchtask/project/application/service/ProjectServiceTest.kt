@@ -6,8 +6,10 @@ import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.project.application.dto.ProjectCreateDTO
 import com.synchtask.project.application.dto.ProjectUpdateDTO
 import com.synchtask.project.domain.entity.Project
+import com.synchtask.project.domain.entity.ProjectMember
 import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.user.domain.entity.User
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
@@ -250,4 +252,31 @@ class ProjectServiceTest {
             service.delete(project.id!!, owner)
         }
     }
+
+    @Test
+    fun `should return project when user has membership access`() {
+        val project = newProject(owner = other)
+
+        every { projectRepository.findById(project.id!!) } returns Optional.of(project)
+        every { projectMemberRepository.existsByProjectIdAndUserId(project.id!!, owner.id!!) } returns true
+
+        val result = service.getById(project.id!!, owner)
+
+        assertEquals(project.id, result.id)
+    }
+
+    @Test
+    fun `should update project when user is membership owner`() {
+        val project = newProject(owner = other)
+        every { projectRepository.findById(project.id!!) } returns Optional.of(project)
+        every {
+            projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!)
+        } returns ProjectMember(project = project, user = owner, role = MembershipRole.OWNER)
+        every { projectRepository.save(any()) } answers { firstArg() }
+
+        val result = service.update(project.id!!, ProjectUpdateDTO(name = "Membership Updated"), owner)
+
+        assertEquals("Membership Updated", result.name)
+    }
+
 }

@@ -4,11 +4,13 @@ import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.notification.application.service.NotificationService
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.dto.TaskCommentCreateDTO
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment
+import com.synchtask.task.domain.entity.TaskMember
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.domain.repository.TaskCommentRepository
 import com.synchtask.task.domain.repository.TaskMemberRepository
@@ -167,5 +169,48 @@ class TaskCommentServiceTest {
 
         assertEquals(1, result.size)
         assertEquals("Test comment", result.first().content)
+    }
+
+
+
+    @Test
+    fun `should add comment when user has task membership`() {
+        val stranger = User(id = 10L, name = "NoPerm", email = "no@access.com", passwordHash = "123")
+        val membershipTask =
+            Task(
+                id = task.id,
+                title = task.title,
+                description = task.description,
+                owner = task.owner,
+                collaborators = mutableSetOf(),
+                status = task.status,
+                board = task.board
+            )
+        every { taskRepository.findById(task.id!!) } returns Optional.of(membershipTask)
+        every { taskMemberRepository.existsByTaskIdAndUserId(task.id!!, stranger.id!!) } returns true
+        every { taskMemberRepository.findAllByTaskId(task.id!!) } returns listOf(
+            TaskMember(task = membershipTask, user = collaborator, role = MembershipRole.COLLABORATOR)
+        )
+
+        val slot = slot<TaskComment>()
+        every { taskCommentRepository.save(capture(slot)) } answers {
+            slot.captured.apply {
+                val field = TaskComment::class.java.getDeclaredField("id")
+                field.isAccessible = true
+                field.set(this, 2L)
+            }
+        }
+
+        val result = service.addComment(task.id!!, stranger, TaskCommentCreateDTO("membership"))
+
+        assertEquals("membership", result.content)
+        verify(exactly = 1) {
+            notificationService.sendNotification(
+                userEmail = collaborator.email,
+                message = any(),
+                type = any(),
+                groupId = task.id
+            )
+        }
     }
 }

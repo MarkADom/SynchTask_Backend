@@ -165,15 +165,42 @@ class TaskServiceTest {
 
     @Test
     fun `should throw unauthorized when updating task without access`() {
-        val outsider = User(id = 3L, name = "Outsider", email = "outsider@test.com", passwordHash = "hash")
-        val foreignBoard = Board(id = 20L, name = "Other", owner = collab)
-        val existing = task(owner = collab, board = foreignBoard)
+        val outsider = User(
+            id = 3L,
+            name = "Outsider",
+            email = "outsider@test.com",
+            passwordHash = "hash"
+        )
+        val foreignBoard = Board(
+            id = 20L,
+            name = "Other",
+            owner = collab
+        )
+        val existing = task(
+            owner = collab,
+            board = foreignBoard)
         every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
 
         assertThrows<UnauthorizedAccessException> {
             service.updateTask(existing.id!!, TaskUpdateDTO(title = "X"), outsider)
         }
     }
+
+
+    @Test
+    fun `should update task when user has task membership`() {
+        val existing = task(owner = collab)
+        val req = TaskUpdateDTO(title = "Membership update")
+
+        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
+        every { taskMemberRepository.existsByTaskIdAndUserId(existing.id!!, owner.id!!) } returns true
+        every { taskRepository.save(any()) } answers { firstArg() }
+
+        val result = service.updateTask(existing.id!!, req, owner)
+
+        assertEquals("Membership update", result.title)
+    }
+
 
     @Test
     fun `should update task labels`() {

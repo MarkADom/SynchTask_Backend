@@ -122,6 +122,19 @@ class TaskAttachmentServiceTest {
     }
 
     @Test
+    fun `should upload file when user has board membership`() {
+        val file = mockk<MultipartFile>()
+        every { file.originalFilename } returns "member.txt"
+        every { taskRepository.findById(task.id!!) } returns Optional.of(task)
+        every { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, other.id!!) } returns true
+        every { taskAttachmentRepository.save(any()) } answers { firstArg() }
+
+        val result = service.uploadFile(task.id!!, file, other)
+
+        assertEquals("member.txt", result.fileName)
+    }
+
+    @Test
     fun `should list attachments when user is owner`() {
         val attachment =
             TaskAttachment(

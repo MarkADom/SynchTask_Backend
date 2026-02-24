@@ -59,7 +59,10 @@ class TaskLinkServiceTest {
         task = newTask(id = 10L, owner = owner, board = board)
     }
 
-    private fun newUser(id: Long, email: String): User = User(
+    private fun newUser(
+        id: Long,
+        email: String,
+    ): User = User(
         id = id,
         name = "User",
         email = email,
@@ -67,13 +70,20 @@ class TaskLinkServiceTest {
         role = UserRole.USER
     )
 
-    private fun newBoard(id: Long, owner: User): Board = Board(
+    private fun newBoard(
+        id: Long,
+        owner: User,
+    ): Board = Board(
         id = id,
         name = "Board",
         owner = owner
     )
 
-    private fun newTask(id: Long, owner: User, board: Board): Task = Task(
+    private fun newTask(
+        id: Long,
+        owner: User,
+        board: Board,
+    ): Task = Task(
         id = id,
         title = "Task",
         description = "Desc",
@@ -139,6 +149,17 @@ class TaskLinkServiceTest {
         }
 
         verify(exactly = 0) { taskLinkRepository.save(any()) }
+    }
+
+    @Test
+    fun `should add link when user has task membership`() {
+        every { taskRepository.findById(task.id!!) } returns Optional.of(task)
+        every { taskMemberRepository.existsByTaskIdAndUserId(task.id!!, other.id!!) } returns true
+        every { taskLinkRepository.save(any()) } answers { firstArg() }
+
+        val result = service.addLink(task.id!!, "Docs", "https://example.com", other)
+
+        assertEquals("Docs", result.title)
     }
 
     @Test
