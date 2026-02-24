@@ -111,7 +111,7 @@ class TaskController(
     }
 
     @DeleteMapping("/{taskId}")
-    @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     fun deleteTask(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): ResponseEntity<String> {
         val userEntity = authenticatedUserService.requireUser(user)
 
@@ -120,7 +120,7 @@ class TaskController(
     }
 
     @PostMapping("/{taskId}/assign")
-    @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     fun assignCollaborator(
         @PathVariable taskId: Long,
         @RequestParam email: String,
@@ -132,7 +132,7 @@ class TaskController(
     }
 
     @PutMapping("/{taskId}/labels")
-    @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     fun updateLabels(
         @PathVariable taskId: Long,
         @RequestBody request: TaskLabelUpdateDTO,
@@ -145,7 +145,7 @@ class TaskController(
     }
 
     @PutMapping("/{taskId}/assignees")
-    @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     fun updateAssignees(
         @PathVariable taskId: Long,
         @RequestBody request: TaskAssigneeUpdateDTO,

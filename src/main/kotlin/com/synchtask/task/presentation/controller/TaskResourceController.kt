@@ -33,7 +33,7 @@ class TaskResourceController(
     // LINKS
 
     @PostMapping("/links")
-    @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     fun addLink(
         @PathVariable taskId: Long,
         @RequestParam title: String,
@@ -58,7 +58,7 @@ class TaskResourceController(
     }
 
     @DeleteMapping("/links/{linkId}")
-    @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     fun deleteLink(
         @PathVariable taskId: Long,
         @PathVariable linkId: Long,
@@ -72,7 +72,7 @@ class TaskResourceController(
     // ATTACHMENTS
 
     @PostMapping("/attachments")
-    @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     fun uploadFile(
         @PathVariable taskId: Long,
         @RequestParam file: MultipartFile,
@@ -96,7 +96,7 @@ class TaskResourceController(
     }
 
     @DeleteMapping("/attachments/{attachmentId}")
-    @PreAuthorize("hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("isAuthenticated()")
     fun deleteAttachment(
         @PathVariable taskId: Long,
         @PathVariable attachmentId: Long,
