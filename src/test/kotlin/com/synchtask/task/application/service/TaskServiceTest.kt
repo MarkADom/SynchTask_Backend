@@ -16,6 +16,7 @@ import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.websocket.application.service.TaskWebSocketService
 import io.mockk.*
@@ -258,4 +259,17 @@ class TaskServiceTest {
 
         assertEquals(2, result.totalElements)
     }
+
+    @Test
+    fun `should update task when actor is admin`() {
+        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        val existing = task(owner = collab)
+        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
+        every { taskRepository.save(any()) } answers { firstArg() }
+
+        val result = service.updateTask(existing.id!!, TaskUpdateDTO(title = "Admin update"), admin)
+
+        assertEquals("Admin update", result.title)
+    }
+
 }

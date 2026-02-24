@@ -11,6 +11,7 @@ import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -279,4 +280,14 @@ class ProjectServiceTest {
         assertEquals("Membership Updated", result.name)
     }
 
+    @Test
+    fun `should return project for admin`() {
+        val project = newProject(owner = other)
+        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        every { projectRepository.findById(project.id!!) } returns Optional.of(project)
+
+        val result = service.getById(project.id!!, admin)
+
+        assertEquals(project.id, result.id)
+    }
 }

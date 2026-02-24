@@ -229,4 +229,23 @@ class TaskLinkServiceTest {
 
         verify(exactly = 0) { taskLinkRepository.deleteByTaskAndId(any(), any()) }
     }
+
+    @Test
+    fun `should add link when user is admin`() {
+        val admin = User(
+            id = 99L,
+            name = "Admin",
+            email = "admin@test.com",
+            passwordHash = "hash",
+            role = UserRole.ADMIN
+        )
+        every { taskRepository.findById(task.id!!) } returns Optional.of(task)
+        every { taskMemberRepository.existsByTaskIdAndUserId(task.id!!, admin.id!!) } returns true
+        every { taskLinkRepository.save(any()) } answers { firstArg() }
+
+        val result = service.addLink(task.id!!, "Admin Docs", "https://example.com", admin)
+
+        assertEquals("Admin Docs", result.title)
+    }
 }
+

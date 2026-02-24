@@ -192,4 +192,17 @@ class TaskAttachmentServiceTest {
 
         verify(exactly = 0) { taskAttachmentRepository.deleteByTaskAndId(any(), any()) }
     }
+
+    @Test
+    fun `should list attachments when user is admin`() {
+        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        val attachment = TaskAttachment(id = 2L, task = task, fileName = "admin.pdf", fileUrl = "url")
+
+        every { taskRepository.findById(task.id!!) } returns Optional.of(task)
+        every { taskAttachmentRepository.findAllByTask(task) } returns listOf(attachment)
+
+        val result = service.listAttachments(task.id!!, admin)
+
+        assertEquals(1, result.size)
+    }
 }

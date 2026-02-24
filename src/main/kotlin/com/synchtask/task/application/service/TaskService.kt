@@ -255,45 +255,15 @@ class TaskService(
         logger.info("Task '${task.title}' deleted by ${user.email}")
     }
 
-    private fun canEditTask(task: Task, actor: User): Boolean {
-        if (actor.role == UserRole.ADMIN) return true
-
-        val taskId = task.id ?: return false
-        val actorId = actor.id ?: return false
-        if (taskMemberRepository.existsByTaskIdAndUserId(taskId, actorId)) {
-            return true
-        }
-        if (canAccessBoard(
-                task.board.id,
-                actor,
-                task.board.owner.id == actorId,
-                task.board.collaborators.any { it.id == actorId })
-        ) {
-            return true
-        }
-
-        // TODO(PR4): Remove legacy collaborator fallback once membership migration is complete.
-        val fallbackResult = task.owner.id == actorId || task.collaborators.any { it.id == actorId }
-        if (fallbackResult) {
-            logger.warn("Using task legacy fallback edit check for taskId={} userId={}", taskId, actorId)
-        }
-        return fallbackResult
-    }
-
-    private fun canAccessBoard(
-        boardId: Long?,
-        actor: User,
-        legacyOwner: Boolean,
-        legacyCollaborator: Boolean,
-    ): Boolean {
-        if (actor.role == UserRole.ADMIN) return true
+    private fun canAccessBoard(boardId: Long?, actor: User, legacyOwner: Boolean, legacyCollaborator: Boolean): Boolean {
+        if (actor.role == com.synchtask.user.domain.entity.UserRole.ADMIN) return true
         val safeBoardId = boardId ?: return false
         val actorId = actor.id ?: return false
         if (boardMemberRepository.existsByBoardIdAndUserId(safeBoardId, actorId)) {
             return true
         }
 
-        // TODO(PR4): Remove legacy board fallback once membership migration is complete.
+        // TODO: Remove legacy board fallback once membership migration is complete.
         val fallback = legacyOwner || legacyCollaborator
         if (fallback) {
             logger.warn("Using board legacy fallback access check for boardId={} userId={}", safeBoardId, actorId)
@@ -301,16 +271,9 @@ class TaskService(
         return fallback
     }
 
-    private fun resolveTaskCollaborators(task: Task): Set<User> {
-        val taskId = task.id ?: return task.collaborators
-        val taskMembershipUsers = taskMemberRepository.findAllByTaskId(taskId).map { it.user }.toSet()
-        if (taskMembershipUsers.isNotEmpty()) {
-            return taskMembershipUsers
-        }
+    private fun canEditTask(task: Task, actor: User): Boolean =
+        hasTaskAccess(task, actor, taskMemberRepository, boardMemberRepository, logger, "task")
 
-        if (task.collaborators.isNotEmpty()) {
-            logger.warn("Using task legacy fallback collaborators for notifications taskId={}", taskId)
-        }
-        return task.collaborators
-    }
+    private fun resolveTaskCollaborators(task: Task): Set<User> =
+        resolveTaskMembershipUsers(task, taskMemberRepository, logger, "task")
 }

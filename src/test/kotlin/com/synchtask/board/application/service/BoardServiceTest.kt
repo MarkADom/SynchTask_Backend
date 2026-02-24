@@ -10,6 +10,7 @@ import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.Runs
 import io.mockk.clearAllMocks
@@ -278,5 +279,16 @@ class BoardServiceTest {
         assertTrue(result.any { it.id == 2L })
     }
 
+    @Test
+    fun `should allow admin to update board even when not owner`() {
+        val board = newBoard(owner = owner)
+        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
 
+        every { boardRepository.findById(any()) } returns Optional.of(board)
+        every { boardRepository.save(any()) } answers { firstArg() }
+
+        val result = service.updateBoard(board.id!!, BoardUpdateDTO("Admin", null, null), admin)
+
+        assertEquals("Admin", result.name)
+    }
 }

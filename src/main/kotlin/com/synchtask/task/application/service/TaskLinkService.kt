@@ -100,28 +100,16 @@ class TaskLinkService(
         logger.info("User '${user.email}' removed link $linkId from task '${task.title}'")
     }
 
-    private fun canAccessTask(task: Task, actor: User): Boolean {
-        if (actor.role == UserRole.ADMIN) return true
-
-        val taskId = task.id ?: return false
-        val actorId = actor.id ?: return false
-        if (taskMemberRepository.existsByTaskIdAndUserId(taskId, actorId)) {
-            return true
-        }
-        val boardId = task.board.id
-        if (boardId != null && boardMemberRepository.existsByBoardIdAndUserId(boardId, actorId)) {
-            return true
-        }
-
-        // TODO: Remove legacy task/board fallback once membership migration is complete.
-        val fallback =
-            task.owner.id == actorId ||
-                task.collaborators.any { it.id == actorId } ||
-                task.board.owner.id == actorId ||
-                task.board.collaborators.any { it.id == actorId }
-        if (fallback) {
-            logger.warn("Using task link legacy fallback access check for taskId={} userId={}", taskId, actorId)
-        }
-        return fallback
-    }
+    private fun canAccessTask(
+        task: Task,
+        actor: User
+    ): Boolean =
+        hasTaskAccess(
+            task,
+            actor,
+            taskMemberRepository,
+            boardMemberRepository,
+            logger,
+            "task link"
+        )
 }

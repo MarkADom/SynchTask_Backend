@@ -29,7 +29,7 @@ class TaskCommentService(
     private val boardMemberRepository: BoardMemberRepository,
     private val userRepository: UserRepository,
     private val notificationService: NotificationService,
-    private val activityService: ActivityService
+    private val activityService: ActivityService,
 ) {
     private val logger = LoggerFactory.getLogger(TaskCommentService::class.java)
 
@@ -86,43 +86,25 @@ class TaskCommentService(
             .map { TaskMapper.toCommentResponse(it) }
     }
 
-    private fun canAccessTask(task: com.synchtask.task.domain.entity.Task, actor: User): Boolean {
-        if (actor.role == UserRole.ADMIN) return true
+    private fun canAccessTask(
+        task: com.synchtask.task.domain.entity.Task,
+        actor: User,
+    ): Boolean =
+        hasTaskAccess(
+            task,
+            actor,
+            taskMemberRepository,
+            boardMemberRepository,
+            logger,
+            "task comment"
+        )
 
-        val taskId = task.id ?: return false
-        val actorId = actor.id ?: return false
-        if (taskMemberRepository.existsByTaskIdAndUserId(taskId, actorId)) {
-            return true
-        }
-        val boardId = task.board.id
-        if (boardId != null && boardMemberRepository.existsByBoardIdAndUserId(boardId, actorId)) {
-            return true
-        }
-
-        // TODO(PR4): Remove legacy task/board fallback once membership migration is complete.
-        val fallback =
-            task.owner.id == actorId ||
-                task.collaborators.any { it.id == actorId } ||
-                task.board.owner.id == actorId ||
-                task.board.collaborators.any { it.id == actorId }
-        if (fallback) {
-            logger.warn("Using task comment legacy fallback access check for taskId={} userId={}", taskId, actorId)
-        }
-        return fallback
-    }
-
-    private fun resolveNotificationRecipients(task: com.synchtask.task.domain.entity.Task): Set<User> {
-        val taskId = task.id ?: return task.collaborators
-        val membershipUsers = taskMemberRepository.findAllByTaskId(taskId).map { it.user }.toSet()
-        if (membershipUsers.isNotEmpty()) {
-            return membershipUsers
-        }
-
-        // TODO(PR4): Remove legacy collaborator fallback once membership migration is complete.
-        if (task.collaborators.isNotEmpty()) {
-            logger.warn("Using task comment legacy fallback recipients for taskId={}", taskId)
-        }
-        return task.collaborators
-    }
-
+    private fun resolveNotificationRecipients(
+        task: com.synchtask.task.domain.entity.Task): Set<User> =
+        resolveTaskMembershipUsers(
+            task,
+            taskMemberRepository,
+            logger,
+            "task comment"
+        )
 }
