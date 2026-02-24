@@ -5,6 +5,7 @@ import com.synchtask.board.application.dto.BoardCollaboratorUpdateDTO
 import com.synchtask.board.application.dto.BoardCreateDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
@@ -23,6 +24,7 @@ import kotlin.test.*
 
 class BoardServiceTest {
     private lateinit var boardRepository: BoardRepository
+    private lateinit var boardMemberRepository: BoardMemberRepository
     private lateinit var userRepository: UserRepository
     private lateinit var activityService: ActivityService
     private lateinit var service: BoardService
@@ -35,9 +37,20 @@ class BoardServiceTest {
         clearAllMocks()
 
         boardRepository = mockk(relaxed = true)
+        boardMemberRepository = mockk(relaxed = true)
         userRepository = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
-        service = BoardService(boardRepository, userRepository, activityService)
+
+
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
+        every { boardMemberRepository.findByBoardIdAndUserId(any(), any()) } returns null
+
+        service = BoardService(
+            boardRepository,
+            boardMemberRepository,
+            userRepository,
+            activityService
+        )
     }
 
     private fun newUser(id: Long, email: String) = User(
@@ -47,7 +60,7 @@ class BoardServiceTest {
         passwordHash = "hash"
     )
 
-    private fun newBoard(id: Long = 10L, owner: User = this.owner,): Board = Board(
+    private fun newBoard(id: Long = 10L, owner: User = this.owner): Board = Board(
         id = id,
         name = "Board",
         color = "#fff",

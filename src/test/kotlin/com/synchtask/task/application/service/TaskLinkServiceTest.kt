@@ -2,6 +2,7 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.domain.entity.Task
@@ -9,6 +10,7 @@ import com.synchtask.task.domain.entity.TaskLink
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.domain.repository.TaskLinkRepository
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
@@ -22,6 +24,8 @@ import kotlin.test.*
 class TaskLinkServiceTest {
     private lateinit var taskRepository: TaskRepository
     private lateinit var taskLinkRepository: TaskLinkRepository
+    private lateinit var taskMemberRepository: TaskMemberRepository
+    private lateinit var boardMemberRepository: BoardMemberRepository
     private lateinit var activityService: ActivityService
     private lateinit var service: TaskLinkService
     private lateinit var owner: User
@@ -33,8 +37,21 @@ class TaskLinkServiceTest {
     fun setup() {
         taskRepository = mockk()
         taskLinkRepository = mockk()
+        taskMemberRepository = mockk(relaxed = true)
+        boardMemberRepository = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
-        service = TaskLinkService(taskRepository, taskLinkRepository, activityService)
+
+
+        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } returns false
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
+
+        service = TaskLinkService(
+            taskRepository,
+            taskMemberRepository,
+            boardMemberRepository,
+            taskLinkRepository,
+            activityService
+        )
 
         owner = newUser(id = 1L, email = "owner@test.com")
         other = newUser(id = 2L, email = "other@test.com")

@@ -2,6 +2,7 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.domain.entity.Task
@@ -9,6 +10,7 @@ import com.synchtask.task.domain.entity.TaskAttachment
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.domain.repository.TaskAttachmentRepository
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
@@ -23,6 +25,8 @@ import kotlin.test.assertFailsWith
 class TaskAttachmentServiceTest {
     private lateinit var taskRepository: TaskRepository
     private lateinit var taskAttachmentRepository: TaskAttachmentRepository
+    private lateinit var taskMemberRepository: TaskMemberRepository
+    private lateinit var boardMemberRepository: BoardMemberRepository
     private lateinit var activityService: ActivityService
     private lateinit var service: TaskAttachmentService
 
@@ -66,8 +70,20 @@ class TaskAttachmentServiceTest {
     fun setup() {
         taskRepository = mockk()
         taskAttachmentRepository = mockk()
+        taskMemberRepository = mockk(relaxed = true)
+        boardMemberRepository = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
-        service = TaskAttachmentService(taskRepository, taskAttachmentRepository, activityService)
+
+        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } returns false
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
+
+        service = TaskAttachmentService(
+            taskRepository,
+            taskMemberRepository,
+            boardMemberRepository,
+            taskAttachmentRepository,
+            activityService
+        )
     }
 
     @Test

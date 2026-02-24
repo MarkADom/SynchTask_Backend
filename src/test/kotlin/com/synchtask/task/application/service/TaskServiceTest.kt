@@ -2,6 +2,7 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.friend.application.port.FriendshipChecker
 import com.synchtask.notification.application.service.NotificationService
@@ -12,6 +13,7 @@ import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.repository.UserRepository
@@ -27,44 +29,72 @@ import kotlin.test.assertEquals
 
 class TaskServiceTest {
     private lateinit var taskRepository: TaskRepository
+    private lateinit var taskMemberRepository: TaskMemberRepository
     private lateinit var userRepository: UserRepository
     private lateinit var notificationService: NotificationService
     private lateinit var taskWebSocketService: TaskWebSocketService
     private lateinit var boardRepository: BoardRepository
+    private lateinit var boardMemberRepository: BoardMemberRepository
     private lateinit var taskSpecificationService: TaskSpecificationService
     private lateinit var friendshipChecker: FriendshipChecker
     private lateinit var activityService: ActivityService
     private lateinit var service: TaskService
 
-    private val owner = User(id = 1L, name = "Owner", email = "owner@test.com", passwordHash = "hash")
-    private val collab = User(id = 2L, name = "Collab", email = "collab@test.com", passwordHash = "hash")
-    private val board = Board(id = 10L, name = "Board", owner = owner)
+    private val owner = User(
+        id = 1L,
+        name = "Owner",
+        email = "owner@test.com",
+        passwordHash = "hash"
+    )
+    private val collab = User(
+        id = 2L,
+        name = "Collab",
+        email = "collab@test.com",
+        passwordHash = "hash"
+    )
+    private val board = Board(
+        id = 10L,
+        name = "Board",
+        owner = owner
+    )
 
     @BeforeEach
     fun setup() {
         taskRepository = mockk(relaxed = true)
+        taskMemberRepository = mockk(relaxed = true)
         userRepository = mockk(relaxed = true)
         notificationService = mockk(relaxed = true)
         taskWebSocketService = mockk(relaxed = true)
         boardRepository = mockk(relaxed = true)
+        boardMemberRepository = mockk(relaxed = true)
         taskSpecificationService = mockk(relaxed = true)
         friendshipChecker = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
+        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } returns false
+        every { taskMemberRepository.findAllByTaskId(any()) } returns emptyList()
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
+
         service =
             TaskService(
                 taskRepository,
+                taskMemberRepository,
                 userRepository,
                 notificationService,
                 taskWebSocketService,
                 boardRepository,
+                boardMemberRepository,
                 taskSpecificationService,
                 friendshipChecker,
                 activityService
             )
     }
 
-    private fun task(id: Long = 1L, owner: User = this.owner) = Task(
+    private fun task(
+        id: Long = 1L,
+        owner: User = this.owner,
+        board: Board = this.board,
+    ) = Task(
         id = id,
         title = "Task$id",
         description = "Desc",
@@ -135,11 +165,13 @@ class TaskServiceTest {
 
     @Test
     fun `should throw unauthorized when updating task without access`() {
-        val existing = task(owner = collab)
+        val outsider = User(id = 3L, name = "Outsider", email = "outsider@test.com", passwordHash = "hash")
+        val foreignBoard = Board(id = 20L, name = "Other", owner = collab)
+        val existing = task(owner = collab, board = foreignBoard)
         every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
 
         assertThrows<UnauthorizedAccessException> {
-            service.updateTask(existing.id!!, TaskUpdateDTO(title = "X"), owner)
+            service.updateTask(existing.id!!, TaskUpdateDTO(title = "X"), outsider)
         }
     }
 

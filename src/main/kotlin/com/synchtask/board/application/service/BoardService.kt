@@ -9,11 +9,14 @@ import com.synchtask.board.application.dto.BoardResponseDTO
 import com.synchtask.board.application.dto.BoardSimpleDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.board.presentation.mapper.BoardMapper
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -23,6 +26,7 @@ import java.time.LocalDateTime
 @Service
 class BoardService(
     private val boardRepository: BoardRepository,
+    private val boardMemberRepository: BoardMemberRepository,
     private val userRepository: UserRepository,
     private val activityService: ActivityService,
 ) {
@@ -61,7 +65,7 @@ class BoardService(
             boardRepository.findById(id)
                 .orElseThrow { ResourceNotFoundException("Board not found: ID $id") }
 
-        if (!board.hasAccess(actor)) {
+        if (!hasBoardAccess(board, actor)) {
             throw UnauthorizedAccessException("You do not have access to this board.")
         }
 
@@ -74,7 +78,7 @@ class BoardService(
             boardRepository.findById(id)
                 .orElseThrow { ResourceNotFoundException("Board not found: ID $id") }
 
-        if (!board.isOwnedBy(actor)) {
+        if (!isBoardOwner(board, actor)) {
             throw UnauthorizedAccessException("Only the board owner can update it.")
         }
 
@@ -99,7 +103,7 @@ class BoardService(
             boardRepository.findById(boardId)
                 .orElseThrow { ResourceNotFoundException("Board not found with ID: $boardId") }
 
-        if (!board.isOwnedBy(actor)) {
+        if (!isBoardOwner(board, actor)) {
             throw UnauthorizedAccessException("You are not authorized to delete this board.")
         }
 
@@ -148,7 +152,7 @@ class BoardService(
             boardRepository.findById(boardId)
                 .orElseThrow { ResourceNotFoundException("Board not found: ID $boardId") }
 
-        if (!board.isOwnedBy(actor)) {
+        if (!isBoardOwner(board, actor)) {
             throw UnauthorizedAccessException("Only the board owner can update collaborators.")
         }
 
@@ -162,16 +166,51 @@ class BoardService(
         board.collaborators.addAll(collaborators)
         board.updatedAt = LocalDateTime.now()
 
-        val updated = boardRepository.save(board)
+        val saved = boardRepository.save(board)
 
         activityService.record(
             actor = actor,
-            type = ActivityType.BOARD_COLLABORATORS_UPDATED,
-            referenceId = board.id,
-            description = "Colaboradores do board '${board.name}' atualizados"
+            type = ActivityType.BOARD_UPDATED,
+            referenceId = saved.id,
+            description = "Collaborators updated"
         )
 
         logger.info("Board collaborators updated for board ID ${board.id} by ${actor.email}")
-        return BoardMapper.toResponse(updated)
+        return BoardMapper.toResponse(saved)
+    }
+
+    private fun hasBoardAccess(board: Board, actor: User): Boolean {
+        if (actor.role == UserRole.ADMIN) return true
+
+        val boardId = board.id ?: return false
+        val actorId = actor.id ?: return false
+        if (boardMemberRepository.existsByBoardIdAndUserId(boardId, actorId)) {
+            return true
+        }
+
+        // TODO: Remove legacy collaborator fallback once membership migration is complete.
+        val fallbackResult = board.owner.id == actor.id || board.collaborators.any { it.id == actor.id }
+        if (fallbackResult) {
+            logger.warn("Using board legacy fallback access check for boardId={} userId={}", boardId, actorId)
+        }
+        return fallbackResult
+    }
+
+    private fun isBoardOwner(board: Board, actor: User): Boolean {
+        if (actor.role == UserRole.ADMIN) return true
+
+        val boardId = board.id ?: return false
+        val actorId = actor.id ?: return false
+        val membership = boardMemberRepository.findByBoardIdAndUserId(boardId, actorId)
+        if (membership != null) {
+            return membership.role == MembershipRole.OWNER
+        }
+
+        // TODO: Remove legacy owner fallback once membership migration is complete.
+        val fallbackResult = board.owner.id == actor.id
+        if (fallbackResult) {
+            logger.warn("Using board legacy fallback owner check for boardId={} userId={}", boardId, actorId)
+        }
+        return fallbackResult
     }
 }

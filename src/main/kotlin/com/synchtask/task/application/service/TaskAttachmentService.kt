@@ -2,14 +2,18 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.domain.model.ActivityType
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.dto.TaskAttachmentDTO
+import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskAttachment
 import com.synchtask.task.domain.repository.TaskAttachmentRepository
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -19,6 +23,8 @@ import java.util.UUID
 @Service
 class TaskAttachmentService(
     private val taskRepository: TaskRepository,
+    private val taskMemberRepository: TaskMemberRepository,
+    private val boardMemberRepository: BoardMemberRepository,
     private val taskAttachmentRepository: TaskAttachmentRepository,
     private val activityService: ActivityService,
 ) {
@@ -30,13 +36,12 @@ class TaskAttachmentService(
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
-        if (!task.canBeEditedBy(user)) {
+        if (!canEditTask(task, user)) {
             throw UnauthorizedAccessException(
                 "User ${user.email} is not allowed to upload attachments to this task."
             )
         }
 
-        // Placeholder
         val fakeUrl =
             "https://cdn.synchtask.app/files/${UUID.randomUUID()}/${file.originalFilename}"
 
@@ -69,7 +74,7 @@ class TaskAttachmentService(
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
-        if (!task.canBeAccessedBy(user)) {
+        if (!canAccessTask(task, user)) {
             throw UnauthorizedAccessException(
                 "User ${user.email} is not allowed to view attachments for this task."
             )
@@ -86,7 +91,7 @@ class TaskAttachmentService(
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
-        if (!task.canBeEditedBy(user)) {
+        if (!canEditTask(task, user)) {
             throw UnauthorizedAccessException(
                 "User ${user.email} is not allowed to delete attachments from this task."
             )
@@ -110,5 +115,31 @@ class TaskAttachmentService(
         logger.info(
             "User '${user.email}' deleted attachment $attachmentId from task '${task.title}'"
         )
+    }
+    private fun canEditTask(task: Task, actor: User): Boolean = canAccessTask(task, actor)
+
+    private fun canAccessTask(task: Task, actor: User): Boolean {
+        if (actor.role == UserRole.ADMIN) return true
+
+        val taskId = task.id ?: return false
+        val actorId = actor.id ?: return false
+        if (taskMemberRepository.existsByTaskIdAndUserId(taskId, actorId)) {
+            return true
+        }
+        val boardId = task.board.id
+        if (boardId != null && boardMemberRepository.existsByBoardIdAndUserId(boardId, actorId)) {
+            return true
+        }
+
+        // TODO: Remove legacy task/board fallback once membership migration is complete.
+        val fallback =
+            task.owner.id == actorId ||
+                task.collaborators.any { it.id == actorId } ||
+                task.board.owner.id == actorId ||
+                task.board.collaborators.any { it.id == actorId }
+        if (fallback) {
+            logger.warn("Using task attachment legacy fallback access check for taskId={} userId={}", taskId, actorId)
+        }
+        return fallback
     }
 }

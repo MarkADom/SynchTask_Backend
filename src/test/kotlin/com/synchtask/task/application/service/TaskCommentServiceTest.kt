@@ -2,6 +2,7 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
@@ -10,6 +11,7 @@ import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.domain.repository.TaskCommentRepository
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.repository.UserRepository
@@ -23,6 +25,8 @@ import kotlin.test.assertEquals
 class TaskCommentServiceTest {
     private lateinit var taskCommentRepository: TaskCommentRepository
     private lateinit var taskRepository: TaskRepository
+    private lateinit var taskMemberRepository: TaskMemberRepository
+    private lateinit var boardMemberRepository: BoardMemberRepository
     private lateinit var userRepository: UserRepository
     private lateinit var notificationService: NotificationService
     private lateinit var activityService: ActivityService
@@ -74,14 +78,22 @@ class TaskCommentServiceTest {
     fun setup() {
         taskCommentRepository = mockk()
         taskRepository = mockk()
+        taskMemberRepository = mockk(relaxed = true)
+        boardMemberRepository = mockk(relaxed = true)
         userRepository = mockk()
         notificationService = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
+
+        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } returns false
+        every { taskMemberRepository.findAllByTaskId(any()) } returns emptyList()
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
 
         service =
             TaskCommentService(
                 taskCommentRepository,
                 taskRepository,
+                taskMemberRepository,
+                boardMemberRepository,
                 userRepository,
                 notificationService,
                 activityService

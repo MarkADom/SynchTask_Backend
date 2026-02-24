@@ -6,6 +6,7 @@ import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.project.application.dto.ProjectCreateDTO
 import com.synchtask.project.application.dto.ProjectUpdateDTO
 import com.synchtask.project.domain.entity.Project
+import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.user.domain.entity.User
 import io.mockk.*
@@ -18,6 +19,7 @@ import kotlin.test.*
 
 class ProjectServiceTest {
     private lateinit var projectRepository: ProjectRepository
+    private lateinit var projectMemberRepository: ProjectMemberRepository
     private lateinit var boardRepository: BoardRepository
     private lateinit var activityService: ActivityService
     private lateinit var service: ProjectService
@@ -29,8 +31,18 @@ class ProjectServiceTest {
     fun setup() {
         projectRepository = mockk()
         boardRepository = mockk()
+        projectMemberRepository = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
-        service = ProjectService(projectRepository, boardRepository, activityService)
+
+        every { projectMemberRepository.existsByProjectIdAndUserId(any(), any()) } returns false
+        every { projectMemberRepository.findByProjectIdAndUserId(any(), any()) } returns null
+
+        service = ProjectService(
+            projectRepository,
+            projectMemberRepository,
+            boardRepository,
+            activityService
+        )
     }
 
     private fun newUser(id: Long) = User(

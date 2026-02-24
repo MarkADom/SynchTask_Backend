@@ -2,6 +2,7 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.domain.model.ActivityType
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.shared.exception.ResourceNotFoundException
@@ -10,9 +11,11 @@ import com.synchtask.task.application.dto.TaskCommentCreateDTO
 import com.synchtask.task.application.dto.TaskCommentResponseDTO
 import com.synchtask.task.domain.entity.TaskComment
 import com.synchtask.task.domain.repository.TaskCommentRepository
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -22,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional
 class TaskCommentService(
     private val taskCommentRepository: TaskCommentRepository,
     private val taskRepository: TaskRepository,
+    private val taskMemberRepository: TaskMemberRepository,
+    private val boardMemberRepository: BoardMemberRepository,
     private val userRepository: UserRepository,
     private val notificationService: NotificationService,
     private val activityService: ActivityService
@@ -34,7 +39,7 @@ class TaskCommentService(
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found") }
 
-        if (!task.canBeAccessedBy(user)) {
+        if (!canAccessTask(task, user)) {
             throw UnauthorizedAccessException("Not allowed to comment on this task")
         }
 
@@ -47,7 +52,6 @@ class TaskCommentService(
                 )
             )
 
-        // Activity
         activityService.record(
             actor = user,
             type = ActivityType.TASK_COMMENTED,
@@ -55,8 +59,7 @@ class TaskCommentService(
             description = "Comentou na task '${task.title}'"
         )
 
-        // Notifications
-        (task.collaborators + task.owner)
+        (resolveNotificationRecipients(task) + task.owner)
             .distinctBy { it.id }
             .filter { it.id != user.id }
             .forEach {
@@ -82,4 +85,44 @@ class TaskCommentService(
             .findByTaskOrderByCreatedAtAsc(task)
             .map { TaskMapper.toCommentResponse(it) }
     }
+
+    private fun canAccessTask(task: com.synchtask.task.domain.entity.Task, actor: User): Boolean {
+        if (actor.role == UserRole.ADMIN) return true
+
+        val taskId = task.id ?: return false
+        val actorId = actor.id ?: return false
+        if (taskMemberRepository.existsByTaskIdAndUserId(taskId, actorId)) {
+            return true
+        }
+        val boardId = task.board.id
+        if (boardId != null && boardMemberRepository.existsByBoardIdAndUserId(boardId, actorId)) {
+            return true
+        }
+
+        // TODO(PR4): Remove legacy task/board fallback once membership migration is complete.
+        val fallback =
+            task.owner.id == actorId ||
+                task.collaborators.any { it.id == actorId } ||
+                task.board.owner.id == actorId ||
+                task.board.collaborators.any { it.id == actorId }
+        if (fallback) {
+            logger.warn("Using task comment legacy fallback access check for taskId={} userId={}", taskId, actorId)
+        }
+        return fallback
+    }
+
+    private fun resolveNotificationRecipients(task: com.synchtask.task.domain.entity.Task): Set<User> {
+        val taskId = task.id ?: return task.collaborators
+        val membershipUsers = taskMemberRepository.findAllByTaskId(taskId).map { it.user }.toSet()
+        if (membershipUsers.isNotEmpty()) {
+            return membershipUsers
+        }
+
+        // TODO(PR4): Remove legacy collaborator fallback once membership migration is complete.
+        if (task.collaborators.isNotEmpty()) {
+            logger.warn("Using task comment legacy fallback recipients for taskId={}", taskId)
+        }
+        return task.collaborators
+    }
+
 }
