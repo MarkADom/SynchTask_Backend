@@ -3,7 +3,6 @@ package com.synchtask.security.infrastructure.config
 import com.synchtask.security.infrastructure.filter.RateLimitFilter
 import com.synchtask.security.infrastructure.jwt.CustomJwtAuthenticationConverter
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
