@@ -167,6 +167,38 @@ class ProjectServiceTest {
     }
 
     @Test
+    fun `should list all projects for admin`() {
+        val admin = User(
+            id = 99L,
+            name = "Admin",
+            email = "admin@test.com",
+            passwordHash = "hash",
+            role = UserRole.ADMIN
+        )
+        every { projectRepository.findAll() } returns listOf(newProject(10L), newProject(11L))
+
+        val result = service.listAll(admin)
+
+        assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `should return empty project list when actor id is null`() {
+        val actorWithoutId = User(
+            id = null,
+            name = "NoId",
+            email = "noid@test.com",
+            passwordHash = "hash"
+        )
+
+        val result = service.listAll(actorWithoutId)
+
+        assertTrue(result.isEmpty())
+        verify(exactly = 0) { projectMemberRepository.findAllByUserId(any()) }
+    }
+
+
+    @Test
     fun `should return project when owner`() {
         val project = newProject()
 
@@ -251,7 +283,11 @@ class ProjectServiceTest {
 
         every { projectRepository.findById(project.id!!) } returns Optional.of(project)
         every { projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!) } returns
-            ProjectMember(project = project, user = owner, role = MembershipRole.OWNER)
+            ProjectMember(
+                project = project,
+                user = owner,
+                role = MembershipRole.OWNER
+            )
         every { projectRepository.delete(project) } just Runs
 
         service.delete(project.id!!, owner)
