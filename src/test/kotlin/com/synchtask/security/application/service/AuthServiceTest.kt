@@ -86,8 +86,8 @@ class AuthServiceTest {
 
         val result = authService.authenticate(email, rawPassword)
 
-        assertEquals("jwt-token", result["accessToken"])
-        assertEquals("refresh-token", result["refreshToken"])
+        assertEquals("jwt-token", result.accessToken)
+        assertEquals("refresh-token", result.refreshToken)
     }
 
     @Test

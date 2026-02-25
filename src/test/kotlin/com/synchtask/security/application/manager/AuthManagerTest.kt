@@ -1,6 +1,7 @@
 package com.synchtask.security.application.manager
 
 import com.synchtask.security.application.context.AuthServiceContext
+import com.synchtask.security.application.dto.TokenPairDTO
 import com.synchtask.security.application.service.AuthService
 import com.synchtask.security.application.service.RefreshTokenService
 import com.synchtask.security.domain.entity.RefreshToken
@@ -70,7 +71,7 @@ class AuthManagerTest {
 
     @Test
     fun `should authenticate user via AuthService`() {
-        val expectedTokens = mapOf("accessToken" to "abc", "refreshToken" to "xyz")
+        val expectedTokens = TokenPairDTO(accessToken = "abc", refreshToken = "xyz")
 
         every { authService.authenticate("bob@example.com", "secret") } returns expectedTokens
 

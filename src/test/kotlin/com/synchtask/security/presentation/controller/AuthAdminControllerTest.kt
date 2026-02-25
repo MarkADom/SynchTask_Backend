@@ -26,7 +26,7 @@ class AuthAdminControllerTest {
         val response = authAdminController.rotateKeys()
 
         assertEquals(HttpStatus.OK, response.statusCode)
-        assertEquals(mapOf("message" to "JWT keys rotated successfully"), response.body)
+        assertEquals("JWT keys rotated successfully", response.body?.message)
         verify(exactly = 1) { jwtKeyManager.rotateKeys() }
     }
 
@@ -37,10 +37,7 @@ class AuthAdminControllerTest {
         val response = authAdminController.rotateKeys()
 
         assertEquals(HttpStatus.NOT_IMPLEMENTED, response.statusCode)
-        assertEquals(
-            mapOf("message" to "Manual rotation is not available for file-based keys."),
-            response.body
-        )
+        assertEquals("Manual rotation is not available for file-based keys.", response.body?.message)
 
         verify(exactly = 1) { jwtKeyManager.rotateKeys() }
     }

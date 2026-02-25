@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.interfaces.RSAPublicKey
-import kotlin.collections.get
 
 class JwtKeyManagerTest {
     @Test
@@ -39,30 +38,21 @@ class JwtKeyManagerTest {
 
         val jwks = manager.getJwks()
 
-        assertTrue(jwks.containsKey("keys"))
+        assertEquals(1, jwks.keys.size)
+        val key = jwks.keys.first()
 
-        val keys = jwks["keys"] as List<*>
-        assertEquals(1, keys.size)
-
-        val key = keys.first() as Map<*, *>
-
-        assertEquals("RSA", key["kty"])
-        assertEquals("RS256", key["alg"])
-        assertEquals("sig", key["use"])
-
-        assertTrue(key["n"] is String)
-        assertTrue(key["e"] is String)
-        assertTrue(key["kid"] is String)
+        assertEquals("RSA", key.kty)
+        assertEquals("RS256", key.alg)
+        assertEquals("sig", key.use)
+        assertTrue(key.n.isNotBlank())
+        assertTrue(key.e.isNotBlank())
+        assertTrue(key.kid.isNotBlank())
     }
 
     @Test
     fun `should throw when rotating keys`() {
         val manager = JwtKeyManager(TestKeyPairs.generateRsa())
-
-        val ex =
-            assertThrows(UnsupportedOperationException::class.java) {
-                manager.rotateKeys()
-            }
+        val ex = assertThrows(UnsupportedOperationException::class.java) { manager.rotateKeys() }
 
         assertTrue(ex.message!!.contains("Manual rotation not supported"))
     }
