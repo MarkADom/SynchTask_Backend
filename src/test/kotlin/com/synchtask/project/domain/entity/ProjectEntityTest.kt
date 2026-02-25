@@ -30,11 +30,10 @@ class ProjectEntityTest {
         )
 
     @Test
-    fun `hasAccess should allow membership and fallback members`() {
+    fun `hasAccess should allow membership only`() {
         val owner = user(1L)
         val memberByRelation = user(2L)
-        val legacyMember = user(3L)
-        val outsider = user(4L)
+        val outsider = user(3L)
         val project = project(owner)
 
         project.projectMembers.add(
@@ -44,16 +43,13 @@ class ProjectEntityTest {
                 role = MembershipRole.COLLABORATOR
             )
         )
-        project.members.add(legacyMember)
-
-        assertTrue(project.hasAccess(owner))
+        assertFalse(project.hasAccess(owner))
         assertTrue(project.hasAccess(memberByRelation))
-        assertTrue(project.hasAccess(legacyMember))
         assertFalse(project.hasAccess(outsider))
     }
 
     @Test
-    fun `isOwnedBy should honor membership owner and fallback owner`() {
+    fun `isOwnedBy should honor membership owner only`() {
         val owner = user(1L)
         val membershipOwner = user(2L)
         val collaborator = user(3L)
@@ -75,7 +71,7 @@ class ProjectEntityTest {
             )
         )
 
-        assertTrue(project.isOwnedBy(owner))
+        assertFalse(project.isOwnedBy(owner))
         assertTrue(project.isOwnedBy(membershipOwner))
         assertFalse(project.isOwnedBy(collaborator))
         assertFalse(project.isOwnedBy(outsider))

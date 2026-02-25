@@ -16,7 +16,6 @@ import com.synchtask.task.domain.repository.TaskCommentRepository
 import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
-import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,7 +28,6 @@ class TaskCommentServiceTest {
     private lateinit var taskRepository: TaskRepository
     private lateinit var taskMemberRepository: TaskMemberRepository
     private lateinit var boardMemberRepository: BoardMemberRepository
-    private lateinit var userRepository: UserRepository
     private lateinit var notificationService: NotificationService
     private lateinit var activityService: ActivityService
     private lateinit var service: TaskCommentService
@@ -82,7 +80,6 @@ class TaskCommentServiceTest {
         taskRepository = mockk()
         taskMemberRepository = mockk(relaxed = true)
         boardMemberRepository = mockk(relaxed = true)
-        userRepository = mockk()
         notificationService = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
@@ -96,7 +93,6 @@ class TaskCommentServiceTest {
                 taskRepository,
                 taskMemberRepository,
                 boardMemberRepository,
-                userRepository,
                 notificationService,
                 activityService
             )
@@ -107,6 +103,10 @@ class TaskCommentServiceTest {
         val request = TaskCommentCreateDTO(content = "New comment")
 
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
+        every { taskMemberRepository.existsByTaskIdAndUserId(task.id!!, user.id!!) } returns true
+        every { taskMemberRepository.findAllByTaskId(task.id!!) } returns listOf(
+            TaskMember(task = task, user = collaborator, role = MembershipRole.COLLABORATOR)
+        )
 
         val slot = slot<TaskComment>()
         every { taskCommentRepository.save(capture(slot)) } answers {

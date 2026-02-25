@@ -11,4 +11,6 @@ interface ProjectMemberRepository : JpaRepository<ProjectMember, Long> {
     fun findByProjectIdAndUserId(projectId: Long, userId: Long): ProjectMember?
 
     fun findAllByProjectId(projectId: Long): List<ProjectMember>
+
+    fun findAllByUserId(userId: Long): List<ProjectMember>
 }

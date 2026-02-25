@@ -97,23 +97,13 @@ class Project(
 
     fun hasAccess(user: User): Boolean {
         if (user.role == UserRole.ADMIN) return true
-        val hasMembership = projectMembers.any { it.user.id == user.id }
-        return if (hasMembership) {
-            true
-        } else {
-            // TODO: Remove legacy project members fallback once membership migration is complete.
-            owner.id == user.id || members.any { it.id == user.id }
-        }
+        return projectMembers.any { it.user.id == user.id }
     }
 
     fun isOwnedBy(user: User): Boolean {
         if (user.role == UserRole.ADMIN) return true
         val role = projectMembers.firstOrNull { it.user.id == user.id }?.role
-        return when {
-            role != null -> role == MembershipRole.OWNER
-            // TODO: Remove legacy project owner fallback once membership migration is complete.
-            else -> owner.id == user.id
-        }
+        return role == MembershipRole.OWNER
     }
 
     override fun equals(other: Any?): Boolean {

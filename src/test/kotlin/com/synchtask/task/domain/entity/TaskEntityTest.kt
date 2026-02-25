@@ -42,11 +42,10 @@ class TaskEntityTest {
         )
 
     @Test
-    fun `canBeEditedBy should allow membership and fallback owner collaborator`() {
+    fun `canBeEditedBy should allow membership only`() {
         val owner = user(1L)
         val taskMemberUser = user(2L)
-        val legacyCollaborator = user(3L)
-        val outsider = user(4L)
+        val outsider = user(3L)
         val task = task(owner, board(owner))
 
         task.members.add(
@@ -56,22 +55,18 @@ class TaskEntityTest {
                 role = MembershipRole.COLLABORATOR
             )
         )
-        task.collaborators.add(legacyCollaborator)
 
-        assertTrue(task.canBeEditedBy(owner))
         assertTrue(task.canBeEditedBy(taskMemberUser))
-        assertTrue(task.canBeEditedBy(legacyCollaborator))
         assertFalse(task.canBeEditedBy(outsider))
     }
 
     @Test
-    fun `canBeAccessedBy should allow task membership board membership and fallback`() {
+    fun `canBeAccessedBy should allow task membership and board membership only`() {
         val owner = user(1L)
         val boardOwner = user(2L)
         val taskMemberUser = user(3L)
         val boardMemberUser = user(4L)
-        val boardLegacyCollaborator = user(5L)
-        val outsider = user(6L)
+        val outsider = user(5L)
         val board = board(boardOwner)
         val task = task(owner, board)
 
@@ -89,11 +84,9 @@ class TaskEntityTest {
                 role = MembershipRole.COLLABORATOR
             )
         )
-        board.collaborators.add(boardLegacyCollaborator)
 
         assertTrue(task.canBeAccessedBy(taskMemberUser))
         assertTrue(task.canBeAccessedBy(boardMemberUser))
-        assertTrue(task.canBeAccessedBy(boardLegacyCollaborator))
         assertFalse(task.canBeAccessedBy(outsider))
     }
 

@@ -15,8 +15,6 @@ import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
-import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -27,7 +25,6 @@ class TaskCommentService(
     private val taskRepository: TaskRepository,
     private val taskMemberRepository: TaskMemberRepository,
     private val boardMemberRepository: BoardMemberRepository,
-    private val userRepository: UserRepository,
     private val notificationService: NotificationService,
     private val activityService: ActivityService,
 ) {
@@ -95,16 +92,13 @@ class TaskCommentService(
             actor,
             taskMemberRepository,
             boardMemberRepository,
-            logger,
-            "task comment"
         )
 
     private fun resolveNotificationRecipients(
-        task: com.synchtask.task.domain.entity.Task): Set<User> =
+        task: com.synchtask.task.domain.entity.Task,
+    ): Set<User> =
         resolveTaskMembershipUsers(
             task,
             taskMemberRepository,
-            logger,
-            "task comment"
         )
 }

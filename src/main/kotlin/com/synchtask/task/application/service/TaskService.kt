@@ -47,12 +47,7 @@ class TaskService(
             boardRepository.findById(request.boardId)
                 .orElseThrow { ResourceNotFoundException("Board not found: ${request.boardId}") }
 
-        if (!canAccessBoard(
-                board.id,
-                owner,
-                board.owner.id == owner.id,
-                board.collaborators.any { it.id == owner.id })
-        ) {
+        if (!canAccessBoard(board.id, owner)) {
             throw UnauthorizedAccessException(
                 "User ${owner.email} is not allowed to create tasks in board ${board.id}."
             )
@@ -92,14 +87,27 @@ class TaskService(
         assigneeId: Long?,
         boardId: Long?,
         pageable: Pageable,
-    ): Page<Task> = taskSpecificationService.findTasksByFilters(user, status, label, assigneeId, boardId, pageable)
+    ): Page<Task> = taskSpecificationService.findTasksByFilters(
+        user,
+        status,
+        label,
+        assigneeId,
+        boardId,
+        pageable
+    )
 
     @Transactional
-    fun updateTask(taskId: Long, request: TaskUpdateDTO, user: User): Task {
+    fun updateTask(
+        taskId: Long,
+        request: TaskUpdateDTO,
+        user: User,
+    ): Task {
         val task = findTaskById(taskId)
 
         if (!canEditTask(task, user)) {
-            throw UnauthorizedAccessException("User ${user.email} is not authorized to update task ${task.id}")
+            throw UnauthorizedAccessException(
+                "User ${user.email} is not authorized to update task ${task.id}"
+            )
         }
 
         task.updateDetails(
@@ -133,11 +141,17 @@ class TaskService(
     }
 
     @Transactional
-    fun updateTaskLabels(taskId: Long, labels: List<String>, user: User) {
+    fun updateTaskLabels(
+        taskId: Long,
+        labels: List<String>,
+        user: User,
+    ) {
         val task = findTaskById(taskId)
 
         if (!canEditTask(task, user)) {
-            throw UnauthorizedAccessException("You are not authorized to update labels on this task.")
+            throw UnauthorizedAccessException(
+                "You are not authorized to update labels on this task."
+            )
         }
 
         task.labels = labels.toMutableSet()
@@ -152,11 +166,17 @@ class TaskService(
     }
 
     @Transactional
-    fun updateTaskAssignees(taskId: Long, userIds: List<Long>, user: User) {
+    fun updateTaskAssignees(
+        taskId: Long,
+        userIds: List<Long>,
+        user: User,
+    ) {
         val task = findTaskById(taskId)
 
         if (!canEditTask(task, user)) {
-            throw UnauthorizedAccessException("You are not authorized to update assignees on this task.")
+            throw UnauthorizedAccessException(
+                "You are not authorized to update assignees on this task."
+            )
         }
 
         val assignees = userRepository.findAllById(userIds).toMutableSet()
@@ -177,11 +197,17 @@ class TaskService(
     }
 
     @Transactional
-    fun updateTaskStatus(taskId: Long, newStatus: TaskStatus, actor: User) {
+    fun updateTaskStatus(
+        taskId: Long,
+        newStatus: TaskStatus,
+        actor: User,
+    ) {
         val task = findTaskById(taskId)
 
         if (!canEditTask(task, actor)) {
-            throw UnauthorizedAccessException("Not allowed to change task status")
+            throw UnauthorizedAccessException(
+                "Not allowed to change task status"
+            )
         }
 
         task.changeStatus(newStatus)
@@ -207,7 +233,12 @@ class TaskService(
     }
 
     @Transactional
-    fun assignCollaborator(taskId: Long, collaboratorEmail: String, actor: User) {
+    fun assignCollaborator(
+        taskId: Long,
+        collaboratorEmail:
+        String,
+        actor: User,
+    ) {
         val task = findTaskById(taskId)
 
         if (!canEditTask(task, actor)) {
@@ -244,36 +275,39 @@ class TaskService(
     }
 
     @Transactional
-    fun deleteTask(taskId: Long, user: User) {
+    fun deleteTask(
+        taskId: Long,
+        user: User,
+    ) {
         val task = findTaskById(taskId)
 
         if (!canEditTask(task, user)) {
-            throw UnauthorizedAccessException("User ${user.email} is not authorized to delete this task.")
+            throw UnauthorizedAccessException(
+                "User ${user.email} is not authorized to delete this task."
+            )
         }
 
         taskRepository.delete(task)
         logger.info("Task '${task.title}' deleted by ${user.email}")
     }
 
-    private fun canAccessBoard(boardId: Long?, actor: User, legacyOwner: Boolean, legacyCollaborator: Boolean): Boolean {
-        if (actor.role == com.synchtask.user.domain.entity.UserRole.ADMIN) return true
+    private fun canAccessBoard(
+        boardId: Long?,
+        actor: User,
+    ): Boolean {
+        if (actor.role == UserRole.ADMIN) return true
         val safeBoardId = boardId ?: return false
         val actorId = actor.id ?: return false
-        if (boardMemberRepository.existsByBoardIdAndUserId(safeBoardId, actorId)) {
-            return true
-        }
 
-        // TODO: Remove legacy board fallback once membership migration is complete.
-        val fallback = legacyOwner || legacyCollaborator
-        if (fallback) {
-            logger.warn("Using board legacy fallback access check for boardId={} userId={}", safeBoardId, actorId)
-        }
-        return fallback
+        return boardMemberRepository.existsByBoardIdAndUserId(safeBoardId, actorId)
     }
 
-    private fun canEditTask(task: Task, actor: User): Boolean =
-        hasTaskAccess(task, actor, taskMemberRepository, boardMemberRepository, logger, "task")
+    private fun canEditTask(
+        task: Task,
+        actor: User,
+    ): Boolean =
+        hasTaskAccess(task, actor, taskMemberRepository, boardMemberRepository)
 
     private fun resolveTaskCollaborators(task: Task): Set<User> =
-        resolveTaskMembershipUsers(task, taskMemberRepository, logger, "task")
+        resolveTaskMembershipUsers(task, taskMemberRepository)
 }

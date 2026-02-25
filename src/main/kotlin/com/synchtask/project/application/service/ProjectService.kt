@@ -32,7 +32,7 @@ class ProjectService(
 
     @Transactional
     fun create(dto: ProjectCreateDTO, owner: User): ProjectResponseDTO {
-        val boards = boardRepository.findAllWithCollaboratorsById(dto.boardIds)
+        val boards = boardRepository.findAllById(dto.boardIds)
         validateBoardsExist(dto.boardIds, boards)
 
         val project =
@@ -63,9 +63,18 @@ class ProjectService(
     }
 
     @Transactional(readOnly = true)
-    fun listAll(owner: User): List<ProjectResponseDTO> =
-        projectRepository.findAllByOwnerWithMembersAndBoards(owner)
-            .map(ProjectMapper::toResponse)
+    fun listAll(owner: User): List<ProjectResponseDTO> {
+        if (owner.role == UserRole.ADMIN) {
+            return projectRepository.findAll().map(ProjectMapper::toResponse)
+        }
+
+        val actorId = owner.id ?: return emptyList()
+        val projectIds = projectMemberRepository.findAllByUserId(actorId).mapNotNull { it.project.id }
+        if (projectIds.isEmpty()) return emptyList()
+
+        return projectRepository.findAllById(projectIds).map(ProjectMapper::toResponse)
+    }
+
 
     @Transactional(readOnly = true)
     fun getById(id: Long, actor: User): ProjectResponseDTO =
@@ -90,7 +99,7 @@ class ProjectService(
         dto.dueDate?.let { project.dueDate = it }
 
         dto.boardIds?.let { ids ->
-            val boardsFromDB = boardRepository.findAllWithCollaboratorsById(ids)
+            val boardsFromDB = boardRepository.findAllById(ids)
             validateBoardsExist(ids, boardsFromDB)
 
             project.boards.forEach { it.project = null }
@@ -161,16 +170,8 @@ class ProjectService(
 
         val projectId = project.id ?: return false
         val actorId = actor.id ?: return false
-        if (projectMemberRepository.existsByProjectIdAndUserId(projectId, actorId)) {
-            return true
-        }
 
-        // TODO(PR4): Remove legacy project members fallback once membership migration is complete.
-        val fallbackResult = project.owner.id == actorId || project.members.any { it.id == actorId }
-        if (fallbackResult) {
-            logger.warn("Using project legacy fallback access check for projectId={} userId={}", projectId, actorId)
-        }
-        return fallbackResult
+        return projectMemberRepository.existsByProjectIdAndUserId(projectId, actorId)
     }
 
     private fun isProjectOwner(project: Project, actor: User): Boolean {
@@ -179,32 +180,12 @@ class ProjectService(
         val projectId = project.id ?: return false
         val actorId = actor.id ?: return false
         val membership = projectMemberRepository.findByProjectIdAndUserId(projectId, actorId)
-        if (membership != null) {
-            return membership.role == MembershipRole.OWNER
-        }
 
-        // TODO: Remove legacy project owner fallback once membership migration is complete.
-        val fallbackResult = project.owner.id == actorId
-        if (fallbackResult) {
-            logger.warn("Using project legacy fallback owner check for projectId={} userId={}", projectId, actorId)
-        }
-        return fallbackResult
+        return membership?.role == MembershipRole.OWNER
     }
 
     private fun resolveProjectMemberEmails(project: Project): Set<String> {
-        val projectId = project.id ?: return project.members.map { it.email }.toSet()
-        val membershipEmails = projectMemberRepository.findAllByProjectId(projectId).map { it.user.email }.toSet()
-        if (membershipEmails.isNotEmpty()) {
-            return membershipEmails
-        }
-
-        // TODO: Remove legacy project members fallback once membership migration is complete.
-        val fallback = project.members.map { it.email }.toSet()
-        if (fallback.isNotEmpty()) {
-            logger.warn("Using project legacy fallback members for snapshot projectId={}", projectId)
-        }
-        return fallback
+        val projectId = project.id ?: return emptySet()
+        return projectMemberRepository.findAllByProjectId(projectId).map { it.user.email }.toSet()
     }
-
-
 }

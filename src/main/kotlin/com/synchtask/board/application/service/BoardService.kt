@@ -56,8 +56,17 @@ class BoardService(
     }
 
     @Transactional(readOnly = true)
-    fun getBoardsForUser(actor: User): List<BoardResponseDTO> = boardRepository.findByOwnerWithOwnerFetched(actor)
-        .map(BoardMapper::toResponse)
+    fun getBoardsForUser(actor: User): List<BoardResponseDTO> {
+        if (actor.role == UserRole.ADMIN) {
+            return boardRepository.findAll().map(BoardMapper::toResponse)
+        }
+
+        val actorId = actor.id ?: return emptyList()
+        val boardIds = boardMemberRepository.findAllByUserId(actorId).mapNotNull { it.board.id }
+        if (boardIds.isEmpty()) return emptyList()
+
+        return boardRepository.findAllById(boardIds).map(BoardMapper::toResponse)
+    }
 
     @Transactional(readOnly = true)
     fun getBoardAccessibleByUser(id: Long, actor: User): BoardResponseDTO {
@@ -110,7 +119,7 @@ class BoardService(
         val snapshot =
             ActivityContextSnapshot(
                 ownerEmail = board.owner.email,
-                collaboratorEmails = board.collaborators.map { it.email }.toSet()
+                collaboratorEmails = board.members.map { it.user.email }.toSet()
             )
 
         boardRepository.delete(board)
@@ -127,16 +136,30 @@ class BoardService(
     }
 
     @Transactional(readOnly = true)
-    fun getBoardsSharedWithUser(actor: User): List<BoardResponseDTO> =
-        boardRepository.findByCollaboratorsContainingWithOwnerFetched(actor)
+    fun getBoardsSharedWithUser(actor: User): List<BoardResponseDTO> {
+        if (actor.role == UserRole.ADMIN) {
+            return boardRepository.findAll().map(BoardMapper::toResponse)
+        }
+
+        val actorId = actor.id ?: return emptyList()
+        val boardIds = boardMemberRepository.findAllByUserId(actorId).mapNotNull { it.board.id }
+        if (boardIds.isEmpty()) return emptyList()
+
+        return boardRepository.findAllById(boardIds)
             .map(BoardMapper::toResponse)
+    }
 
     @Transactional(readOnly = true)
     fun getSimpleBoardsForUser(actor: User): List<BoardSimpleDTO> {
-        val owned = boardRepository.findByOwnerWithOwnerFetched(actor)
-        val shared = boardRepository.findByCollaboratorsContainingWithOwnerFetched(actor)
-
-        return (owned + shared)
+        val boards = if (actor.role == UserRole.ADMIN) {
+            boardRepository.findAll()
+        } else {
+            val actorId = actor.id ?: return emptyList()
+            val boardIds = boardMemberRepository.findAllByUserId(actorId).mapNotNull { it.board.id }
+            if (boardIds.isEmpty()) return emptyList()
+            boardRepository.findAllById(boardIds)
+        }
+        return boards
             .distinctBy { it.id }
             .map {
                 BoardSimpleDTO(
@@ -184,16 +207,8 @@ class BoardService(
 
         val boardId = board.id ?: return false
         val actorId = actor.id ?: return false
-        if (boardMemberRepository.existsByBoardIdAndUserId(boardId, actorId)) {
-            return true
-        }
 
-        // TODO: Remove legacy collaborator fallback once membership migration is complete.
-        val fallbackResult = board.owner.id == actor.id || board.collaborators.any { it.id == actor.id }
-        if (fallbackResult) {
-            logger.warn("Using board legacy fallback access check for boardId={} userId={}", boardId, actorId)
-        }
-        return fallbackResult
+        return boardMemberRepository.existsByBoardIdAndUserId(boardId, actorId)
     }
 
     private fun isBoardOwner(board: Board, actor: User): Boolean {
@@ -202,15 +217,7 @@ class BoardService(
         val boardId = board.id ?: return false
         val actorId = actor.id ?: return false
         val membership = boardMemberRepository.findByBoardIdAndUserId(boardId, actorId)
-        if (membership != null) {
-            return membership.role == MembershipRole.OWNER
-        }
 
-        // TODO: Remove legacy owner fallback once membership migration is complete.
-        val fallbackResult = board.owner.id == actor.id
-        if (fallbackResult) {
-            logger.warn("Using board legacy fallback owner check for boardId={} userId={}", boardId, actorId)
-        }
-        return fallbackResult
+        return membership?.role == MembershipRole.OWNER
     }
 }

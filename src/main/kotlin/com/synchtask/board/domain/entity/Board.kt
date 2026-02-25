@@ -1,6 +1,5 @@
 package com.synchtask.board.domain.entity
 
-import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.project.domain.entity.Project
 import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.task.domain.entity.Task
@@ -109,25 +108,15 @@ class Board(
 
     fun isOwnedBy(user: User): Boolean {
         if (user.role == UserRole.ADMIN) return true
-
         val memberRole = members.firstOrNull { it.user.id == user.id }?.role
-        return when {
-            memberRole != null -> memberRole == MembershipRole.OWNER
-            // TODO(PR4): Remove legacy owner fallback once membership migration is complete.
-            else -> owner.id == user.id
-        }
+
+        return memberRole == MembershipRole.OWNER
     }
 
     fun hasAccess(user: User): Boolean {
         if (user.role == UserRole.ADMIN) return true
 
-        val hasMembership = members.any { it.user.id == user.id }
-        return if (hasMembership) {
-            true
-        } else {
-            // TODO(PR4): Remove legacy collaborator fallback once membership migration is complete.
-            owner.id == user.id || collaborators.any { it.id == user.id }
-        }
+        return members.any { it.user.id == user.id }
     }
 
     override fun equals(other: Any?): Boolean {

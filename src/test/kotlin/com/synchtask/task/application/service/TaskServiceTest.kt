@@ -72,9 +72,9 @@ class TaskServiceTest {
         friendshipChecker = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
-        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } returns false
+        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
         every { taskMemberRepository.findAllByTaskId(any()) } returns emptyList()
-        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
 
         service =
             TaskService(
@@ -179,7 +179,8 @@ class TaskServiceTest {
         )
         val existing = task(
             owner = collab,
-            board = foreignBoard)
+            board = foreignBoard
+        )
         every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
 
         assertThrows<UnauthorizedAccessException> {
@@ -262,7 +263,8 @@ class TaskServiceTest {
 
     @Test
     fun `should update task when actor is admin`() {
-        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        val admin =
+            User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
         val existing = task(owner = collab)
         every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
         every { taskRepository.save(any()) } answers { firstArg() }
