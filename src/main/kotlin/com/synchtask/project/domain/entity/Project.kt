@@ -1,7 +1,9 @@
 package com.synchtask.project.domain.entity
 
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -72,6 +74,14 @@ class Project(
         ]
     )
     val members: MutableSet<User> = mutableSetOf(),
+    @OneToMany(
+        mappedBy = "project",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    val projectMembers: MutableSet<ProjectMember> = mutableSetOf(),
+
     /**
      * Boards that belong to this project.
      * Orphan removal ensures consistency when boards are removed.
@@ -84,6 +94,28 @@ class Project(
     )
     val boards: MutableSet<Board> = mutableSetOf()
 ) {
+
+    fun hasAccess(user: User): Boolean {
+        if (user.role == UserRole.ADMIN) return true
+        val hasMembership = projectMembers.any { it.user.id == user.id }
+        return if (hasMembership) {
+            true
+        } else {
+            // TODO: Remove legacy project members fallback once membership migration is complete.
+            owner.id == user.id || members.any { it.id == user.id }
+        }
+    }
+
+    fun isOwnedBy(user: User): Boolean {
+        if (user.role == UserRole.ADMIN) return true
+        val role = projectMembers.firstOrNull { it.user.id == user.id }?.role
+        return when {
+            role != null -> role == MembershipRole.OWNER
+            // TODO: Remove legacy project owner fallback once membership migration is complete.
+            else -> owner.id == user.id
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Project) return false

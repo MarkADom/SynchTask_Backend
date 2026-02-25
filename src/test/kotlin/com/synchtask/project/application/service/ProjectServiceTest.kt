@@ -6,8 +6,12 @@ import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.project.application.dto.ProjectCreateDTO
 import com.synchtask.project.application.dto.ProjectUpdateDTO
 import com.synchtask.project.domain.entity.Project
+import com.synchtask.project.domain.entity.ProjectMember
+import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -18,6 +22,7 @@ import kotlin.test.*
 
 class ProjectServiceTest {
     private lateinit var projectRepository: ProjectRepository
+    private lateinit var projectMemberRepository: ProjectMemberRepository
     private lateinit var boardRepository: BoardRepository
     private lateinit var activityService: ActivityService
     private lateinit var service: ProjectService
@@ -29,8 +34,18 @@ class ProjectServiceTest {
     fun setup() {
         projectRepository = mockk()
         boardRepository = mockk()
+        projectMemberRepository = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
-        service = ProjectService(projectRepository, boardRepository, activityService)
+
+        every { projectMemberRepository.existsByProjectIdAndUserId(any(), any()) } returns false
+        every { projectMemberRepository.findByProjectIdAndUserId(any(), any()) } returns null
+
+        service = ProjectService(
+            projectRepository,
+            projectMemberRepository,
+            boardRepository,
+            activityService
+        )
     }
 
     private fun newUser(id: Long) = User(
@@ -237,5 +252,42 @@ class ProjectServiceTest {
         assertFailsWith<NoSuchElementException> {
             service.delete(project.id!!, owner)
         }
+    }
+
+    @Test
+    fun `should return project when user has membership access`() {
+        val project = newProject(owner = other)
+
+        every { projectRepository.findById(project.id!!) } returns Optional.of(project)
+        every { projectMemberRepository.existsByProjectIdAndUserId(project.id!!, owner.id!!) } returns true
+
+        val result = service.getById(project.id!!, owner)
+
+        assertEquals(project.id, result.id)
+    }
+
+    @Test
+    fun `should update project when user is membership owner`() {
+        val project = newProject(owner = other)
+        every { projectRepository.findById(project.id!!) } returns Optional.of(project)
+        every {
+            projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!)
+        } returns ProjectMember(project = project, user = owner, role = MembershipRole.OWNER)
+        every { projectRepository.save(any()) } answers { firstArg() }
+
+        val result = service.update(project.id!!, ProjectUpdateDTO(name = "Membership Updated"), owner)
+
+        assertEquals("Membership Updated", result.name)
+    }
+
+    @Test
+    fun `should return project for admin`() {
+        val project = newProject(owner = other)
+        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        every { projectRepository.findById(project.id!!) } returns Optional.of(project)
+
+        val result = service.getById(project.id!!, admin)
+
+        assertEquals(project.id, result.id)
     }
 }

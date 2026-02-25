@@ -2,14 +2,18 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.domain.model.ActivityType
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.dto.TaskLinkDTO
+import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskLink
 import com.synchtask.task.domain.repository.TaskLinkRepository
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -17,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class TaskLinkService(
     private val taskRepository: TaskRepository,
+    private val taskMemberRepository: TaskMemberRepository,
+    private val boardMemberRepository: BoardMemberRepository,
     private val taskLinkRepository: TaskLinkRepository,
     private val activityService: ActivityService,
 ) {
@@ -28,7 +34,7 @@ class TaskLinkService(
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
-        if (!task.canBeEditedBy(user)) {
+        if (!canAccessTask(task, user)) {
             throw UnauthorizedAccessException("User ${user.email} is not allowed to modify this task")
         }
 
@@ -59,7 +65,7 @@ class TaskLinkService(
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
-        if (!task.canBeAccessedBy(user)) {
+        if (!canAccessTask(task, user)) {
             throw UnauthorizedAccessException("User ${user.email} is not allowed to view links for this task")
         }
 
@@ -74,7 +80,7 @@ class TaskLinkService(
             taskRepository.findById(taskId)
                 .orElseThrow { ResourceNotFoundException("Task not found with ID $taskId") }
 
-        if (!task.canBeEditedBy(user)) {
+        if (!canAccessTask(task, user)) {
             throw UnauthorizedAccessException("User ${user.email} is not allowed to modify this task")
         }
 
@@ -93,4 +99,17 @@ class TaskLinkService(
 
         logger.info("User '${user.email}' removed link $linkId from task '${task.title}'")
     }
+
+    private fun canAccessTask(
+        task: Task,
+        actor: User
+    ): Boolean =
+        hasTaskAccess(
+            task,
+            actor,
+            taskMemberRepository,
+            boardMemberRepository,
+            logger,
+            "task link"
+        )
 }

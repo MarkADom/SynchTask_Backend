@@ -67,6 +67,13 @@ class Task(
         ]
     )
     val collaborators: MutableSet<User> = mutableSetOf(),
+    @OneToMany(
+        mappedBy = "task",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    val members: MutableSet<TaskMember> = mutableSetOf(),
     /**
      * Simple labels associated with the task.
      * Stored as an element collection with a unique constraint per task.
@@ -109,11 +116,27 @@ class Task(
      * Domain invariants
      */
     fun canBeEditedBy(user: User): Boolean {
-        return owner.id == user.id || user.role == UserRole.ADMIN
+        if (user.role == UserRole.ADMIN) return true
+        val hasMembership = members.any { it.user.id == user.id }
+        return if (hasMembership) {
+            true
+        } else {
+            // TODO: Remove legacy collaborator fallback once membership migration is complete.
+            owner.id == user.id || collaborators.any { it.id == user.id }
+        }
     }
 
     fun canBeAccessedBy(user: User): Boolean {
-        return owner.id == user.id || collaborators.any { it.id == user.id }
+        if (user.role == UserRole.ADMIN) return true
+        val taskMembership = members.any { it.user.id == user.id }
+        val boardMembership = board.members.any { it.user.id == user.id }
+        if (taskMembership || boardMembership) {
+            return true
+        }
+
+        // TODO: Remove legacy collaborator fallback once membership migration is complete.
+        return owner.id == user.id || collaborators.any { it.id == user.id } ||
+            board.collaborators.any { it.id == user.id }
     }
 
     fun canAddCollaborator(requester: User): Boolean {

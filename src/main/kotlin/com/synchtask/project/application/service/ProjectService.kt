@@ -9,9 +9,13 @@ import com.synchtask.project.application.dto.ProjectCreateDTO
 import com.synchtask.project.application.dto.ProjectResponseDTO
 import com.synchtask.project.application.dto.ProjectUpdateDTO
 import com.synchtask.project.domain.entity.Project
+import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.project.presentation.mapper.ProjectMapper
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -20,9 +24,12 @@ import java.time.LocalDateTime
 @Service
 class ProjectService(
     private val projectRepository: ProjectRepository,
+    private val projectMemberRepository: ProjectMemberRepository,
     private val boardRepository: BoardRepository,
     private val activityService: ActivityService,
 ) {
+    private val logger = LoggerFactory.getLogger(ProjectService::class.java)
+
     @Transactional
     fun create(dto: ProjectCreateDTO, owner: User): ProjectResponseDTO {
         val boards = boardRepository.findAllWithCollaboratorsById(dto.boardIds)
@@ -58,20 +65,20 @@ class ProjectService(
     @Transactional(readOnly = true)
     fun listAll(owner: User): List<ProjectResponseDTO> =
         projectRepository.findAllByOwnerWithMembersAndBoards(owner)
-        .map(ProjectMapper::toResponse)
+            .map(ProjectMapper::toResponse)
 
     @Transactional(readOnly = true)
-    fun getById(id: Long, owner: User): ProjectResponseDTO =
+    fun getById(id: Long, actor: User): ProjectResponseDTO =
         projectRepository.findById(id)
-        .filter { it.owner.id == owner.id }
-        .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
-        .let(ProjectMapper::toResponse)
+            .filter { hasProjectAccess(it, actor) }
+            .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
+            .let(ProjectMapper::toResponse)
 
     @Transactional
-    fun update(id: Long, dto: ProjectUpdateDTO, owner: User): ProjectResponseDTO {
+    fun update(id: Long, dto: ProjectUpdateDTO, actor: User): ProjectResponseDTO {
         val project =
             projectRepository.findById(id)
-                .filter { it.owner.id == owner.id }
+                .filter { isProjectOwner(it, actor) }
                 .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
 
         var boardsUpdated = false
@@ -101,7 +108,7 @@ class ProjectService(
         val updated = projectRepository.save(project)
 
         activityService.record(
-            actor = owner,
+            actor = actor,
             type = ActivityType.PROJECT_UPDATED,
             referenceId = updated.id,
             description = "Project '${updated.name}' atualizado"
@@ -109,7 +116,7 @@ class ProjectService(
 
         if (boardsUpdated) {
             activityService.record(
-                actor = owner,
+                actor = actor,
                 type = ActivityType.PROJECT_BOARDS_UPDATED,
                 referenceId = updated.id,
                 description = "Boards do project '${updated.name}' atualizados"
@@ -120,22 +127,22 @@ class ProjectService(
     }
 
     @Transactional
-    fun delete(id: Long, owner: User) {
+    fun delete(id: Long, actor: User) {
         val project =
             projectRepository.findById(id)
-                .filter { it.owner.id == owner.id }
+                .filter { isProjectOwner(it, actor) }
                 .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
 
         val snapshot =
             ActivityContextSnapshot(
                 ownerEmail = project.owner.email,
-                memberEmails = project.members.map { it.email }.toSet()
+                memberEmails = resolveProjectMemberEmails(project)
             )
 
         projectRepository.delete(project)
 
         activityService.record(
-            actor = owner,
+            actor = actor,
             type = ActivityType.PROJECT_DELETED,
             referenceId = id,
             description = "Project '${project.name}' removido",
@@ -148,4 +155,56 @@ class ProjectService(
             throw IllegalArgumentException("One or more boards not found for provided IDs")
         }
     }
+
+    private fun hasProjectAccess(project: Project, actor: User): Boolean {
+        if (actor.role == UserRole.ADMIN) return true
+
+        val projectId = project.id ?: return false
+        val actorId = actor.id ?: return false
+        if (projectMemberRepository.existsByProjectIdAndUserId(projectId, actorId)) {
+            return true
+        }
+
+        // TODO(PR4): Remove legacy project members fallback once membership migration is complete.
+        val fallbackResult = project.owner.id == actorId || project.members.any { it.id == actorId }
+        if (fallbackResult) {
+            logger.warn("Using project legacy fallback access check for projectId={} userId={}", projectId, actorId)
+        }
+        return fallbackResult
+    }
+
+    private fun isProjectOwner(project: Project, actor: User): Boolean {
+        if (actor.role == UserRole.ADMIN) return true
+
+        val projectId = project.id ?: return false
+        val actorId = actor.id ?: return false
+        val membership = projectMemberRepository.findByProjectIdAndUserId(projectId, actorId)
+        if (membership != null) {
+            return membership.role == MembershipRole.OWNER
+        }
+
+        // TODO: Remove legacy project owner fallback once membership migration is complete.
+        val fallbackResult = project.owner.id == actorId
+        if (fallbackResult) {
+            logger.warn("Using project legacy fallback owner check for projectId={} userId={}", projectId, actorId)
+        }
+        return fallbackResult
+    }
+
+    private fun resolveProjectMemberEmails(project: Project): Set<String> {
+        val projectId = project.id ?: return project.members.map { it.email }.toSet()
+        val membershipEmails = projectMemberRepository.findAllByProjectId(projectId).map { it.user.email }.toSet()
+        if (membershipEmails.isNotEmpty()) {
+            return membershipEmails
+        }
+
+        // TODO: Remove legacy project members fallback once membership migration is complete.
+        val fallback = project.members.map { it.email }.toSet()
+        if (fallback.isNotEmpty()) {
+            logger.warn("Using project legacy fallback members for snapshot projectId={}", projectId)
+        }
+        return fallback
+    }
+
+
 }

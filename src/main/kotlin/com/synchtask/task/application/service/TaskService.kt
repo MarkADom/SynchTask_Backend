@@ -2,6 +2,7 @@ package com.synchtask.task.application.service
 
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.activity.domain.model.ActivityType
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.friend.application.port.FriendshipChecker
 import com.synchtask.notification.application.service.NotificationService
@@ -12,9 +13,11 @@ import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskStatus
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.websocket.application.service.TaskWebSocketService
 import org.slf4j.LoggerFactory
@@ -26,10 +29,12 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class TaskService(
     private val taskRepository: TaskRepository,
+    private val taskMemberRepository: TaskMemberRepository,
     private val userRepository: UserRepository,
     private val notificationService: NotificationService,
     private val taskWebSocketService: TaskWebSocketService,
     private val boardRepository: BoardRepository,
+    private val boardMemberRepository: BoardMemberRepository,
     private val taskSpecificationService: TaskSpecificationService,
     private val friendshipChecker: FriendshipChecker,
     private val activityService: ActivityService,
@@ -42,7 +47,12 @@ class TaskService(
             boardRepository.findById(request.boardId)
                 .orElseThrow { ResourceNotFoundException("Board not found: ${request.boardId}") }
 
-        if (!board.hasAccess(owner)) {
+        if (!canAccessBoard(
+                board.id,
+                owner,
+                board.owner.id == owner.id,
+                board.collaborators.any { it.id == owner.id })
+        ) {
             throw UnauthorizedAccessException(
                 "User ${owner.email} is not allowed to create tasks in board ${board.id}."
             )
@@ -88,7 +98,7 @@ class TaskService(
     fun updateTask(taskId: Long, request: TaskUpdateDTO, user: User): Task {
         val task = findTaskById(taskId)
 
-        if (!task.canBeEditedBy(user)) {
+        if (!canEditTask(task, user)) {
             throw UnauthorizedAccessException("User ${user.email} is not authorized to update task ${task.id}")
         }
 
@@ -126,7 +136,7 @@ class TaskService(
     fun updateTaskLabels(taskId: Long, labels: List<String>, user: User) {
         val task = findTaskById(taskId)
 
-        if (!task.canBeEditedBy(user)) {
+        if (!canEditTask(task, user)) {
             throw UnauthorizedAccessException("You are not authorized to update labels on this task.")
         }
 
@@ -145,7 +155,7 @@ class TaskService(
     fun updateTaskAssignees(taskId: Long, userIds: List<Long>, user: User) {
         val task = findTaskById(taskId)
 
-        if (!task.canBeEditedBy(user)) {
+        if (!canEditTask(task, user)) {
             throw UnauthorizedAccessException("You are not authorized to update assignees on this task.")
         }
 
@@ -170,7 +180,7 @@ class TaskService(
     fun updateTaskStatus(taskId: Long, newStatus: TaskStatus, actor: User) {
         val task = findTaskById(taskId)
 
-        if (!task.canBeEditedBy(actor)) {
+        if (!canEditTask(task, actor)) {
             throw UnauthorizedAccessException("Not allowed to change task status")
         }
 
@@ -184,7 +194,7 @@ class TaskService(
             description = "Status alterado para $newStatus"
         )
 
-        task.collaborators.forEach {
+        resolveTaskCollaborators(task).forEach {
             notificationService.sendNotification(
                 userEmail = it.email,
                 message = "Task '${task.title}' status updated to: $newStatus.",
@@ -200,7 +210,7 @@ class TaskService(
     fun assignCollaborator(taskId: Long, collaboratorEmail: String, actor: User) {
         val task = findTaskById(taskId)
 
-        if (!task.canBeEditedBy(actor)) {
+        if (!canEditTask(task, actor)) {
             throw UnauthorizedAccessException("Not allowed to assign collaborators")
         }
 
@@ -237,11 +247,33 @@ class TaskService(
     fun deleteTask(taskId: Long, user: User) {
         val task = findTaskById(taskId)
 
-        if (!task.canBeEditedBy(user)) {
+        if (!canEditTask(task, user)) {
             throw UnauthorizedAccessException("User ${user.email} is not authorized to delete this task.")
         }
 
         taskRepository.delete(task)
         logger.info("Task '${task.title}' deleted by ${user.email}")
     }
+
+    private fun canAccessBoard(boardId: Long?, actor: User, legacyOwner: Boolean, legacyCollaborator: Boolean): Boolean {
+        if (actor.role == com.synchtask.user.domain.entity.UserRole.ADMIN) return true
+        val safeBoardId = boardId ?: return false
+        val actorId = actor.id ?: return false
+        if (boardMemberRepository.existsByBoardIdAndUserId(safeBoardId, actorId)) {
+            return true
+        }
+
+        // TODO: Remove legacy board fallback once membership migration is complete.
+        val fallback = legacyOwner || legacyCollaborator
+        if (fallback) {
+            logger.warn("Using board legacy fallback access check for boardId={} userId={}", safeBoardId, actorId)
+        }
+        return fallback
+    }
+
+    private fun canEditTask(task: Task, actor: User): Boolean =
+        hasTaskAccess(task, actor, taskMemberRepository, boardMemberRepository, logger, "task")
+
+    private fun resolveTaskCollaborators(task: Task): Set<User> =
+        resolveTaskMembershipUsers(task, taskMemberRepository, logger, "task")
 }
