@@ -1,5 +1,7 @@
 package com.synchtask.security.infrastructure.jwt
 
+import com.synchtask.security.application.dto.JwkKeyDTO
+import com.synchtask.security.application.dto.JwksResponseDTO
 import org.springframework.stereotype.Component
 import java.math.BigInteger
 import java.security.KeyPair
@@ -29,7 +31,7 @@ class JwtKeyManager(
         )
     }
 
-    fun getJwks(): Map<String, Any> {
+    fun getJwks(): JwksResponseDTO{
         val publicKey = getPublicKey() as RSAPublicKey
 
         val modulusBase64Url = Base64.getUrlEncoder().withoutPadding().encodeToString(publicKey.modulus.toByteArray())
@@ -40,16 +42,16 @@ class JwtKeyManager(
 
         val kid = generateKid(publicKey)
 
-        return mapOf(
-            "keys" to
+        return  JwksResponseDTO(
+            keys =
                 listOf(
-                    mapOf(
-                        "kty" to "RSA",
-                        "alg" to "RS256",
-                        "use" to "sig",
-                        "n" to modulusBase64Url,
-                        "e" to exponentBase64Url,
-                        "kid" to kid
+                    JwkKeyDTO(
+                        kty = "RSA",
+                        alg = "RS256",
+                        use = "sig",
+                        n = modulusBase64Url,
+                        e = exponentBase64Url,
+                        kid = kid
                     )
                 )
         )

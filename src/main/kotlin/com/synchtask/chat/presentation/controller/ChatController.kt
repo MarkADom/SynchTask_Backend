@@ -74,6 +74,16 @@ class ChatController(
         return ResponseEntity.ok("Public key saved successfully.")
     }
 
+    @GetMapping("/key-exchange/me")
+    @PreAuthorize("isAuthenticated()")
+    fun getMyPublicKey(@AuthenticationPrincipal user: UserDetails): ResponseEntity<String> {
+        val publicKey =
+            keyExchangeService.getUserPublicKey(user.username)
+                ?: return ResponseEntity.notFound().build()
+
+        return ResponseEntity.ok(publicKey)
+    }
+
     @GetMapping("/key-exchange/{email}")
     @PreAuthorize("isAuthenticated()")
     fun getPublicKey(@PathVariable email: String): ResponseEntity<String> {

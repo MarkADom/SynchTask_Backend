@@ -5,6 +5,7 @@ import com.synchtask.task.application.dto.TaskLinkDTO
 import com.synchtask.task.application.service.TaskAttachmentService
 import com.synchtask.task.application.service.TaskLinkService
 import com.synchtask.user.application.service.AuthenticatedUserService
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -28,7 +29,7 @@ import org.springframework.web.multipart.MultipartFile
 class TaskResourceController(
     private val taskLinkService: TaskLinkService,
     private val taskAttachmentService: TaskAttachmentService,
-    private val authenticatedUserService: AuthenticatedUserService
+    private val authenticatedUserService: AuthenticatedUserService,
 ) {
     // LINKS
 
@@ -38,7 +39,7 @@ class TaskResourceController(
         @PathVariable taskId: Long,
         @RequestParam title: String,
         @RequestParam url: String,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<TaskLinkDTO> {
         val actor = authenticatedUserService.requireUser(user)
         val result = taskLinkService.addLink(taskId, title, url, actor)
@@ -49,7 +50,7 @@ class TaskResourceController(
     @PreAuthorize("isAuthenticated()")
     fun listLinks(
         @PathVariable taskId: Long,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<List<TaskLinkDTO>> {
         val actor = authenticatedUserService.requireUser(user)
         return ResponseEntity.ok(
@@ -62,7 +63,7 @@ class TaskResourceController(
     fun deleteLink(
         @PathVariable taskId: Long,
         @PathVariable linkId: Long,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<Void> {
         val actor = authenticatedUserService.requireUser(user)
         taskLinkService.removeLink(taskId, linkId, actor)
@@ -71,12 +72,12 @@ class TaskResourceController(
 
     // ATTACHMENTS
 
-    @PostMapping("/attachments")
+    @PostMapping("/attachments", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     @PreAuthorize("isAuthenticated()")
     fun uploadFile(
         @PathVariable taskId: Long,
         @RequestParam file: MultipartFile,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<TaskAttachmentDTO> {
         val actor = authenticatedUserService.requireUser(user)
         val result = taskAttachmentService.uploadFile(taskId, file, actor)
@@ -87,7 +88,7 @@ class TaskResourceController(
     @PreAuthorize("isAuthenticated()")
     fun listAttachments(
         @PathVariable taskId: Long,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<List<TaskAttachmentDTO>> {
         val actor = authenticatedUserService.requireUser(user)
         return ResponseEntity.ok(
@@ -100,7 +101,7 @@ class TaskResourceController(
     fun deleteAttachment(
         @PathVariable taskId: Long,
         @PathVariable attachmentId: Long,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<Void> {
         val actor = authenticatedUserService.requireUser(user)
         taskAttachmentService.deleteAttachment(taskId, attachmentId, actor)
