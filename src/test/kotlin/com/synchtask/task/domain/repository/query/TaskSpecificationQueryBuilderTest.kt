@@ -103,16 +103,22 @@ class TaskSpecificationQueryBuilderTest {
     @Test
     fun `should apply optional predicates when all filters are provided`() {
         val labelJoin = mockk<SetJoin<Task, String>>(relaxed = true)
-        val collabJoin = mockk<SetJoin<Task, User>>(relaxed = true)
+        val taskMemberJoin = mockk<Join<Task, Any>>(relaxed = true)
         val predicate = mockk<Predicate>(relaxed = true)
 
         every { taskRoot.joinSet<Task, String>("labels", JoinType.LEFT) } returns labelJoin
         every { countRoot.joinSet<Task, String>("labels", JoinType.LEFT) } returns labelJoin
-        every { taskRoot.joinSet<Task, User>("collaborators", JoinType.LEFT) } returns collabJoin
-        every { countRoot.joinSet<Task, User>("collaborators", JoinType.LEFT) } returns collabJoin
+
+        every { taskRoot.join<Task, Any>("members", JoinType.LEFT) } returns taskMemberJoin
+        every { countRoot.join<Task, Any>("members", JoinType.LEFT) } returns taskMemberJoin
+
         every { criteriaBuilder.equal(labelJoin, "backend") } returns predicate
-        every { collabJoin.get<Long>("id") } returns mockk<Path<Long>>(relaxed = true)
-        every { criteriaBuilder.equal(any<Path<Long>>(), any<Long>()) } returns predicate
+
+        val userPath = mockk<Path<Any>>(relaxed = true)
+        val userIdPath = mockk<Path<Long>>(relaxed = true)
+        every { taskMemberJoin.get<Any>("user") } returns userPath
+        every { userPath.get<Long>("id") } returns userIdPath
+        every { criteriaBuilder.equal(userIdPath, any<Long>()) } returns predicate
 
         val typedTaskQuery = mockk<TypedQuery<Task>>(relaxed = true)
         val typedCountQuery = mockk<TypedQuery<Long>>(relaxed = true)
@@ -133,36 +139,41 @@ class TaskSpecificationQueryBuilderTest {
 
         assertEquals(0, result.totalElements)
         verify(atLeast = 1) { taskRoot.joinSet<Task, String>("labels", JoinType.LEFT) }
-        verify(atLeast = 1) { taskRoot.joinSet<Task, User>("collaborators", JoinType.LEFT) }
+        verify(atLeast = 1) { taskRoot.join<Task, Any>("members", JoinType.LEFT) }
     }
 
     private fun stubRootPredicates(root: Root<Task>) {
-        val ownerPath = mockk<Path<User>>(relaxed = true)
         val collabsPath = mockk<Path<Collection<User>>>(relaxed = true)
+        val taskMemberJoin = mockk<Join<Task, Any>>(relaxed = true)
+        val taskMemberUserPath = mockk<Path<Any>>(relaxed = true)
+        val taskMemberUserIdPath = mockk<Path<Long>>(relaxed = true)
+
         val boardJoin = mockk<Join<Task, Any>>(relaxed = true)
-        val boardOwnerPath = mockk<Path<User>>(relaxed = true)
-        val boardOwnerIdPath = mockk<Path<Long>>(relaxed = true)
-        val boardCollabJoin = mockk<Join<Any, User>>(relaxed = true)
-        val boardCollabIdPath = mockk<Path<Long>>(relaxed = true)
+
+        val boardMemberJoin = mockk<Join<Any, Any>>(relaxed = true)
+        val boardMemberUserPath = mockk<Path<Any>>(relaxed = true)
+        val boardMemberUserIdPath = mockk<Path<Long>>(relaxed = true)
 
         val fetch = mockk<Fetch<Task, Any>>(relaxed = true)
         every { root.fetch<Task, Any>("board", JoinType.LEFT) } returns fetch
-        every { root.fetch<Task, Any>("collaborators", JoinType.LEFT) } returns fetch
+        every { root.fetch<Task, Any>("board", JoinType.LEFT) } returns fetch
+        every { root.fetch<Task, Any>("members", JoinType.LEFT) } returns fetch
 
-        every { root.get<User>("owner") } returns ownerPath
-        every { root.get<Collection<User>>("collaborators") } returns collabsPath
+        every { root.join<Task, Any>("members", JoinType.LEFT) } returns taskMemberJoin
+        every { taskMemberJoin.get<Any>("user") } returns taskMemberUserPath
+        every { taskMemberUserPath.get<Long>("id") } returns taskMemberUserIdPath
+
         every { root.join<Task, Any>("board", JoinType.LEFT) } returns boardJoin
-        every { boardJoin.get<User>("owner") } returns boardOwnerPath
-        every { boardOwnerPath.get<Long>("id") } returns boardOwnerIdPath
-        every { boardJoin.join<Any, User>("collaborators", JoinType.LEFT) } returns boardCollabJoin
-        every { boardCollabJoin.get<Long>("id") } returns boardCollabIdPath
+
+        every { boardJoin.join<Any, Any>("members", JoinType.LEFT) } returns boardMemberJoin
+        every { boardMemberJoin.get<Any>("user") } returns boardMemberUserPath
+        every { boardMemberUserPath.get<Long>("id") } returns boardMemberUserIdPath
+
 
         val predicate = mockk<Predicate>(relaxed = true)
-        every { criteriaBuilder.equal(ownerPath, actor) } returns predicate
-        every { criteriaBuilder.isMember(actor, collabsPath) } returns predicate
-        every { criteriaBuilder.equal(boardOwnerIdPath, actor.id) } returns predicate
-        every { criteriaBuilder.equal(boardCollabIdPath, actor.id) } returns predicate
-        every { criteriaBuilder.or(any<Predicate>(), any<Predicate>(), any<Predicate>(), any<Predicate>()) } returns predicate
+        every { criteriaBuilder.equal(taskMemberUserIdPath, actor.id) } returns predicate
+        every { criteriaBuilder.equal(boardMemberUserIdPath, actor.id) } returns predicate
+        every { criteriaBuilder.or(any<Predicate>(), any<Predicate>()) } returns predicate
 
         val statusPath = mockk<Path<TaskStatus>>(relaxed = true)
         every { root.get<TaskStatus>("status") } returns statusPath

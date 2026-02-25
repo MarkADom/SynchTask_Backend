@@ -1,6 +1,7 @@
 package com.synchtask.task.presentation.controller
 
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
@@ -9,6 +10,7 @@ import com.synchtask.task.application.dto.TaskLabelUpdateDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.task.application.service.TaskService
 import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskMember
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.user.application.service.AuthenticatedUserService
@@ -155,6 +157,13 @@ class TaskControllerTest {
     @Test
     fun `should return task detail when user has access`() {
         val task = newTask(5L, "Detail Task")
+        task.members.add(
+            TaskMember(
+                task = task,
+                user = userEntity,
+                role = MembershipRole.COLLABORATOR
+            )
+        )
 
         every { taskService.findTaskById(5L) } returns task
         every { authenticatedUserService.requireUser(userDetails) } returns userEntity

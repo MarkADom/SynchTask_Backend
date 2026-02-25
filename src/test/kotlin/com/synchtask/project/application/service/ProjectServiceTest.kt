@@ -94,7 +94,7 @@ class ProjectServiceTest {
             )
 
         every {
-            boardRepository.findAllWithCollaboratorsById(dto.boardIds)
+            boardRepository.findAllById(dto.boardIds)
         } returns boards
 
         every {
@@ -140,7 +140,7 @@ class ProjectServiceTest {
                 boardIds = listOf(1, 2)
             )
 
-        every { boardRepository.findAllWithCollaboratorsById(dto.boardIds) } returns listOf(newBoard(1))
+        every { boardRepository.findAllById(dto.boardIds) } returns listOf(newBoard(1))
 
         assertFailsWith<IllegalArgumentException> {
             service.create(dto, owner)
@@ -150,8 +150,16 @@ class ProjectServiceTest {
     }
 
     @Test
-    fun `should list projects by owner`() {
-        every { projectRepository.findAllByOwnerWithMembersAndBoards(owner) } returns listOf(newProject())
+    fun `should list projects by membership`() {
+        val project = newProject()
+        every { projectMemberRepository.findAllByUserId(owner.id!!) } returns listOf(
+            ProjectMember(
+                project = project,
+                user = owner,
+                role = MembershipRole.COLLABORATOR
+            )
+        )
+        every { projectRepository.findAllById(listOf(project.id!!)) } returns listOf(project)
 
         val result = service.listAll(owner)
 
@@ -159,10 +167,44 @@ class ProjectServiceTest {
     }
 
     @Test
+    fun `should list all projects for admin`() {
+        val admin = User(
+            id = 99L,
+            name = "Admin",
+            email = "admin@test.com",
+            passwordHash = "hash",
+            role = UserRole.ADMIN
+        )
+        every { projectRepository.findAll() } returns listOf(newProject(10L), newProject(11L))
+
+        val result = service.listAll(admin)
+
+        assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `should return empty project list when actor id is null`() {
+        val actorWithoutId = User(
+            id = null,
+            name = "NoId",
+            email = "noid@test.com",
+            passwordHash = "hash"
+        )
+
+        val result = service.listAll(actorWithoutId)
+
+        assertTrue(result.isEmpty())
+        verify(exactly = 0) { projectMemberRepository.findAllByUserId(any()) }
+    }
+
+
+    @Test
     fun `should return project when owner`() {
         val project = newProject()
 
         every { projectRepository.findById(project.id!!) } returns Optional.of(project)
+        every { projectMemberRepository.existsByProjectIdAndUserId(project.id!!, owner.id!!) } returns true
+
 
         val result = service.getById(project.id!!, owner)
 
@@ -185,6 +227,8 @@ class ProjectServiceTest {
         val project = newProject()
 
         every { projectRepository.findById(project.id!!) } returns Optional.of(project)
+        every { projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!) } returns
+            ProjectMember(project = project, user = owner, role = MembershipRole.OWNER)
         every { projectRepository.save(any()) } answers { firstArg() }
 
         val dto =
@@ -211,7 +255,9 @@ class ProjectServiceTest {
         val boards = listOf(newBoard(1), newBoard(2))
 
         every { projectRepository.findById(project.id!!) } returns Optional.of(project)
-        every { boardRepository.findAllWithCollaboratorsById(listOf(1L, 2L)) } returns boards
+        every { projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!) } returns
+            ProjectMember(project = project, user = owner, role = MembershipRole.OWNER)
+        every { boardRepository.findAllById(listOf(1L, 2L)) } returns boards
         every { projectRepository.save(any()) } answers { firstArg() }
 
         val dto =
@@ -236,6 +282,12 @@ class ProjectServiceTest {
         val project = newProject()
 
         every { projectRepository.findById(project.id!!) } returns Optional.of(project)
+        every { projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!) } returns
+            ProjectMember(
+                project = project,
+                user = owner,
+                role = MembershipRole.OWNER
+            )
         every { projectRepository.delete(project) } just Runs
 
         service.delete(project.id!!, owner)
@@ -283,7 +335,8 @@ class ProjectServiceTest {
     @Test
     fun `should return project for admin`() {
         val project = newProject(owner = other)
-        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        val admin =
+            User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
         every { projectRepository.findById(project.id!!) } returns Optional.of(project)
 
         val result = service.getById(project.id!!, admin)

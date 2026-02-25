@@ -72,9 +72,9 @@ class TaskServiceTest {
         friendshipChecker = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
-        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } returns false
+        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
         every { taskMemberRepository.findAllByTaskId(any()) } returns emptyList()
-        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
 
         service =
             TaskService(
@@ -135,6 +135,50 @@ class TaskServiceTest {
     }
 
     @Test
+    fun `should allow admin to create task without board membership`() {
+        val admin = User(
+            id = 99L,
+            name = "Admin",
+            email = "admin@test.com",
+            passwordHash = "hash",
+            role = UserRole.ADMIN
+        )
+        val dto = TaskCreateDTO(
+            title = "Admin Task",
+            description = "Desc",
+            boardId = board.id!!
+        )
+        every { boardRepository.findById(board.id!!) } returns Optional.of(board)
+        every { taskRepository.save(any()) } answers { firstArg() }
+
+        val result = service.createTask(admin, dto)
+
+        assertEquals("Admin Task", result.title)
+    }
+
+    @Test
+    fun `should throw unauthorized when creating task without board access`() {
+        val outsider = User(
+            id = 3L,
+            name = "Outsider",
+            email = "outsider@test.com",
+            passwordHash = "hash"
+        )
+        val dto = TaskCreateDTO(
+            title = "Blocked",
+            description = "Desc",
+            boardId = board.id!!
+        )
+        every { boardRepository.findById(board.id!!) } returns Optional.of(board)
+        every { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, outsider.id!!) } returns false
+
+        assertThrows<UnauthorizedAccessException> {
+            service.createTask(outsider, dto)
+        }
+    }
+
+
+    @Test
     fun `should throw when board not found on create`() {
         val dto = TaskCreateDTO(title = "New", description = "Desc", boardId = 999L)
         every { boardRepository.findById(999L) } returns Optional.empty()
@@ -179,7 +223,8 @@ class TaskServiceTest {
         )
         val existing = task(
             owner = collab,
-            board = foreignBoard)
+            board = foreignBoard
+        )
         every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
 
         assertThrows<UnauthorizedAccessException> {
@@ -261,8 +306,45 @@ class TaskServiceTest {
     }
 
     @Test
+    fun `should delete task when user has access`() {
+        val existing = task()
+        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
+        every { taskRepository.delete(existing) } just Runs
+
+        service.deleteTask(existing.id!!, owner)
+
+        verify(exactly = 1) { taskRepository.delete(existing) }
+    }
+
+    @Test
+    fun `should throw unauthorized when deleting task without access`() {
+        val outsider = User(
+            id = 3L,
+            name = "Outsider",
+            email = "outsider@test.com",
+            passwordHash = "hash"
+        )
+        val foreign = task(
+            owner = collab,
+            board = Board(
+                id = 55L,
+                name = "Other",
+                owner = collab
+            )
+        )
+        every { taskRepository.findById(foreign.id!!) } returns Optional.of(foreign)
+        every { taskMemberRepository.existsByTaskIdAndUserId(foreign.id!!, outsider.id!!) } returns false
+        every { boardMemberRepository.existsByBoardIdAndUserId(foreign.board.id!!, outsider.id!!) } returns false
+
+        assertThrows<UnauthorizedAccessException> {
+            service.deleteTask(foreign.id!!, outsider)
+        }
+    }
+
+    @Test
     fun `should update task when actor is admin`() {
-        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        val admin =
+            User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
         val existing = task(owner = collab)
         every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
         every { taskRepository.save(any()) } answers { firstArg() }

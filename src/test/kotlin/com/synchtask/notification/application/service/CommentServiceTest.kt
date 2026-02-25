@@ -13,7 +13,6 @@ import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -27,7 +26,6 @@ class CommentServiceTest {
     private lateinit var taskRepository: TaskRepository
     private lateinit var taskMemberRepository: TaskMemberRepository
     private lateinit var boardMemberRepository: BoardMemberRepository
-    private lateinit var userRepository: UserRepository
     private lateinit var notificationService: NotificationService
     private lateinit var activityService: ActivityService
     private lateinit var commentService: TaskCommentService
@@ -73,7 +71,6 @@ class CommentServiceTest {
         taskRepository = mockk(relaxed = true)
         taskMemberRepository = mockk(relaxed = true)
         boardMemberRepository = mockk(relaxed = true)
-        userRepository = mockk(relaxed = true)
         notificationService = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
@@ -87,7 +84,6 @@ class CommentServiceTest {
                 taskRepository,
                 taskMemberRepository,
                 boardMemberRepository,
-                userRepository,
                 notificationService,
                 activityService
             )
@@ -98,6 +94,7 @@ class CommentServiceTest {
         val content = "This is a comment"
 
         every { taskRepository.findById(1L) } returns Optional.of(task)
+        every { taskMemberRepository.existsByTaskIdAndUserId(1L, user.id!!) } returns true
         every { taskCommentRepository.save(any()) } answers {
             val original = firstArg<TaskComment>()
             TaskComment(

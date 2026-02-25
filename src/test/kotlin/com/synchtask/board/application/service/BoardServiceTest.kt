@@ -5,8 +5,10 @@ import com.synchtask.board.application.dto.BoardCollaboratorUpdateDTO
 import com.synchtask.board.application.dto.BoardCreateDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.entity.BoardMember
 import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.entity.User
@@ -45,6 +47,7 @@ class BoardServiceTest {
 
         every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
         every { boardMemberRepository.findByBoardIdAndUserId(any(), any()) } returns null
+        every { boardMemberRepository.findAllByUserId(any()) } returns emptyList()
 
         service = BoardService(
             boardRepository,
@@ -98,11 +101,43 @@ class BoardServiceTest {
 
     @Test
     fun `should return boards for user`() {
-        every { boardRepository.findByOwnerWithOwnerFetched(owner) } returns listOf(newBoard())
+        every { boardMemberRepository.findAllByUserId(owner.id!!) } returns listOf()
+        every { boardRepository.findAllById(any<List<Long>>()) } returns listOf(newBoard())
 
         val result = service.getBoardsForUser(owner)
 
-        assertEquals(1, result.size)
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun `should return all boards for admin on user listing`() {
+        val admin = User(
+            id = 99L,
+            name = "Admin",
+            email = "admin@test.com",
+            passwordHash = "hash",
+            role = UserRole.ADMIN
+        )
+        every { boardRepository.findAll() } returns listOf(newBoard(1L), newBoard(2L))
+
+        val result = service.getBoardsForUser(admin)
+
+        assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `should return empty boards for user with null id`() {
+        val actorWithoutId = User(
+            id = null,
+            name = "NoId",
+            email = "noid@test.com",
+            passwordHash = "hash"
+        )
+
+        val result = service.getBoardsForUser(actorWithoutId)
+
+        assertTrue(result.isEmpty())
+        verify(exactly = 0) { boardMemberRepository.findAllByUserId(any()) }
     }
 
     @Test
@@ -110,6 +145,7 @@ class BoardServiceTest {
         val board = newBoard(owner = owner)
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
+        every { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, owner.id!!) } returns true
 
         val result = service.getBoardAccessibleByUser(board.id!!, owner)
 
@@ -142,6 +178,12 @@ class BoardServiceTest {
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
         every { boardRepository.save(any()) } answers { firstArg() }
+        every { boardMemberRepository.findByBoardIdAndUserId(any(), any()) } returns
+            BoardMember(
+                board = board,
+                user = owner,
+                role = MembershipRole.OWNER
+            )
 
         val dto =
             BoardUpdateDTO(
@@ -194,6 +236,12 @@ class BoardServiceTest {
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
         every { boardRepository.delete(board) } just Runs
+        every { boardMemberRepository.findByBoardIdAndUserId(any(), any()) } returns
+            BoardMember(
+                board = board,
+                user = owner,
+                role = MembershipRole.OWNER
+            )
 
         service.deleteBoard(board.id!!, owner)
 
@@ -215,9 +263,34 @@ class BoardServiceTest {
 
     @Test
     fun `should get boards shared with user`() {
-        every { boardRepository.findByCollaboratorsContainingWithOwnerFetched(other) } returns listOf(newBoard())
+        val shared = newBoard(id = 20L)
+        every { boardMemberRepository.findAllByUserId(other.id!!) } returns listOf(
+            BoardMember(
+                board = shared,
+                user = other,
+                role = MembershipRole.COLLABORATOR
+            )
+        )
+        every { boardRepository.findAllById(any<List<Long>>()) } returns listOf(shared)
 
         val result = service.getBoardsSharedWithUser(other)
+
+        assertEquals(1, result.size)
+    }
+
+    @Test
+    fun `should return all shared boards for admin`() {
+        val admin = User(
+            id = 99L,
+            name = "Admin",
+            email = "admin@test.com",
+            passwordHash = "hash",
+            role = UserRole.ADMIN
+
+        )
+        every { boardRepository.findAll() } returns listOf(newBoard(5L))
+
+        val result = service.getBoardsSharedWithUser(admin)
 
         assertEquals(1, result.size)
     }
@@ -228,6 +301,12 @@ class BoardServiceTest {
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
         every { userRepository.findAllById(listOf(3L)) } returns emptyList()
+        every { boardMemberRepository.findByBoardIdAndUserId(any(), any()) } returns
+            BoardMember(
+                board = board,
+                user = owner,
+                role = MembershipRole.OWNER
+            )
 
         val dto = BoardCollaboratorUpdateDTO(listOf(3L))
 
@@ -244,6 +323,12 @@ class BoardServiceTest {
         every { boardRepository.findById(any()) } returns Optional.of(board)
         every { userRepository.findAllById(listOf(3L)) } returns listOf(collaborator)
         every { boardRepository.save(any()) } answers { firstArg() }
+        every { boardMemberRepository.findByBoardIdAndUserId(board.id!!, owner.id!!) } returns
+            BoardMember(
+                board = board,
+                user = owner,
+                role = MembershipRole.OWNER
+            )
 
         val dto = BoardCollaboratorUpdateDTO(listOf(3L))
 
@@ -269,8 +354,11 @@ class BoardServiceTest {
         val board1 = newBoard(id = 1L)
         val board2 = newBoard(id = 2L)
 
-        every { boardRepository.findByOwnerWithOwnerFetched(owner) } returns listOf(board1)
-        every { boardRepository.findByCollaboratorsContainingWithOwnerFetched(owner) } returns listOf(board1, board2)
+        every { boardMemberRepository.findAllByUserId(owner.id!!) } returns listOf(
+            BoardMember(board = board1, user = owner, role = MembershipRole.OWNER),
+            BoardMember(board = board2, user = owner, role = MembershipRole.COLLABORATOR)
+        )
+        every { boardRepository.findAllById(any<List<Long>>()) } returns listOf(board1, board2)
 
         val result = service.getSimpleBoardsForUser(owner)
 
@@ -280,9 +368,44 @@ class BoardServiceTest {
     }
 
     @Test
+    fun `should return distinct simple boards for admin`() {
+        val admin =
+            User(
+                id = 99L,
+                name = "Admin",
+                email = "admin@test.com",
+                passwordHash = "hash",
+                role = UserRole.ADMIN
+            )
+
+        val board1 = newBoard(id = 1L)
+        every { boardRepository.findAll() } returns listOf(board1, board1)
+
+        val result = service.getSimpleBoardsForUser(admin)
+
+        assertEquals(1, result.size)
+        assertEquals(1L, result.first().id)
+    }
+
+    @Test
+    fun `should return empty simple boards when actor id is null`() {
+        val actorWithoutId = User(
+            id = null,
+            name = "NoId",
+            email = "noid@test.com",
+            passwordHash = "hash"
+        )
+
+        val result = service.getSimpleBoardsForUser(actorWithoutId)
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
     fun `should allow admin to update board even when not owner`() {
         val board = newBoard(owner = owner)
-        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        val admin =
+            User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
 
         every { boardRepository.findById(any()) } returns Optional.of(board)
         every { boardRepository.save(any()) } answers { firstArg() }

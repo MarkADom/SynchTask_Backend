@@ -11,4 +11,6 @@ interface BoardMemberRepository : JpaRepository<BoardMember, Long> {
     fun findByBoardIdAndUserId(boardId: Long, userId: Long): BoardMember?
 
     fun findAllByBoardId(boardId: Long): List<BoardMember>
+
+    fun findAllByUserId(userId: Long): List<BoardMember>
 }

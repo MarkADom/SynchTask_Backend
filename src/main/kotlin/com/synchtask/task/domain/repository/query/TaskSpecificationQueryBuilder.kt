@@ -17,16 +17,13 @@ import org.springframework.stereotype.Component
  * Builds visibility-safe, dynamic task queries.
  *
  * A user can see a task if they:
- * - own the task
- * - collaborate on the task
- * - own the board
- * - collaborate on the board
- *
+ * - are a task member
+ * - are a board member
  * Uses distinct queries to avoid duplicates caused by joins.
  */
 @Component
 class TaskSpecificationQueryBuilder(
-    private val entityManager: EntityManager
+    private val entityManager: EntityManager,
 ) {
     fun execute(
         user: User,
@@ -34,7 +31,7 @@ class TaskSpecificationQueryBuilder(
         label: String?,
         assigneeId: Long?,
         boardId: Long?,
-        pageable: Pageable
+        pageable: Pageable,
     ): Page<Task> {
         val cb = entityManager.criteriaBuilder
 
@@ -43,7 +40,7 @@ class TaskSpecificationQueryBuilder(
 
         root.fetch<Task, Any>("owner", JoinType.LEFT)
         root.fetch<Task, Any>("board", JoinType.LEFT)
-        root.fetch<Task, Any>("collaborators", JoinType.LEFT)
+        root.fetch<Task, Any>("members", JoinType.LEFT)
 
         val predicates = buildPredicates(cb, root, user, status, label, assigneeId, boardId)
         query.select(root).distinct(true).where(*predicates.toTypedArray())
@@ -72,22 +69,16 @@ class TaskSpecificationQueryBuilder(
         status: TaskStatus?,
         label: String?,
         assigneeId: Long?,
-        boardId: Long?
+        boardId: Long?,
     ): MutableList<Predicate> {
         val predicates = mutableListOf<Predicate>()
-
-        val isOwner = cb.equal(root.get<User>("owner"), user)
-        val isTaskCollaborator = cb.isMember(user, root.get("collaborators"))
-
+        val taskMemberJoin = root.join<Task, Any>("members", JoinType.LEFT)
         val boardJoin = root.join<Task, Any>("board", JoinType.LEFT)
-        val boardOwner = boardJoin.get<User>("owner")
-        val boardCollaborators = boardJoin.join<Any, User>("collaborators", JoinType.LEFT)
+        val boardMemberJoin = boardJoin.join<Any, Any>("members", JoinType.LEFT)
+        val isTaskMember = cb.equal(taskMemberJoin.get<Any>("user").get<Long>("id"), user.id)
+        val isBoardMember = cb.equal(boardMemberJoin.get<Any>("user").get<Long>("id"), user.id)
 
-        val isBoardOwner = cb.equal(boardOwner.get<Long>("id"), user.id)
-        val isBoardCollaborator = cb.equal(boardCollaborators.get<Long>("id"), user.id)
-
-        // Visibility rules (task-level OR board-level access)
-        predicates.add(cb.or(isOwner, isTaskCollaborator, isBoardOwner, isBoardCollaborator))
+        predicates.add(cb.or(isTaskMember, isBoardMember))
 
         status?.let { predicates.add(cb.equal(root.get<TaskStatus>("status"), it)) }
 
@@ -97,8 +88,7 @@ class TaskSpecificationQueryBuilder(
         }
 
         assigneeId?.let {
-            val collabJoin = root.joinSet<Task, User>("collaborators", JoinType.LEFT)
-            predicates.add(cb.equal(collabJoin.get<Long>("id"), it))
+            predicates.add(cb.equal(taskMemberJoin.get<Any>("user").get<Long>("id"), it))
         }
 
         boardId?.let {

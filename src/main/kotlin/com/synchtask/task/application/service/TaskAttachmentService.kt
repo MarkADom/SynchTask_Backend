@@ -13,7 +13,6 @@ import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.domain.entity.User
-import com.synchtask.user.domain.entity.UserRole
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -126,8 +125,6 @@ class TaskAttachmentService(
             actor,
             taskMemberRepository,
             boardMemberRepository,
-            logger,
-            "task attachment"
         )
 
     private fun canAccessTask(
@@ -139,7 +136,5 @@ class TaskAttachmentService(
             actor,
             taskMemberRepository,
             boardMemberRepository,
-            logger,
-            "task attachment"
         )
 }

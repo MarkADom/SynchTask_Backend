@@ -74,8 +74,8 @@ class TaskAttachmentServiceTest {
         boardMemberRepository = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
-        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } returns false
-        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
+        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
 
         service = TaskAttachmentService(
             taskRepository,
@@ -195,7 +195,8 @@ class TaskAttachmentServiceTest {
 
     @Test
     fun `should list attachments when user is admin`() {
-        val admin = User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        val admin =
+            User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
         val attachment = TaskAttachment(id = 2L, task = task, fileName = "admin.pdf", fileUrl = "url")
 
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)

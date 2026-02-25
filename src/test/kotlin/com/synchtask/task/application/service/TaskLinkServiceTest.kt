@@ -41,9 +41,16 @@ class TaskLinkServiceTest {
         boardMemberRepository = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
-
-        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } returns false
-        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
+        every {
+            taskMemberRepository.existsByTaskIdAndUserId(
+                any(), any()
+            )
+        } answers { secondArg<Long>() == owner.id }
+        every {
+            boardMemberRepository.existsByBoardIdAndUserId(
+                any(), any()
+            )
+        } answers { secondArg<Long>() == owner.id }
 
         service = TaskLinkService(
             taskRepository,
