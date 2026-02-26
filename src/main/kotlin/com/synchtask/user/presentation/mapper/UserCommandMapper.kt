@@ -19,7 +19,7 @@ object UserCommandMapper {
         id = existingUser.id,
         name = dto.name,
         email = dto.email,
-        passwordHash = dto.passwordHash ?: existingUser.passwordHash,
+        passwordHash = existingUser.passwordHash,
         profilePictureUrl = dto.profilePictureUrl ?: existingUser.profilePictureUrl.orEmpty(),
         role = existingUser.role,
         createdAt = existingUser.createdAt,

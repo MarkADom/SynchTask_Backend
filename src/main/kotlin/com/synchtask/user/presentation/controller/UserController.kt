@@ -1,7 +1,9 @@
 package com.synchtask.user.presentation.controller
 
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.user.application.dto.UpdatePasswordDTO
 import com.synchtask.user.application.dto.UpdateUserDTO
 import com.synchtask.user.application.dto.UserOptionDTO
 import com.synchtask.user.application.dto.UserPublicDTO
@@ -13,11 +15,13 @@ import com.synchtask.user.application.service.UserService
 import com.synchtask.user.presentation.mapper.UserCommandMapper
 import com.synchtask.user.presentation.mapper.UserMapper
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -25,6 +29,7 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -177,20 +182,31 @@ class UserController(
         return ResponseEntity.ok(UserMapper.toResponseDTO(updatedUser))
     }
 
-    @PutMapping("/me/profile-picture")
+    @PatchMapping("/me/password")
+    @PreAuthorize("isAuthenticated()")
+    fun updateCurrentUserPassword(
+        @Valid @RequestBody updatePasswordDTO: UpdatePasswordDTO,
+        @AuthenticationPrincipal user: UserDetails,
+    ): ResponseEntity<ApiMessageResponseDTO> {
+        val currentUser = authenticatedUserService.requireUser(user)
+        userService.updatePassword(currentUser.email, updatePasswordDTO.currentPassword, updatePasswordDTO.newPassword)
+        return ResponseEntity.ok(ApiMessageResponseDTO("Password updated successfully"))
+    }
+
+    @PutMapping("/me/profile-picture", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     @PreAuthorize("isAuthenticated()")
     fun updateProfilePicture(
         @RequestParam file: MultipartFile,
         @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<Map<String, String>> {
+    ): ResponseEntity<ApiMessageResponseDTO> {
         val updatedUser =
             userService.updateProfilePicture(
                 authenticatedUserService.requireUser(user).email,
                 file
             )
         return ResponseEntity.ok(
-            mapOf(
-                "profilePictureUrl" to updatedUser.profilePictureUrl.orEmpty()
+            ApiMessageResponseDTO(
+                "Profile picture updated: ${updatedUser.profilePictureUrl.orEmpty()}"
             )
         )
     }

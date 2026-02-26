@@ -87,14 +87,14 @@ class UserServiceTest {
     }
 
     @Test
-    fun `should update user data and hash new password`() {
+    fun `should update user data without changing password hash`() {
         val existing = buildUser()
         val updates =
             User(
                 id = existing.id,
                 name = "New Name",
                 email = existing.email,
-                passwordHash = "newpass",
+                passwordHash = existing.passwordHash,
                 profilePictureUrl = existing.profilePictureUrl,
                 role = existing.role,
                 createdAt = existing.createdAt,
@@ -106,13 +106,12 @@ class UserServiceTest {
             )
 
         every { userRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { passwordEncoder.encode("newpass") } returns "new-hash"
         every { userRepository.save(any()) } answers { firstArg() }
 
         val result = userService.updateUser(existing.id!!, updates)
 
         assertEquals("New Name", result?.name)
-        assertEquals("new-hash", result?.passwordHash)
+        assertEquals("hashed", result?.passwordHash)
     }
 
     @Test
@@ -141,6 +140,20 @@ class UserServiceTest {
 
         assertEquals("old-value-will-be-kept", result?.passwordHash)
         verify(exactly = 0) { passwordEncoder.encode(any()) }
+    }
+
+    @Test
+    fun `should update password when current password matches`() {
+        val existing = buildUser(email = "test@email.com", passwordHash = "old-hash")
+        every { userRepository.findByEmail(existing.email) } returns Optional.of(existing)
+        every { passwordEncoder.matches("currentPass", "old-hash") } returns true
+        every { passwordEncoder.encode("newPass") } returns "new-hash"
+        every { userRepository.save(any()) } answers { firstArg() }
+
+        userService.updatePassword(existing.email, "currentPass", "newPass")
+
+        verify { passwordEncoder.encode("newPass") }
+        verify { userRepository.save(match { it.passwordHash == "new-hash" }) }
     }
 
     @Test
@@ -234,7 +247,6 @@ class UserServiceTest {
         val result = userService.getOnlineUsers()
 
         assertEquals(1, result.size)
-        assertTrue(result[0] is UserStatusDTO)
     }
 
     @Test

@@ -73,14 +73,24 @@ class UserService(
         user.name = userDetails.name
         user.email = userDetails.email
 
-        val newPassword = userDetails.passwordHash
-        if (!newPassword.startsWith("\$2a\$")) {
-            user.passwordHash = passwordEncoder.encode(newPassword)
-        }
-
         user.profilePictureUrl = userDetails.profilePictureUrl ?: user.profilePictureUrl
         logger.info("User updated: ${user.email}")
         return userRepository.save(user)
+    }
+
+    @Transactional
+    fun updatePassword(email: String, currentPassword: String, newPassword: String) {
+        val user =
+            userRepository.findByEmail(email)
+                .orElseThrow { ResourceNotFoundException("User not found") }
+
+        if (!passwordEncoder.matches(currentPassword, user.passwordHash)) {
+            throw IllegalArgumentException("Current password is incorrect")
+        }
+
+        user.passwordHash = passwordEncoder.encode(newPassword)
+        userRepository.save(user)
+        logger.info("Password updated for user: {}", user.email)
     }
 
     @Transactional

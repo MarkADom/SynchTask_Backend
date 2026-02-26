@@ -1,9 +1,14 @@
 package com.synchtask.security.presentation.controller
 
+import com.synchtask.security.application.dto.AuthLoginResponseDTO
+import com.synchtask.security.application.dto.JwksResponseDTO
 import com.synchtask.security.application.manager.AuthManager
 import com.synchtask.security.application.service.AuthService
-import com.synchtask.security.application.service.RefreshTokenService
+import com.synchtask.security.application.dto.OidcUserInfoDTO
+import com.synchtask.security.application.dto.RefreshTokenRequestDTO
+import com.synchtask.security.application.dto.TokenPairDTO
 import com.synchtask.security.infrastructure.jwt.JwtKeyManager
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.user.application.dto.UserLoginDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
 import com.synchtask.user.application.dto.UserResponseDTO
@@ -12,6 +17,7 @@ import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.entity.UserRole
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -47,8 +53,7 @@ class AuthController(
     private val jwtKeyManager: JwtKeyManager,
     private val userService: UserService,
     private val authenticatedUserService: AuthenticatedUserService,
-    private val refreshTokenService: RefreshTokenService,
-    private val authService: AuthService
+    private val authService: AuthService,
 ) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(AuthController::class.java)
@@ -72,7 +77,7 @@ class AuthController(
     }
 
     @PostMapping("/login")
-    fun login(@RequestBody loginRequest: UserLoginDTO): ResponseEntity<Map<String, Any>> {
+    fun login(@RequestBody loginRequest: UserLoginDTO): ResponseEntity<AuthLoginResponseDTO> {
         logger.info("Login attempt for email: ${loginRequest.email}")
 
         return try {
@@ -88,53 +93,68 @@ class AuthController(
                     email = user.email,
                     profilePictureUrl = user.profilePictureUrl ?: "N/A"
                 )
-
-            val responseBody =
-                mapOf(
-                    "accessToken" to tokens["accessToken"]!!,
-                    "refreshToken" to tokens["refreshToken"]!!,
-                    "com/synchtask/user" to userDto
+            ResponseEntity.ok(
+                AuthLoginResponseDTO(
+                    accessToken = tokens.accessToken,
+                    refreshToken = tokens.refreshToken ?: "",
+                    user = userDto
                 )
+            )
 
-            ResponseEntity.ok(responseBody)
         } catch (e: SecurityException) {
-            logger.warn("Authentication failed for user: ${loginRequest.email}", e)
+            logger.warn("Authentication failed", e)
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials", e)
         }
     }
 
     @GetMapping("/oauth2/success")
-    fun getOAuth2User(@AuthenticationPrincipal principal: OAuth2User): ResponseEntity<Map<String, Any>> {
-        logger.info("OAuth2 authentication successful for user: ${principal.attributes["email"]}")
-        return ResponseEntity.ok(principal.attributes)
+    fun getOAuth2User(@AuthenticationPrincipal principal: OAuth2User): ResponseEntity<OidcUserInfoDTO> {
+        logger.info("OAuth2 authentication successful")
+        return ResponseEntity.ok(
+            OidcUserInfoDTO(
+                email = principal.attributes["email"]?.toString().orEmpty(),
+                name = principal.attributes["name"]?.toString().orEmpty(),
+                roles = principal.authorities.map { it.authority }
+            )
+        )
     }
 
     @GetMapping("/oidc/success")
-    fun getOidcUser(@AuthenticationPrincipal oidcUser: OidcUser): ResponseEntity<Map<String, Any>> {
-        logger.info("OIDC authentication successful for user: ${oidcUser.email}")
-        return ResponseEntity.ok(oidcUser.claims)
+    fun getOidcUser(@AuthenticationPrincipal oidcUser: OidcUser): ResponseEntity<OidcUserInfoDTO> {
+        logger.info("OIDC authentication successful")
+        return ResponseEntity.ok(
+            OidcUserInfoDTO(
+                email = oidcUser.email ?: "",
+                name = oidcUser.fullName ?: oidcUser.subject,
+                roles = oidcUser.authorities.map { it.authority }
+            )
+        )
     }
 
     @DeleteMapping("/logout")
     @PreAuthorize("isAuthenticated()")
-    fun logout(request: HttpServletRequest, response: HttpServletResponse, @AuthenticationPrincipal user: UserDetails) {
+    fun logout(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        @AuthenticationPrincipal user: UserDetails
+    ): ResponseEntity<ApiMessageResponseDTO> {
         val userEntity = authenticatedUserService.requireUser(user)
+
+        authManager.logoutUser(userEntity.email)
 
         SecurityContextLogoutHandler().logout(request, response, null)
         response.status = HttpServletResponse.SC_OK
+
+        return ResponseEntity.ok(ApiMessageResponseDTO("Logout successful"))
     }
 
     @GetMapping("/jwks")
-    fun getJwks(): Map<String, Any> = jwtKeyManager.getJwks()
+    fun getJwks(): JwksResponseDTO = jwtKeyManager.getJwks()
 
     @PostMapping("/refresh")
-    fun refresh(@RequestBody request: Map<String, String>): ResponseEntity<Map<String, String>> {
-        val refreshToken =
-            request["refreshToken"]
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Refresh token is required")
-
-        val newAccessToken = authManager.refreshJwt(refreshToken)
-        return ResponseEntity.ok(mapOf("accessToken" to newAccessToken))
+    fun refresh(@Valid @RequestBody request: RefreshTokenRequestDTO): ResponseEntity<TokenPairDTO> {
+        val newAccessToken = authManager.refreshJwt(request.refreshToken)
+        return ResponseEntity.ok(TokenPairDTO(accessToken = newAccessToken))
     }
 
     /**
@@ -147,13 +167,13 @@ class AuthController(
     fun updateUserRole(
         @AuthenticationPrincipal adminUser: UserDetails,
         @PathVariable userId: Long,
-        @RequestParam newRole: UserRole
-    ): ResponseEntity<String> {
+        @RequestParam newRole: UserRole,
+    ): ResponseEntity<ApiMessageResponseDTO> {
         if (newRole == UserRole.ADMIN) {
             throw IllegalArgumentException("Assigning 'ADMIN' role is blocked via API.")
         }
 
         authService.updateUserRole(adminUser.username, userId, newRole)
-        return ResponseEntity.ok("User role updated successfully")
+        return ResponseEntity.ok(ApiMessageResponseDTO("User role updated successfully"))
     }
 }

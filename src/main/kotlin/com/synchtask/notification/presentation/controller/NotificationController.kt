@@ -4,6 +4,7 @@ import com.synchtask.notification.application.dto.NotificationRequestDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.redis.application.service.NotificationRedisCleanupService
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -25,15 +26,24 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/notifications")
 class NotificationController(
     private val notificationService: NotificationService,
-    private val redisCleanupService: NotificationRedisCleanupService
 ) {
     @PostMapping("/send")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_OWNER') or hasAuthority('ROLE_COLLABORATOR')")
-    fun sendNotification(@RequestBody request: NotificationRequestDTO): ResponseEntity<String> {
+    fun sendNotification(@RequestBody request: NotificationRequestDTO): ResponseEntity<ApiMessageResponseDTO> {
         notificationService.sendNotification(request.email, request.message, request.type, request.groupId)
-        return ResponseEntity.ok("Notification sent successfully")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Notification sent successfully"))
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    fun getMyUnreadNotifications(@AuthenticationPrincipal user: UserDetails):
+        ResponseEntity<List<NotificationResponseDTO>> {
+        val notifications = notificationService.getUnreadNotifications(user.username)
+        return ResponseEntity.ok(notifications)
+    }
+
+
+    @Deprecated("Use /notifications/me")
     @GetMapping("/{userEmail}")
     @PreAuthorize("#userEmail == authentication.name or hasAuthority('ROLE_ADMIN')")
     fun getUnreadNotifications(@PathVariable userEmail: String): ResponseEntity<List<NotificationResponseDTO>> {
@@ -44,30 +54,39 @@ class NotificationController(
     @PostMapping("/mark-as-read/{id}")
     @PreAuthorize("isAuthenticated()")
     fun markNotificationAsRead(
-        @PathVariable id: Long
-    ): ResponseEntity<String> {
+        @PathVariable id: Long,
+    ): ResponseEntity<ApiMessageResponseDTO> {
         notificationService.markAsRead(id)
-        return ResponseEntity.ok("Notification marked as read")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Notification marked as read"))
     }
 
+    @PostMapping("/mark-all-as-read/me")
+    @PreAuthorize("isAuthenticated()")
+    fun markAllMyNotificationsAsRead(@AuthenticationPrincipal user: UserDetails): ResponseEntity<ApiMessageResponseDTO> {
+        notificationService.markAllAsRead(user.username)
+        return ResponseEntity.ok(ApiMessageResponseDTO("All notifications marked as read"))
+    }
+
+    @Deprecated("Use /notifications/mark-all-as-read/me")
     @PostMapping("/mark-all-as-read/{userEmail}")
     @PreAuthorize("#userEmail == authentication.name or hasAuthority('ROLE_ADMIN')")
-    fun markAllNotificationsAsRead(@PathVariable userEmail: String): ResponseEntity<String> {
+    fun markAllNotificationsAsRead(@PathVariable userEmail: String): ResponseEntity<ApiMessageResponseDTO> {
         notificationService.markAllAsRead(userEmail)
-        return ResponseEntity.ok("All notifications marked as read")
+        return ResponseEntity.ok(ApiMessageResponseDTO("All notifications marked as read"))
     }
 
+    @DeleteMapping("/clear-cache/me")
+    @PreAuthorize("isAuthenticated()")
+    fun clearMyNotificationCache(@AuthenticationPrincipal user: UserDetails): ResponseEntity<ApiMessageResponseDTO> {
+        val deletedCount = notificationService.clearRedisCacheForUser(user.username)
+        return ResponseEntity.ok(ApiMessageResponseDTO("Cleared $deletedCount notification(s) from Redis cache"))
+    }
+
+    @Deprecated("Use /notifications/clear-cache/me")
     @DeleteMapping("/clear-cache/{userEmail}")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #userEmail == authentication.name")
-    fun clearNotificationCache(@PathVariable userEmail: String): ResponseEntity<String> {
+    fun clearNotificationCache(@PathVariable userEmail: String): ResponseEntity<ApiMessageResponseDTO> {
         val deletedCount = notificationService.clearRedisCacheForUser(userEmail)
-        return ResponseEntity.ok("Cleared $deletedCount notification(s) from Redis cache for $userEmail")
-    }
-
-    @PostMapping("/cleanup")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    fun triggerRedisCleanup(): ResponseEntity<String> {
-        redisCleanupService.cleanOldNotifications()
-        return ResponseEntity.ok("Manual Redis notification cleanup triggered.")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Cleared $deletedCount notification(s) from Redis cache"))
     }
 }

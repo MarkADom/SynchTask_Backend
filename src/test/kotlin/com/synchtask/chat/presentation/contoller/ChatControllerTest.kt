@@ -5,32 +5,26 @@ import com.synchtask.chat.application.dto.ChatRoomDTO
 import com.synchtask.chat.application.service.ChatService
 import com.synchtask.chat.application.service.KeyExchangeService
 import com.synchtask.chat.presentation.controller.ChatController
-import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.ResponseEntity
-import org.springframework.security.core.userdetails.User
+import org.springframework.http.HttpStatus
+import org.springframework.security.core.userdetails.UserDetails
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class ChatControllerTest {
     private lateinit var chatService: ChatService
     private lateinit var keyExchangeService: KeyExchangeService
     private lateinit var controller: ChatController
 
-    private val testUser =
-        User(
-            "user@example.com",
-            "password",
-            emptyList()
-        )
-
     @BeforeEach
-    fun setup() {
+    fun setUp() {
         chatService = mockk()
         keyExchangeService = mockk()
         controller = ChatController(chatService, keyExchangeService)
@@ -38,122 +32,94 @@ class ChatControllerTest {
 
     @Test
     fun `should get or create chat room`() {
-        val friendEmail = "friend@example.com"
-        val roomDto =
-            ChatRoomDTO(
-                id = 1L,
-                participants = listOf("user@example.com", friendEmail)
-            )
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+        val room = ChatRoomDTO(7L, listOf("me@example.com", "friend@example.com"))
+        every { chatService.getOrCreateChatRoom(listOf("me@example.com", "friend@example.com")) } returns room
 
-        every {
-            chatService.getOrCreateChatRoom(listOf("user@example.com", friendEmail))
-        } returns roomDto
+        val response = controller.getOrCreateChatRoom(principal, "friend@example.com")
 
-        val response = controller.getOrCreateChatRoom(testUser, friendEmail)
-
-        assertEquals(ResponseEntity.ok(roomDto), response)
-        verify {
-            chatService.getOrCreateChatRoom(listOf("user@example.com", friendEmail))
-        }
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(room, response.body)
+        verify(exactly = 1) { chatService.getOrCreateChatRoom(listOf("me@example.com", "friend@example.com")) }
     }
 
     @Test
-    fun `should send message to chat room`() {
-        val chatRoomId = 10L
-        val message = "Hello"
+    fun `should send message`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+        val message = ChatMessageDTO(1L, 9L, "me@example.com", "hello", LocalDateTime.now())
+        every { chatService.sendMessage(9L, "me@example.com", "hello") } returns message
 
-        val messageDto =
-            ChatMessageDTO(
-                id = 1L,
-                chatRoomId = chatRoomId,
-                senderEmail = "user@example.com",
-                message = message,
-                timestamp = LocalDateTime.now()
-            )
+        val response = controller.sendMessage(9L, principal, "hello")
 
-        every {
-            chatService.sendMessage(chatRoomId, "user@example.com", message)
-        } returns messageDto
-
-        val response = controller.sendMessage(chatRoomId, testUser, message)
-
-        assertEquals(ResponseEntity.ok(messageDto), response)
-        verify {
-            chatService.sendMessage(chatRoomId, "user@example.com", message)
-        }
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(message, response.body)
+        verify(exactly = 1) { chatService.sendMessage(9L, "me@example.com", "hello") }
     }
 
     @Test
     fun `should return chat history`() {
-        val chatRoomId = 5L
-        val history =
-            listOf(
-                ChatMessageDTO(1L, chatRoomId, "user@example.com", "Hello", LocalDateTime.now()),
-                ChatMessageDTO(2L, chatRoomId, "friend@example.com", "Hi", LocalDateTime.now())
-            )
+        val principal = mockk<UserDetails>()
+        val history = listOf(ChatMessageDTO(1L, 4L, "me@example.com", "m1", LocalDateTime.now()))
+        every { chatService.getChatHistory(4L) } returns history
 
-        every {
-            chatService.getChatHistory(chatRoomId)
-        } returns history
+        val response = controller.getChatHistory(4L, principal)
 
-        val response = controller.getChatHistory(chatRoomId, testUser)
-
-        assertEquals(ResponseEntity.ok(history), response)
-        verify {
-            chatService.getChatHistory(chatRoomId)
-        }
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(history, response.body)
+        verify(exactly = 1) { chatService.getChatHistory(4L) }
     }
 
     @Test
-    fun `should save user public key`() {
-        val publicKey = "mockPublicKey"
+    fun `should save public key`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+        every { keyExchangeService.saveUserPublicKey("me@example.com", "pubkey") } just runs
 
-        every {
-            keyExchangeService.saveUserPublicKey("user@example.com", publicKey)
-        } just Runs
+        val response = controller.savePublicKey(principal, "pubkey")
 
-        val response = controller.savePublicKey(testUser, publicKey)
-
-        assertEquals(
-            ResponseEntity.ok("Public key saved successfully."),
-            response
-        )
-
-        verify {
-            keyExchangeService.saveUserPublicKey("user@example.com", publicKey)
-        }
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("Public key saved successfully.", response.body)
+        verify(exactly = 1) { keyExchangeService.saveUserPublicKey("me@example.com", "pubkey") }
     }
 
     @Test
-    fun `should return public key if exists`() {
-        val email = "user@example.com"
-        val publicKey = "mockPublicKey"
+    fun `should return my public key when present`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+        every { keyExchangeService.getUserPublicKey("me@example.com") } returns "pubkey"
 
-        every {
-            keyExchangeService.getUserPublicKey(email)
-        } returns publicKey
+        val response = controller.getMyPublicKey(principal)
 
-        val response = controller.getPublicKey(email)
-
-        assertEquals(ResponseEntity.ok(publicKey), response)
-        verify {
-            keyExchangeService.getUserPublicKey(email)
-        }
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("pubkey", response.body)
     }
 
     @Test
-    fun `should return 404 if public key not found`() {
-        val email = "notfound@example.com"
+    fun `should return not found for my public key when missing`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+        every { keyExchangeService.getUserPublicKey("me@example.com") } returns null
 
-        every {
-            keyExchangeService.getUserPublicKey(email)
-        } returns null
+        val response = controller.getMyPublicKey(principal)
 
-        val response = controller.getPublicKey(email)
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        assertNull(response.body)
+    }
 
-        assertEquals(ResponseEntity.notFound().build(), response)
-        verify {
-            keyExchangeService.getUserPublicKey(email)
-        }
+    @Test
+    fun `should return public key by email when present`() {
+        every { keyExchangeService.getUserPublicKey("friend@example.com") } returns "friend-key"
+
+        val response = controller.getPublicKey("friend@example.com")
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("friend-key", response.body)
+    }
+
+    @Test
+    fun `should return not found public key by email when missing`() {
+        every { keyExchangeService.getUserPublicKey("friend@example.com") } returns null
+
+        val response = controller.getPublicKey("friend@example.com")
+
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        assertNull(response.body)
     }
 }

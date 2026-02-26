@@ -149,7 +149,7 @@ class UserControllerTest {
         val response =
             controller.updateUser(
                 1L,
-                UpdateUserDTO("New", "new@email.com", null, null),
+                UpdateUserDTO("New", "new@email.com", null),
                 authUser
             )
 
@@ -181,7 +181,7 @@ class UserControllerTest {
         val response =
             controller.updateUser(
                 1L,
-                UpdateUserDTO("X", "x@email.com", null, null),
+                UpdateUserDTO("X", "x@email.com", null),
                 authUser
             )
 
@@ -203,7 +203,7 @@ class UserControllerTest {
         val response =
             controller.updateUser(
                 999L,
-                UpdateUserDTO("X", "x@email.com", null, null),
+                UpdateUserDTO("X", "x@email.com", null),
                 authUser
             )
 
@@ -300,7 +300,7 @@ class UserControllerTest {
 
         val response =
             controller.updateCurrentUser(
-                UpdateUserDTO("New", "user@email.com", null, null),
+                UpdateUserDTO("New", "user@email.com", null),
                 authUser
             )
 
@@ -318,7 +318,7 @@ class UserControllerTest {
 
         val ex =
             assertFailsWith<ResourceNotFoundException> {
-                controller.updateCurrentUser(UpdateUserDTO("X", "x@email.com", null, null), authUser)
+                controller.updateCurrentUser(UpdateUserDTO("X", "x@email.com", null), authUser)
             }
 
         assertEquals("Authenticated user not found: ${authUser.username}", ex.message)
@@ -440,6 +440,37 @@ class UserControllerTest {
     }
 
     @Test
+    fun `should update current user password`() {
+        val authUser: UserDetails =
+            org.springframework.security.core.userdetails.User("me@email.com", "pw", emptyList())
+        val currentUser = User(
+            id = 1L,
+            name = "Me",
+            email = "me@email.com",
+            passwordHash = "pw"
+        )
+        val request = UpdatePasswordDTO(
+            currentPassword = "oldPassword123",
+            newPassword = "newPassword123"
+        )
+
+        every { authenticatedUserService.requireUser(authUser) } returns currentUser
+        every { userService.updatePassword(currentUser.email, request.currentPassword, request.newPassword) } just Runs
+
+        val response = controller.updateCurrentUserPassword(request, authUser)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("Password updated successfully", response.body?.message)
+        verify(exactly = 1) {
+            userService.updatePassword(
+                currentUser.email,
+                request.currentPassword,
+                request.newPassword
+            )
+        }
+    }
+
+    @Test
     fun `should update profile picture`() {
         val authUser: UserDetails =
             org.springframework.security.core.userdetails.User("me@email.com", "pw", emptyList())
@@ -459,7 +490,7 @@ class UserControllerTest {
         val response = controller.updateProfilePicture(file, authUser)
 
         assertEquals(HttpStatus.OK, response.statusCode)
-        assertEquals("https://cdn/img.png", response.body!!["profilePictureUrl"])
+        assertEquals("Profile picture updated: https://cdn/img.png", response.body!!.message)
     }
 
     @Test

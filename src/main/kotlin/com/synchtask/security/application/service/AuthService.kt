@@ -2,6 +2,7 @@ package com.synchtask.security.application.service
 
 import com.synchtask.notification.application.handler.WelcomeNotificationHandler
 import com.synchtask.notification.application.manager.NotificationManager
+import com.synchtask.security.application.dto.TokenPairDTO
 import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
 import com.synchtask.user.domain.entity.UserRole
@@ -28,7 +29,7 @@ class AuthService(
 ) {
     private val logger = LoggerFactory.getLogger(AuthService::class.java)
 
-    fun authenticate(email: String, rawPassword: String): Map<String, String> {
+    fun authenticate(email: String, rawPassword: String): TokenPairDTO {
         logger.info("Attempting authentication for: $email")
 
         val userDetails: UserDetails =
@@ -58,9 +59,9 @@ class AuthService(
 
         logger.info("JWT and refresh token issued for $email")
 
-        return mapOf(
-            "accessToken" to accessToken,
-            "refreshToken" to refreshToken.token
+        return TokenPairDTO(
+            accessToken = accessToken,
+            refreshToken = refreshToken.token
         )
     }
 
