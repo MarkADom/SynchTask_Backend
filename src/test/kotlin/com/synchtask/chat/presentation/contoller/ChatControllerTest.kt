@@ -5,6 +5,7 @@ import com.synchtask.chat.application.dto.ChatRoomDTO
 import com.synchtask.chat.application.service.ChatService
 import com.synchtask.chat.application.service.KeyExchangeService
 import com.synchtask.chat.presentation.controller.ChatController
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -17,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertFailsWith
 
 class ChatControllerTest {
     private lateinit var chatService: ChatService
@@ -125,4 +127,19 @@ class ChatControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
         assertNull(response.body)
     }
+
+    @Test
+    fun `should deny legacy public key lookup for different principal`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+
+        val ex = assertFailsWith<UnauthorizedAccessException> {
+            controller.getPublicKey("friend@example.com", principal)
+        }
+
+        assertEquals(
+            "Deprecated endpoint only supports the authenticated principal; use /chat/key-exchange/me",
+            ex.message
+        )
+    }
+
 }

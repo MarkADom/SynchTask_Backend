@@ -1,13 +1,17 @@
 package com.synchtask.notification.application.service
 
+import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.notification.application.dto.NotificationRedisDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.notification.presentation.mapper.NotificationMapper
+import com.synchtask.project.domain.entity.Project
 import com.synchtask.project.domain.repository.ProjectRepository
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.entity.User
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
@@ -16,6 +20,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class NotificationServiceTest {
     private lateinit var storageService: NotificationStorageService
@@ -197,6 +202,247 @@ class NotificationServiceTest {
 
         verify(exactly = 0) {
             storageService.deleteRedisKeys(any())
+        }
+    }
+
+    @Test
+    fun `markAsRead should use recipient scoped update for non admin`() {
+        val actor =
+            User(
+                id = 2L,
+                name = "User",
+                email = "user@example.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
+
+        every { userRepository.findByEmail(actor.email) } returns java.util.Optional.of(actor)
+        every { storageService.markAsRead(42L, actor.email) } just runs
+
+        notificationService.markAsRead(42L, actor.email)
+
+        verify(exactly = 1) { storageService.markAsRead(42L, actor.email) }
+        verify(exactly = 0) { storageService.markAsRead(42L) }
+    }
+
+    @Test
+    fun `markAsRead should throw when actor is unknown`() {
+        every { userRepository.findByEmail("missing@example.com") } returns java.util.Optional.empty()
+
+        val ex = assertFailsWith<ResourceNotFoundException> {
+            notificationService.markAsRead(10L, "missing@example.com")
+        }
+
+        assertEquals("User not found: missing@example.com", ex.message)
+    }
+
+    @Test
+    fun `sendNotificationAsActor should allow admin without context`() {
+        val admin =
+            User(
+                id = 5L,
+                name = "Admin",
+                email = "admin@example.com",
+                passwordHash = "pw",
+                role = UserRole.ADMIN
+            )
+        val recipient =
+            User(
+                id = 6L,
+                name = "Recipient",
+                email = "recipient@example.com",
+                passwordHash = "pw"
+            )
+        val notification =
+            Notification(
+                id = 300L,
+                recipient = recipient,
+                message = "hello",
+                type = NotificationType.SYSTEM
+            )
+
+        every { userRepository.findByEmail(admin.email) } returns java.util.Optional.of(admin)
+        every {
+            storageService.storeNotification(
+                recipient.email,
+                "hello",
+                NotificationType.SYSTEM,
+                null
+            )
+        } returns notification
+        every { webSocketService.sendNotification(recipient.email, any()) } just Runs
+        every { storageService.updateDeliveryStatus(notification) } just Runs
+
+        assertDoesNotThrow {
+            notificationService.sendNotificationAsActor(
+                actorEmail = admin.email,
+                recipientEmail = recipient.email,
+                message = "hello",
+                type = NotificationType.SYSTEM,
+                groupId = null
+            )
+        }
+    }
+
+    @Test
+    fun `sendNotificationAsActor should throw when non admin has no context`() {
+        val actor =
+            User(
+                id = 7L,
+                name = "Owner",
+                email = "owner@example.com",
+                passwordHash = "pw",
+                role = UserRole.OWNER
+            )
+        every { userRepository.findByEmail(actor.email) } returns java.util.Optional.of(actor)
+
+        val ex = assertFailsWith<UnauthorizedAccessException> {
+            notificationService.sendNotificationAsActor(
+                actorEmail = actor.email,
+                recipientEmail = "recipient@example.com",
+                message = "hello",
+                type = NotificationType.GROUP,
+                groupId = null
+            )
+        }
+
+        assertEquals("Notification dispatch requires context (groupId) for non-admin users", ex.message)
+    }
+
+    @Test
+    fun `sendNotificationAsActor should throw when actor has no board or project access`() {
+        val actor =
+            User(
+                id = 8L,
+                name = "Collaborator",
+                email = "collab@example.com",
+                passwordHash = "pw",
+                role = UserRole.COLLABORATOR
+            )
+        every { userRepository.findByEmail(actor.email) } returns java.util.Optional.of(actor)
+        every { boardRepository.findById(99L) } returns java.util.Optional.empty()
+        every { projectRepository.findById(99L) } returns java.util.Optional.empty()
+
+        val ex = assertFailsWith<UnauthorizedAccessException> {
+            notificationService.sendNotificationAsActor(
+                actorEmail = actor.email,
+                recipientEmail = "recipient@example.com",
+                message = "hello",
+                type = NotificationType.GROUP,
+                groupId = 99L
+            )
+        }
+
+        assertEquals("Actor ${actor.email} has no contextual permission for groupId=99", ex.message)
+    }
+
+    @Test
+    fun `sendNotificationAsActor should allow actor with board access`() {
+        val actor =
+            User(
+                id = 9L,
+                name = "Owner",
+                email = "owner@example.com",
+                passwordHash = "pw",
+                role = UserRole.OWNER
+            )
+        val recipient =
+            User(
+                id = 10L,
+                name = "Recipient",
+                email = "recipient@example.com",
+                passwordHash = "pw"
+            )
+        val board = mockk<Board>()
+        every { board.owner } returns actor
+        every { board.collaborators } returns mutableSetOf()
+
+        val notification =
+            Notification(
+                id = 301L,
+                recipient = recipient,
+                message = "board update",
+                type = NotificationType.GROUP,
+                groupId = 5L
+            )
+
+        every { userRepository.findByEmail(actor.email) } returns java.util.Optional.of(actor)
+        every { boardRepository.findById(5L) } returns java.util.Optional.of(board)
+        every { projectRepository.findById(5L) } returns java.util.Optional.empty()
+        every {
+            storageService.storeNotification(
+                recipient.email,
+                "board update",
+                NotificationType.GROUP,
+                5L
+            )
+        } returns notification
+        every { webSocketService.sendNotification(recipient.email, any()) } just Runs
+        every { storageService.updateDeliveryStatus(notification) } just Runs
+
+        assertDoesNotThrow {
+            notificationService.sendNotificationAsActor(
+                actorEmail = actor.email,
+                recipientEmail = recipient.email,
+                message = "board update",
+                type = NotificationType.GROUP,
+                groupId = 5L
+            )
+        }
+    }
+
+    @Test
+    fun `sendNotificationAsActor should allow actor with project member access`() {
+        val actor =
+            User(
+                id = 11L,
+                name = "Member",
+                email = "member@example.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
+        val recipient =
+            User(
+                id = 12L,
+                name = "Recipient",
+                email = "recipient2@example.com",
+                passwordHash = "pw"
+            )
+        val project = mockk<Project>()
+        every { project.owner } returns recipient
+        every { project.members } returns mutableSetOf(actor)
+
+        val notification =
+            Notification(
+                id = 302L,
+                recipient = recipient,
+                message = "project update",
+                type = NotificationType.GROUP,
+                groupId = 77L
+            )
+
+        every { userRepository.findByEmail(actor.email) } returns java.util.Optional.of(actor)
+        every { boardRepository.findById(77L) } returns java.util.Optional.empty()
+        every { projectRepository.findById(77L) } returns java.util.Optional.of(project)
+        every {
+            storageService.storeNotification(
+                recipient.email,
+                "project update",
+                NotificationType.GROUP,
+                77L
+            )
+        } returns notification
+        every { webSocketService.sendNotification(recipient.email, any()) } just Runs
+        every { storageService.updateDeliveryStatus(notification) } just Runs
+
+        assertDoesNotThrow {
+            notificationService.sendNotificationAsActor(
+                actorEmail = actor.email,
+                recipientEmail = recipient.email,
+                message = "project update",
+                type = NotificationType.GROUP,
+                groupId = 77L
+            )
         }
     }
 }

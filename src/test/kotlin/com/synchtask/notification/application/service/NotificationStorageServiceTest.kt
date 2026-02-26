@@ -5,6 +5,7 @@ import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.notification.domain.repository.NotificationRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
@@ -142,5 +143,41 @@ class NotificationStorageServiceTest {
             }
 
         assertEquals("Notification with ID 42 not found.", ex.message)
+    }
+
+    @Test
+    fun `markAsRead for user should succeed when recipient matches`() {
+        every { notificationRepository.markAsReadByIdAndRecipientEmail(42L, user.email) } returns 1
+
+        assertDoesNotThrow {
+            service.markAsRead(42L, user.email)
+        }
+    }
+
+    @Test
+    fun `markAsRead for user should throw unauthorized when recipient does not match`() {
+        every { notificationRepository.markAsReadByIdAndRecipientEmail(42L, user.email) } returns 0
+
+        val ex =
+            assertThrows(UnauthorizedAccessException::class.java) {
+                service.markAsRead(42L, user.email)
+            }
+
+        assertEquals(
+            "Notification with ID 42 was not found for the authenticated user",
+            ex.message
+        )
+    }
+
+    @Test
+    fun `markAllAsRead should throw when user does not exist`() {
+        every { userRepository.findByEmail(user.email) } returns Optional.empty()
+
+        val ex =
+            assertThrows(ResourceNotFoundException::class.java) {
+                service.markAllAsRead(user.email)
+            }
+
+        assertEquals("User not found: ${user.email}", ex.message)
     }
 }
