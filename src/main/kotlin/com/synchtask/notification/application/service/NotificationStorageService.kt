@@ -81,6 +81,16 @@ class NotificationStorageService(
     }
 
     @Transactional
+    fun markAsRead(notificationId: Long, userEmail: String) {
+        val updatedCount = notificationRepository.markAsReadByIdAndRecipientEmail(notificationId, userEmail)
+        if (updatedCount <= 0) {
+            throw com.synchtask.shared.exception.UnauthorizedAccessException(
+                "Notification with ID $notificationId was not found for the authenticated user"
+            )
+        }
+    }
+
+    @Transactional
     fun markAllAsRead(userEmail: String) {
         val user =
             userRepository.findByEmail(userEmail)

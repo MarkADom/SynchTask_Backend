@@ -4,6 +4,7 @@ import com.synchtask.notification.application.dto.NotificationRequestDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.notification.domain.entity.NotificationType
+import com.synchtask.shared.exception.UnauthorizedAccessException
 import io.mockk.mockk
 import io.mockk.Runs
 import io.mockk.every
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class NotificationControllerTest {
     private lateinit var notificationService: NotificationService
@@ -36,26 +38,19 @@ class NotificationControllerTest {
                 groupId = 1L
             )
 
+        val principal = mockk<UserDetails> { every { username } returns "owner@example.com" }
+
         every {
-            notificationService.sendNotification(
-                request.email,
-                request.message,
-                request.type,
-                request.groupId
-            )
+            notificationService.sendNotificationAsActor(any(), any(), any(), any(), any())
         } just Runs
 
-        val response = controller.sendNotification(request)
+        val response = controller.sendNotification(principal, request)
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals("Notification sent successfully", response.body?.message)
+
         verify(exactly = 1) {
-            notificationService.sendNotification(
-                request.email,
-                request.message,
-                request.type,
-                request.groupId
-            )
+            notificationService.sendNotificationAsActor(any(), any(), any(), any(), any())
         }
     }
 
@@ -100,13 +95,14 @@ class NotificationControllerTest {
 
     @Test
     fun `should mark one notification as read`() {
-        every { notificationService.markAsRead(10L) } just Runs
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+        every { notificationService.markAsRead(10L, "me@example.com") } just Runs
 
-        val response = controller.markNotificationAsRead(10L)
+        val response = controller.markNotificationAsRead(10L, principal)
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals("Notification marked as read", response.body?.message)
-        verify(exactly = 1) { notificationService.markAsRead(10L) }
+        verify(exactly = 1) { notificationService.markAsRead(10L, "me@example.com") }
     }
 
     @Test
@@ -121,14 +117,17 @@ class NotificationControllerTest {
         verify(exactly = 1) { notificationService.markAllAsRead("me@example.com") }
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun `should mark all notifications as read on legacy endpoint`() {
+        val principal = mockk<UserDetails> { every { username } returns "legacy@example.com" }
         every { notificationService.markAllAsRead("legacy@example.com") } just Runs
 
-        val response = controller.markAllNotificationsAsRead("legacy@example.com")
+        val response = controller.markAllNotificationsAsRead("legacy@example.com", principal)
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals("All notifications marked as read", response.body?.message)
+
         verify(exactly = 1) { notificationService.markAllAsRead("legacy@example.com") }
     }
 
@@ -144,14 +143,62 @@ class NotificationControllerTest {
         verify(exactly = 1) { notificationService.clearRedisCacheForUser("me@example.com") }
     }
 
+    @Suppress("DEPRECATION")
     @Test
     fun `should clear notification cache on legacy endpoint`() {
+        val principal = mockk<UserDetails> { every { username } returns "legacy@example.com" }
         every { notificationService.clearRedisCacheForUser("legacy@example.com") } returns 1
 
-        val response = controller.clearNotificationCache("legacy@example.com")
+        val response = controller.clearNotificationCache("legacy@example.com", principal)
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals("Cleared 1 notification(s) from Redis cache", response.body?.message)
+
         verify(exactly = 1) { notificationService.clearRedisCacheForUser("legacy@example.com") }
     }
+
+    @Test
+    fun `should reject legacy unread notifications endpoint for different principal`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+
+        val ex = assertFailsWith<UnauthorizedAccessException> {
+            controller.getUnreadNotifications("other@example.com", principal)
+        }
+
+        assertEquals(
+            "Deprecated endpoint only supports the authenticated principal; use /notifications/me",
+            ex.message
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `should reject legacy mark all endpoint for different principal`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+
+        val ex = assertFailsWith<UnauthorizedAccessException> {
+            controller.markAllNotificationsAsRead("other@example.com", principal)
+        }
+
+        assertEquals(
+            "Deprecated endpoint only supports the authenticated principal; use /notifications/mark-all-as-read/me",
+            ex.message
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun `should reject legacy clear cache endpoint for different principal`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+
+        val ex = assertFailsWith<UnauthorizedAccessException> {
+            controller.clearNotificationCache("other@example.com", principal)
+        }
+
+        assertEquals(
+            "Deprecated endpoint only supports the authenticated principal; use /notifications/clear-cache/me",
+            ex.message
+        )
+    }
+
 }

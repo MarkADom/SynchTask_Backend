@@ -32,8 +32,25 @@ interface NotificationRepository : JpaRepository<Notification, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE Notification n SET n.isRead = true WHERE n.id = :id")
+    @Query(
+        "UPDATE Notification n " +
+        "SET n.isRead = true " +
+        "WHERE n.id = :id"
+    )
     fun markAsReadById(@Param("id") id: Long): Int
+
+    @Modifying
+    @Transactional
+    @Query(
+        "UPDATE Notification n " +
+            "SET n.isRead = true " +
+            "WHERE n.id = :id " +
+            "AND n.recipient.email = :userEmail"
+    )
+    fun markAsReadByIdAndRecipientEmail(
+        @Param("id") id: Long,
+        @Param("userEmail") userEmail: String,
+    ): Int
 
     fun findAllByDeliveredFalse(): List<Notification>
 }

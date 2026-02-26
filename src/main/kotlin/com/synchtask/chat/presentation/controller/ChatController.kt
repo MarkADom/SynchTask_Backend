@@ -4,6 +4,8 @@ import com.synchtask.chat.application.dto.ChatMessageDTO
 import com.synchtask.chat.application.dto.ChatRoomDTO
 import com.synchtask.chat.application.service.ChatService
 import com.synchtask.chat.application.service.KeyExchangeService
+import com.synchtask.shared.exception.UnauthorizedAccessException
+import io.swagger.v3.oas.annotations.Operation
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -77,20 +79,25 @@ class ChatController(
     @GetMapping("/key-exchange/me")
     @PreAuthorize("isAuthenticated()")
     fun getMyPublicKey(@AuthenticationPrincipal user: UserDetails): ResponseEntity<String> {
-        val publicKey =
-            keyExchangeService.getUserPublicKey(user.username)
-                ?: return ResponseEntity.notFound().build()
-
-        return ResponseEntity.ok(publicKey)
+        return getPublicKeyResponse(user.username)
     }
 
+    @Deprecated("Use /chat/key-exchange/me")
+    @Operation(deprecated = true, summary = "Deprecated alias for /chat/key-exchange/me")
     @GetMapping("/key-exchange/{email}")
     @PreAuthorize("isAuthenticated()")
-    fun getPublicKey(@PathVariable email: String): ResponseEntity<String> {
-        val publicKey =
-            keyExchangeService.getUserPublicKey(email)
-                ?: return ResponseEntity.notFound().build()
+    fun getPublicKey(
+        @PathVariable email: String,
+        @AuthenticationPrincipal user: UserDetails,
+    ): ResponseEntity<String> {
+        if (email != user.username) {
+            throw UnauthorizedAccessException("Deprecated endpoint only supports the authenticated principal; use /chat/key-exchange/me")
+        }
+        return getMyPublicKey(user)
+    }
 
+    private fun getPublicKeyResponse(email: String): ResponseEntity<String> {
+        val publicKey = keyExchangeService.getUserPublicKey(email) ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(publicKey)
     }
 }
