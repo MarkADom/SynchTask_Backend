@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.context.annotation.Profile
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -16,8 +17,14 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/test")
 class TestController {
+
     @GetMapping("/ping")
-    fun clear(): ResponseEntity<ApiMessageResponseDTO> {
+    fun ping(): ResponseEntity<ApiMessageResponseDTO> {
+        return ResponseEntity.ok(ApiMessageResponseDTO("API is running"))
+    }
+
+    @PostMapping("/cache/clear")
+    fun clearCache(): ResponseEntity<ApiMessageResponseDTO> {
         return ResponseEntity.ok(ApiMessageResponseDTO("Cache cleared"))
     }
 }

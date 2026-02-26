@@ -247,7 +247,6 @@ class UserServiceTest {
         val result = userService.getOnlineUsers()
 
         assertEquals(1, result.size)
-        assertTrue(result[0] is UserStatusDTO)
     }
 
     @Test

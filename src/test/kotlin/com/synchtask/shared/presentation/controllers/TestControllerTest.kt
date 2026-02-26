@@ -1,25 +1,40 @@
 package com.synchtask.shared.presentation.controllers
 
-import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.presentation.controller.TestController
-import io.mockk.junit5.MockKExtension
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 /**
- * Unit test for [TestController].
+ * Unit tests for [TestController].
  */
-@ExtendWith(MockKExtension::class)
 class TestControllerTest {
-    private val mockMvc: MockMvc = MockMvcBuilders.standaloneSetup(TestController()).build()
+
+    private lateinit var mockMvc: MockMvc
+
+    @BeforeEach
+    fun setup() {
+        mockMvc = MockMvcBuilders
+            .standaloneSetup(TestController())
+            .build()
+    }
 
     @Test
     fun `should return API is running`() {
-        fun ping(): ResponseEntity<ApiMessageResponseDTO> {
-            return ResponseEntity.ok(ApiMessageResponseDTO("API is running"))
-        }
+        mockMvc.perform(get("/test/ping"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.message").value("API is running"))
+    }
+
+    @Test
+    fun `should clear cache`() {
+        mockMvc.perform(post("/test/cache/clear"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.message").value("Cache cleared"))
     }
 }
