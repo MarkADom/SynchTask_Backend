@@ -2,6 +2,7 @@ package com.synchtask.security.presentation.controller
 
 import com.synchtask.security.infrastructure.jwt.JwtKeyManager
 import com.synchtask.shared.dto.ApiMessageResponseDTO
+import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 /**
  * Admin endpoint for manual JWT key rotation.
  */
+@Hidden
 @RestController
 @RequestMapping("/auth")
 class AuthAdminController(private val jwtKeyManager: JwtKeyManager) {
