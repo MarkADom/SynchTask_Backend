@@ -1,11 +1,15 @@
 package com.synchtask.notification.application.service
 
+import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.notification.application.dto.NotificationRedisDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.notification.presentation.mapper.NotificationMapper
+import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -16,13 +20,25 @@ import kotlin.test.assertEquals
 class NotificationServiceTest {
     private lateinit var storageService: NotificationStorageService
     private lateinit var webSocketService: NotificationWebSocketService
+    private lateinit var userRepository: UserRepository
+    private lateinit var boardRepository: BoardRepository
+    private lateinit var projectRepository: ProjectRepository
     private lateinit var notificationService: NotificationService
 
     @BeforeEach
     fun setUp() {
         storageService = mockk()
         webSocketService = mockk()
-        notificationService = NotificationService(storageService, webSocketService)
+        userRepository = mockk()
+        boardRepository = mockk()
+        projectRepository = mockk()
+        notificationService = NotificationService(
+            storageService,
+            webSocketService,
+            userRepository,
+            boardRepository,
+            projectRepository
+        )
     }
 
     @Test
@@ -132,11 +148,21 @@ class NotificationServiceTest {
     }
 
     @Test
-    fun `markAsRead should not crash`() {
+    fun `markAsRead should not crash for admin`() {
+        val admin =
+            User(
+                id = 99L,
+                name = "Admin",
+                email = "admin@example.com",
+                passwordHash = "pw",
+                role = UserRole.ADMIN
+            )
+
+        every { userRepository.findByEmail("admin@example.com") } returns java.util.Optional.of(admin)
         every { storageService.markAsRead(42L) } just runs
 
         assertDoesNotThrow {
-            notificationService.markAsRead(42L)
+            notificationService.markAsRead(42L, "admin@example.com")
         }
 
         verify(exactly = 1) { storageService.markAsRead(42L) }

@@ -10,5 +10,4 @@ data class UpdateUserDTO(
     @field:Email(message = "Email should be valid")
     val email: String,
     val profilePictureUrl: String? = null,
-    val passwordHash: String? = null,
 )

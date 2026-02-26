@@ -105,9 +105,11 @@ class ChatControllerTest {
 
     @Test
     fun `should return public key by email when present`() {
+        val principal = mockk<UserDetails> { every { username } returns "friend@example.com" }
+
         every { keyExchangeService.getUserPublicKey("friend@example.com") } returns "friend-key"
 
-        val response = controller.getPublicKey("friend@example.com")
+        val response = controller.getPublicKey("friend@example.com", principal)
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals("friend-key", response.body)
@@ -115,9 +117,10 @@ class ChatControllerTest {
 
     @Test
     fun `should return not found public key by email when missing`() {
+        val principal = mockk<UserDetails> { every { username } returns "friend@example.com" }
         every { keyExchangeService.getUserPublicKey("friend@example.com") } returns null
 
-        val response = controller.getPublicKey("friend@example.com")
+        val response = controller.getPublicKey("friend@example.com", principal)
 
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
         assertNull(response.body)

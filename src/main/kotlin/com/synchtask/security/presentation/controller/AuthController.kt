@@ -15,6 +15,7 @@ import com.synchtask.user.application.dto.UserResponseDTO
 import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
 import com.synchtask.user.domain.entity.UserRole
+import io.swagger.v3.oas.annotations.Operation
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
@@ -148,6 +149,8 @@ class AuthController(
         return ResponseEntity.ok(ApiMessageResponseDTO("Logout successful"))
     }
 
+    @Deprecated("Use /jwks")
+    @Operation(deprecated = true, summary = "Deprecated alias for canonical /jwks endpoint")
     @GetMapping("/jwks")
     fun getJwks(): JwksResponseDTO = jwtKeyManager.getJwks()
 
