@@ -97,4 +97,61 @@ class NotificationControllerTest {
 
         verify(exactly = 1) { notificationService.getUnreadNotifications(userEmail) }
     }
+
+    @Test
+    fun `should mark one notification as read`() {
+        every { notificationService.markAsRead(10L) } just Runs
+
+        val response = controller.markNotificationAsRead(10L)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("Notification marked as read", response.body?.message)
+        verify(exactly = 1) { notificationService.markAsRead(10L) }
+    }
+
+    @Test
+    fun `should mark all my notifications as read`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+        every { notificationService.markAllAsRead("me@example.com") } just Runs
+
+        val response = controller.markAllMyNotificationsAsRead(principal)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("All notifications marked as read", response.body?.message)
+        verify(exactly = 1) { notificationService.markAllAsRead("me@example.com") }
+    }
+
+    @Test
+    fun `should mark all notifications as read on legacy endpoint`() {
+        every { notificationService.markAllAsRead("legacy@example.com") } just Runs
+
+        val response = controller.markAllNotificationsAsRead("legacy@example.com")
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("All notifications marked as read", response.body?.message)
+        verify(exactly = 1) { notificationService.markAllAsRead("legacy@example.com") }
+    }
+
+    @Test
+    fun `should clear my notification cache`() {
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
+        every { notificationService.clearRedisCacheForUser("me@example.com") } returns 3
+
+        val response = controller.clearMyNotificationCache(principal)
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("Cleared 3 notification(s) from Redis cache", response.body?.message)
+        verify(exactly = 1) { notificationService.clearRedisCacheForUser("me@example.com") }
+    }
+
+    @Test
+    fun `should clear notification cache on legacy endpoint`() {
+        every { notificationService.clearRedisCacheForUser("legacy@example.com") } returns 1
+
+        val response = controller.clearNotificationCache("legacy@example.com")
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("Cleared 1 notification(s) from Redis cache", response.body?.message)
+        verify(exactly = 1) { notificationService.clearRedisCacheForUser("legacy@example.com") }
+    }
 }
