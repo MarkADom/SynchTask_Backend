@@ -369,7 +369,7 @@ class NotificationServiceTest {
             )
         val board = mockk<Board>()
         every { board.owner } returns actor
-        every { board.collaborators } returns mutableSetOf()
+        every { board.members } returns mutableSetOf()
 
         val notification =
             Notification(
@@ -425,7 +425,7 @@ class NotificationServiceTest {
             )
         val project = mockk<Project>()
         every { project.owner } returns recipient
-        every { project.members } returns mutableSetOf(actor)
+        every { project.projectMembers } returns mutableSetOf(mockk { every { user } returns actor })
 
         val notification =
             Notification(
@@ -483,9 +483,21 @@ class NotificationServiceTest {
 
     @Test
     fun `sendNotificationAsActor should allow member on task context`() {
-        val actor = User(id = 31L, name = "Member", email = "member@x.com", passwordHash = "pw", role = UserRole.USER)
+        val actor = User(
+            id = 31L,
+            name = "Member",
+            email = "member@x.com",
+            passwordHash = "pw",
+            role = UserRole.USER
+        )
         val recipient =
-            User(id = 32L, name = "Recipient", email = "recipient@x.com", passwordHash = "pw", role = UserRole.USER)
+            User(
+                id = 32L,
+                name = "Recipient",
+                email = "recipient@x.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
         val task = mockk<Task>()
         val board = mockk<Board>()
 
@@ -495,12 +507,10 @@ class NotificationServiceTest {
         every { taskRepository.findById(222L) } returns java.util.Optional.of(task)
 
         every { task.owner } returns recipient
-        every { task.collaborators } returns mutableSetOf()
         every { task.members } returns mutableSetOf(mockk { every { user } returns actor })
         every { task.board } returns board
         every { board.owner } returns recipient
         every { board.members } returns mutableSetOf()
-        every { board.collaborators } returns mutableSetOf()
 
         val notification = Notification(
             id = 401L,
@@ -563,5 +573,4 @@ class NotificationServiceTest {
 
         verify(exactly = 1) { storageService.markAllAsRead("other@x.com") }
     }
-
 }

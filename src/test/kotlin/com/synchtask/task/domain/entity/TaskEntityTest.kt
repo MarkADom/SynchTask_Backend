@@ -8,7 +8,6 @@ import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -101,17 +100,17 @@ class TaskEntityTest {
     }
 
     @Test
-    fun `addCollaborator should avoid duplicates and set updatedAt`() {
+    fun `legacy collaborator methods should fail fast`() {
         val owner = user(1L)
         val collaborator = user(2L)
         val task = task(owner, board(owner))
 
-        assertTrue(task.addCollaborator(collaborator))
-        val firstUpdate = task.updatedAt
-        assertNotNull(firstUpdate)
-        assertFalse(task.addCollaborator(collaborator))
-        assertEquals(1, task.collaborators.size)
-        assertEquals(firstUpdate, task.updatedAt)
+        assertThrows(UnsupportedOperationException::class.java) {
+            task.canAddCollaborator(owner)
+        }
+        assertThrows(UnsupportedOperationException::class.java) {
+            task.addCollaborator(collaborator)
+        }
     }
 
     @Test

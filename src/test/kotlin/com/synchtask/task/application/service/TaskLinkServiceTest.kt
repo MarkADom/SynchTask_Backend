@@ -95,7 +95,6 @@ class TaskLinkServiceTest {
         title = "Task",
         description = "Desc",
         owner = owner,
-        collaborators = mutableSetOf(),
         labels = mutableSetOf(),
         status = TaskStatus.TODO,
         priority = TaskPriority.MID,
@@ -171,8 +170,18 @@ class TaskLinkServiceTest {
 
     @Test
     fun `should list links for task`() {
-        val l1 = TaskLink(id = 1L, task = task, title = "A", url = "https://a.com")
-        val l2 = TaskLink(id = 2L, task = task, title = "B", url = "https://b.com")
+        val l1 = TaskLink(
+            id = 1L,
+            task = task,
+            title = "A",
+            url = "https://a.com"
+        )
+        val l2 = TaskLink(
+            id = 2L,
+            task = task,
+            title = "B",
+            url = "https://b.com"
+        )
 
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskLinkRepository.findAllByTask(task) } returns listOf(l1, l2)
@@ -255,4 +264,3 @@ class TaskLinkServiceTest {
         assertEquals("Admin Docs", result.title)
     }
 }
-

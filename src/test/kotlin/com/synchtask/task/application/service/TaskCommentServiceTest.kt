@@ -69,7 +69,6 @@ class TaskCommentServiceTest {
             title = "Title",
             description = "Desc",
             owner = user,
-            collaborators = mutableSetOf(collaborator),
             status = TaskStatus.TODO,
             board = board
         )
@@ -144,7 +143,12 @@ class TaskCommentServiceTest {
 
     @Test
     fun `should throw if user is not authorized to comment`() {
-        val stranger = User(id = 10L, name = "NoPerm", email = "no@access.com", passwordHash = "123")
+        val stranger = User(
+            id = 10L,
+            name = "NoPerm",
+            email = "no@access.com",
+            passwordHash = "123"
+        )
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertThrows<UnauthorizedAccessException> {
@@ -171,18 +175,20 @@ class TaskCommentServiceTest {
         assertEquals("Test comment", result.first().content)
     }
 
-
-
     @Test
     fun `should add comment when user has task membership`() {
-        val stranger = User(id = 10L, name = "NoPerm", email = "no@access.com", passwordHash = "123")
+        val stranger = User(
+            id = 10L,
+            name = "NoPerm",
+            email = "no@access.com",
+            passwordHash = "123"
+        )
         val membershipTask =
             Task(
                 id = task.id,
                 title = task.title,
                 description = task.description,
                 owner = task.owner,
-                collaborators = mutableSetOf(),
                 status = task.status,
                 board = task.board
             )

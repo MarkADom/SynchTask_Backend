@@ -61,8 +61,7 @@ class CommentServiceTest {
             title = "Test Task",
             description = "A task for testing",
             owner = owner,
-            board = board,
-            collaborators = mutableSetOf(user)
+            board = board
         )
 
     @BeforeEach
