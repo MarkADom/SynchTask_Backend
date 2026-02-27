@@ -5,6 +5,7 @@ import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
@@ -53,10 +54,11 @@ class NotificationController(
     }
 
 
-    @Deprecated("Use /notifications/me")
+    @Deprecated(message = "Use /me variant")
     @Operation(deprecated = true, summary = "Deprecated alias for /notifications/me")
     @GetMapping("/{userEmail}")
     @PreAuthorize("isAuthenticated()")
+    @Hidden
     fun getUnreadNotifications(
         @PathVariable userEmail: String,
         @AuthenticationPrincipal user: UserDetails,
@@ -87,10 +89,11 @@ class NotificationController(
         return ResponseEntity.ok(ApiMessageResponseDTO("All notifications marked as read"))
     }
 
-    @Deprecated("Use /notifications/mark-all-as-read/me")
+    @Deprecated(message = "Use /me variant")
     @Operation(deprecated = true, summary = "Deprecated alias for /notifications/mark-all-as-read/me")
     @PostMapping("/mark-all-as-read/{userEmail}")
     @PreAuthorize("isAuthenticated()")
+    @Hidden
     fun markAllNotificationsAsRead(
         @PathVariable userEmail: String,
         @AuthenticationPrincipal user: UserDetails,
@@ -110,10 +113,11 @@ class NotificationController(
         return ResponseEntity.ok(ApiMessageResponseDTO("Cleared $deletedCount notification(s) from Redis cache"))
     }
 
-    @Deprecated("Use /notifications/clear-cache/me")
+    @Deprecated(message = "Use /me variant")
     @Operation(deprecated = true, summary = "Deprecated alias for /notifications/clear-cache/me")
     @DeleteMapping("/clear-cache/{userEmail}", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
+    @Hidden
     fun clearNotificationCache(
         @PathVariable userEmail: String,
         @AuthenticationPrincipal user: UserDetails,

@@ -8,7 +8,8 @@ import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
-import com.synchtask.user.application.service.UserService
+import com.synchtask.task.application.service.TaskService
+import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
@@ -24,11 +25,19 @@ class NotificationService(
     private val userRepository: UserRepository,
     private val boardRepository: BoardRepository,
     private val projectRepository: ProjectRepository,
+    private val taskRepository: TaskRepository,
 ) {
     private val logger = LoggerFactory.getLogger(NotificationService::class.java)
 
     @Transactional
-    fun sendNotification(userEmail: String, message: String, type: NotificationType, groupId: Long? = null) {
+    fun sendNotification(
+        userEmail: String,
+        message: String,
+        type:
+        NotificationType,
+        groupId:
+        Long? = null,
+    ) {
         val notification = notificationStorageService.storeNotification(userEmail, message, type, groupId)
         try {
             val dto = NotificationMapper.toWebSocketDTO(notification)
@@ -76,15 +85,21 @@ class NotificationService(
             userRepository.findByEmail(actorEmail)
                 .orElseThrow { ResourceNotFoundException("User not found: $actorEmail") }
 
-        requireNotificationContextPermission(actor, groupId)
+        requireNotificationContextPermission(actor, groupId, type)
         sendNotification(recipientEmail, message, type, groupId)
     }
 
-    private fun requireNotificationContextPermission(actor: User, groupId: Long?) {
+    private fun requireNotificationContextPermission(
+        actor: User,
+        groupId: Long?,
+        type: NotificationType,
+    ) {
         if (actor.role == UserRole.ADMIN) return
 
         if (groupId == null) {
-            throw UnauthorizedAccessException("Notification dispatch requires context (groupId) for non-admin users")
+            throw UnauthorizedAccessException(
+                "Notification dispatch requires context (groupId) for non-admin users"
+            )
         }
 
         val hasBoardContextAccess =
@@ -103,14 +118,37 @@ class NotificationService(
                 }
                 .orElse(false)
 
-        if (!hasBoardContextAccess && !hasProjectContextAccess) {
-            throw UnauthorizedAccessException("Actor ${actor.email} has no contextual permission for groupId=$groupId")
+        val hasTaskContextAccess =
+            taskRepository.findById(groupId)
+                .map { task ->
+                    task.owner.email == actor.email ||
+                        task.collaborators.any { collaborator -> collaborator.email == actor.email } ||
+                        task.members.any { member -> member.user.email == actor.email } ||
+                        task.board.owner.email == actor.email ||
+                        task.board.members.any { member -> member.user.email == actor.email } ||
+                        task.board.collaborators.any { collaborator -> collaborator.email == actor.email }
+                }
+                .orElse(false)
+
+        if (!hasBoardContextAccess && !hasProjectContextAccess && !hasTaskContextAccess) {
+            throw UnauthorizedAccessException(
+                "Actor ${actor.email} has no contextual permission for groupId=$groupId and type=$type"
+            )
+
         }
     }
 
-    fun markAllAsRead(userEmail: String) {
-        notificationStorageService.markAllAsRead(userEmail)
-        logger.info("All notifications marked as read for $userEmail")
+    fun markAllAsRead(actorEmail: String, targetEmail: String = actorEmail) {
+        val actor =
+            userRepository.findByEmail(actorEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $actorEmail") }
+
+        if (actor.role != UserRole.ADMIN && actorEmail != targetEmail) {
+            throw UnauthorizedAccessException("Non-admin users can only mark their own notifications as read")
+        }
+
+        notificationStorageService.markAllAsRead(targetEmail)
+        logger.info("All notifications marked as read for $targetEmail (actor=$actorEmail)")
     }
 
     fun sendFirstLoginNotifications(user: User) {

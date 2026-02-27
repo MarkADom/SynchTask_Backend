@@ -6,6 +6,7 @@ import com.synchtask.chat.application.service.ChatService
 import com.synchtask.chat.application.service.KeyExchangeService
 import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -83,10 +84,11 @@ class ChatController(
         return getPublicKeyResponse(user.username)
     }
 
-    @Deprecated("Use /chat/key-exchange/me")
+    @Deprecated(message = "Use /me variant")
     @Operation(deprecated = true, summary = "Deprecated alias for /chat/key-exchange/me")
     @GetMapping("/key-exchange/{email}")
     @PreAuthorize("isAuthenticated()")
+    @Hidden
     fun getPublicKey(
         @PathVariable email: String,
         @AuthenticationPrincipal user: UserDetails,
