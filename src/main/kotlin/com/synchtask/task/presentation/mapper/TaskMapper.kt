@@ -31,7 +31,7 @@ object TaskMapper {
         description = task.description,
         creatorId = requireId(task.owner.id, "User"),
         creatorName = task.owner.name,
-        assignees = task.collaborators.map { requireId(it.id, "User") },
+        assignees = task.members.map { requireId(it.user.id, "User") },
         status = task.status,
         labels = task.labels.toList(),
         createdAt = task.createdAt,

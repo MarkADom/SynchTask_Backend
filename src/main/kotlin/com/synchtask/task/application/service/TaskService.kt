@@ -7,11 +7,13 @@ import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.friend.application.port.FriendshipChecker
 import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.notification.domain.entity.NotificationType
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskMember
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
@@ -65,6 +67,7 @@ class TaskService(
             )
 
         val savedTask = taskRepository.save(newTask)
+        syncTaskAssignees(savedTask, request.assignees, owner)
 
         activityService.record(
             actor = owner,
@@ -119,12 +122,7 @@ class TaskService(
         )
 
         request.assignees?.let { assigneeIds ->
-            val collaborators = userRepository.findAllById(assigneeIds).toSet()
-            if (collaborators.size != assigneeIds.size) {
-                throw ResourceNotFoundException("Some users not found")
-            }
-            task.collaborators.clear()
-            task.collaborators.addAll(collaborators)
+            syncTaskAssignees(task, assigneeIds, user)
         }
 
         val updated = taskRepository.save(task)
@@ -178,14 +176,7 @@ class TaskService(
                 "You are not authorized to update assignees on this task."
             )
         }
-
-        val assignees = userRepository.findAllById(userIds).toMutableSet()
-        if (assignees.size != userIds.size) {
-            throw ResourceNotFoundException("Some users not found")
-        }
-
-        task.collaborators.clear()
-        task.collaborators.addAll(assignees)
+        syncTaskAssignees(task, userIds, user)
         taskRepository.save(task)
 
         activityService.record(
@@ -252,12 +243,18 @@ class TaskService(
         if (!friendshipChecker.areFriends(task.owner.id!!, collaborator.id!!)) {
             throw UnauthorizedAccessException("You can only assign friends as collaborators.")
         }
-
-        if (!task.addCollaborator(collaborator)) {
-            return
+        val taskIdValue = task.id ?: throw ResourceNotFoundException("Task not found with ID: $taskId")
+        val existingMembership = taskMemberRepository.findByTaskIdAndUserId(taskIdValue, collaborator.id!!)
+        if (existingMembership == null) {
+            taskMemberRepository.save(
+                TaskMember(
+                    task = task,
+                    user = collaborator,
+                    role = MembershipRole.COLLABORATOR,
+                    createdByUser = actor
+                )
+            )
         }
-
-        taskRepository.save(task)
 
         activityService.record(
             actor = actor,
@@ -310,4 +307,41 @@ class TaskService(
 
     private fun resolveTaskCollaborators(task: Task): Set<User> =
         resolveTaskMembershipUsers(task, taskMemberRepository)
+
+    private fun syncTaskAssignees(task: Task, assigneeIds: List<Long>, actor: User) {
+        val usersById = userRepository.findAllById(assigneeIds).associateBy { it.id }
+        if (usersById.size != assigneeIds.size) {
+            throw ResourceNotFoundException("Some users not found")
+        }
+
+        val taskId = checkNotNull(task.id) { "Task not found" }
+        val existingMemberships = taskMemberRepository.findAllByTaskId(taskId)
+        val ownerMemberships = existingMemberships.filter { it.role == MembershipRole.OWNER }
+        taskMemberRepository.deleteAll(existingMemberships.filter { it.role != MembershipRole.OWNER })
+
+        val ownerIds = ownerMemberships.mapNotNull { it.user.id }.toSet()
+        val assigneeMemberships = assigneeIds
+            .distinct()
+            .filter { it !in ownerIds }
+            .map { assigneeId ->
+                TaskMember(
+                    task = task,
+                    user = usersById.getValue(assigneeId),
+                    role = MembershipRole.COLLABORATOR,
+                    createdByUser = actor
+                )
+            }
+        taskMemberRepository.saveAll(assigneeMemberships)
+
+        if (ownerIds.isEmpty()) {
+            taskMemberRepository.save(
+                TaskMember(
+                    task = task,
+                    user = task.owner,
+                    role = MembershipRole.OWNER,
+                    createdByUser = actor
+                )
+            )
+        }
+    }
 }

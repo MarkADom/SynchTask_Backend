@@ -1,6 +1,8 @@
 package com.synchtask.task.domain.entity
 
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.shared.domain.legacy.Legacy
+import com.synchtask.shared.exception.LegacyPathInvokedException
 import com.synchtask.task.domain.exception.InvalidTaskStatusTransitionException
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
@@ -17,12 +19,11 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 /**
@@ -50,23 +51,7 @@ class Task(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     val owner: User,
-    /**
-     * Users collaborating on this task.
-     * A unique constraint prevents duplicated (task_id, user_id) pairs.
-     */
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "task_collaborators",
-        joinColumns = [JoinColumn(name = "task_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")],
-        uniqueConstraints = [
-            UniqueConstraint(
-                name = "uk_task_collaborators_task_user",
-                columnNames = ["task_id", "user_id"]
-            )
-        ]
-    )
-    val collaborators: MutableSet<User> = mutableSetOf(),
+
     @OneToMany(
         mappedBy = "task",
         cascade = [CascadeType.ALL],
@@ -129,17 +114,31 @@ class Task(
         return taskMembership || boardMembership
     }
 
+    /**
+     * Legacy compatibility shim kept only to fail fast when old join-table collaborator flows are invoked.
+     * This exists to detect stale callers while assignee management is now handled via TaskMember/TaskMemberRepository.
+     * Removal planned for v1.1.0.
+     */
+    @Legacy
     fun canAddCollaborator(requester: User): Boolean {
-        return owner.id == requester.id
+        legacyLogger.warn("Legacy Task.canAddCollaborator invoked for taskId={}, requesterId={}", id, requester.id)
+        throw LegacyPathInvokedException(
+            "Legacy collaborator path exists for backward compatibility, replaced by TaskMember-based assignments. Removal planned for v1.1.0"
+        )
     }
 
+    /**
+     * Legacy compatibility shim kept only to fail fast when old join-table collaborator writes are invoked.
+     * This exists because runtime membership persistence is now exclusively handled by TaskMemberRepository.
+     * Removal planned for v1.1.0.
+     */
+
+    @Legacy
     fun addCollaborator(user: User): Boolean {
-        if (collaborators.any { it.id == user.id }) {
-            return false
-        }
-        collaborators.add(user)
-        updatedAt = LocalDateTime.now()
-        return true
+        legacyLogger.warn("Legacy Task.addCollaborator invoked for taskId={}, userId={}", id, user.id)
+        throw LegacyPathInvokedException(
+            "Legacy collaborator path exists for backward compatibility, replaced by TaskMemberRepository writes. Removal planned for v1.1.0"
+        )
     }
 
     fun updateDetails(
@@ -180,6 +179,11 @@ class Task(
             )
 
         return allowedTransitions[this.status]?.contains(target) ?: false
+    }
+
+
+    companion object {
+        private val legacyLogger = LoggerFactory.getLogger(Task::class.java)
     }
 }
 

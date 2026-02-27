@@ -33,7 +33,7 @@ class ProjectNotificationPolicy(
             ActivityType.PROJECT_CREATED -> setOf(project.owner.email)
 
             ActivityType.PROJECT_UPDATED ->
-                (project.members.map { it.email } + project.owner.email)
+                (project.projectMembers.map { it.user.email } + project.owner.email)
                     .filter { it != activity.actor.email }
                     .toSet()
 

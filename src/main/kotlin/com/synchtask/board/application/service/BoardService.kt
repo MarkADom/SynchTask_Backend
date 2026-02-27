@@ -9,6 +9,7 @@ import com.synchtask.board.application.dto.BoardResponseDTO
 import com.synchtask.board.application.dto.BoardSimpleDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.entity.BoardMember
 import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.board.presentation.mapper.BoardMapper
@@ -43,6 +44,14 @@ class BoardService(
             )
 
         val saved = boardRepository.save(board)
+        boardMemberRepository.save(
+            BoardMember(
+                board = saved,
+                user = actor,
+                role = MembershipRole.OWNER,
+                createdByUser = actor
+            )
+        )
 
         activityService.record(
             actor = actor,
@@ -180,15 +189,27 @@ class BoardService(
         }
 
         val collaborators = userRepository.findAllById(dto.userIds).toSet()
-
         if (collaborators.size != dto.userIds.size) {
             throw ResourceNotFoundException("Some users not found")
         }
+        val memberships = boardMemberRepository.findAllByBoardId(boardId)
+        val ownerMemberships = memberships.filter { it.role == MembershipRole.OWNER }
+        boardMemberRepository.deleteAll(memberships.filter { it.role != MembershipRole.OWNER })
 
-        board.collaborators.clear()
-        board.collaborators.addAll(collaborators)
+        val ownerIds = ownerMemberships.mapNotNull { it.user.id }.toSet()
+        val newCollaboratorMemberships = collaborators
+            .filter { collaborator -> collaborator.id !in ownerIds }
+            .map { collaborator ->
+                BoardMember(
+                    board = board,
+                    user = collaborator,
+                    role = MembershipRole.COLLABORATOR,
+                    createdByUser = actor
+                )
+            }
+        boardMemberRepository.saveAll(newCollaboratorMemberships)
+
         board.updatedAt = LocalDateTime.now()
-
         val saved = boardRepository.save(board)
 
         activityService.record(

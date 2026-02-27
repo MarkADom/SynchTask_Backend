@@ -8,7 +8,6 @@ import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
-import com.synchtask.task.application.service.TaskService
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
@@ -106,7 +105,7 @@ class NotificationService(
             boardRepository.findById(groupId)
                 .map { board ->
                     board.owner.email == actor.email ||
-                        board.collaborators.any { collaborator -> collaborator.email == actor.email }
+                        board.members.any { collaborator -> collaborator.user.email == actor.email }
                 }
                 .orElse(false)
 
@@ -114,7 +113,7 @@ class NotificationService(
             projectRepository.findById(groupId)
                 .map { project ->
                     project.owner.email == actor.email ||
-                        project.members.any { member -> member.email == actor.email }
+                        project.projectMembers.any { member -> member.user.email == actor.email }
                 }
                 .orElse(false)
 
@@ -122,11 +121,9 @@ class NotificationService(
             taskRepository.findById(groupId)
                 .map { task ->
                     task.owner.email == actor.email ||
-                        task.collaborators.any { collaborator -> collaborator.email == actor.email } ||
-                        task.members.any { member -> member.user.email == actor.email } ||
+                        task.members.any { collaborator -> collaborator.user.email == actor.email } ||
                         task.board.owner.email == actor.email ||
-                        task.board.members.any { member -> member.user.email == actor.email } ||
-                        task.board.collaborators.any { collaborator -> collaborator.email == actor.email }
+                        task.board.members.any { member -> member.user.email == actor.email }
                 }
                 .orElse(false)
 
