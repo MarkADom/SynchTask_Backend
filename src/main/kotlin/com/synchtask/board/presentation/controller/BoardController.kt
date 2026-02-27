@@ -6,6 +6,7 @@ import com.synchtask.board.application.dto.BoardResponseDTO
 import com.synchtask.board.application.dto.BoardSimpleDTO
 import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.board.application.service.BoardService
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.user.application.service.AuthenticatedUserService
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import org.springframework.http.ResponseEntity
@@ -37,7 +38,7 @@ class BoardController(
     @PreAuthorize("isAuthenticated()")
     fun createBoard(
         @RequestBody request: BoardCreateDTO,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<BoardResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
 
@@ -68,7 +69,7 @@ class BoardController(
     fun updateBoard(
         @PathVariable id: Long,
         @RequestBody request: BoardUpdateDTO,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<BoardResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
 
@@ -76,13 +77,16 @@ class BoardController(
         return ResponseEntity.ok(updated)
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
-    fun deleteBoard(@PathVariable id: Long, @AuthenticationPrincipal user: UserDetails): ResponseEntity<String> {
+    fun deleteBoard(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal user: UserDetails,
+    ): ResponseEntity<ApiMessageResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
 
         boardService.deleteBoard(id, actor)
-        return ResponseEntity.ok("Board deleted successfully.")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Board deleted successfully."))
     }
 
     @GetMapping("/shared")
@@ -98,7 +102,7 @@ class BoardController(
     fun updateBoardCollaborators(
         @PathVariable id: Long,
         @RequestBody dto: BoardCollaboratorUpdateDTO,
-        @AuthenticationPrincipal user: UserDetails
+        @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<BoardResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
 

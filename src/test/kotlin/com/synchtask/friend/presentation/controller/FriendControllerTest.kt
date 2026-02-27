@@ -3,6 +3,7 @@ package com.synchtask.friend.presentation.controller
 import com.synchtask.friend.application.dto.FriendRequestDTO
 import com.synchtask.friend.application.dto.FriendResponseDTO
 import com.synchtask.friend.application.service.FriendService
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -40,7 +41,7 @@ class FriendControllerTest {
 
         val response = controller.sendFriendRequest(request, testUser)
 
-        Assertions.assertEquals("Friend request sent successfully!", response.body)
+        Assertions.assertEquals(ApiMessageResponseDTO("Friend request sent successfully!"), response.body)
         Assertions.assertEquals(200, response.statusCode.value())
         verify { friendService.sendFriendRequest("user@email.com", "friend@email.com") }
     }
@@ -53,7 +54,7 @@ class FriendControllerTest {
 
         val response = controller.acceptFriendRequest(requestId, testUser)
 
-        Assertions.assertEquals("Friend request accepted!", response.body)
+        Assertions.assertEquals(ApiMessageResponseDTO("Friend request accepted!"), response.body)
         Assertions.assertEquals(200, response.statusCode.value())
         verify { friendService.acceptFriendRequest(requestId, "user@email.com") }
     }
@@ -66,7 +67,7 @@ class FriendControllerTest {
 
         val response = controller.removeFriend(friendId, testUser)
 
-        Assertions.assertEquals("Friend removed!", response.body)
+        Assertions.assertEquals(ApiMessageResponseDTO("Friend removed!"), response.body)
         Assertions.assertEquals(200, response.statusCode.value())
         verify { friendService.removeFriend(friendId, "user@email.com") }
     }

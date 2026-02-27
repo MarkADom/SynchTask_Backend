@@ -132,7 +132,7 @@ class AuthController(
         )
     }
 
-    @DeleteMapping("/logout")
+    @DeleteMapping("/logout", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun logout(
         request: HttpServletRequest,

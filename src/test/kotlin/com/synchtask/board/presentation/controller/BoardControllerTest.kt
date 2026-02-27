@@ -3,6 +3,7 @@ package com.synchtask.board.presentation.controller
 import com.synchtask.board.application.dto.*
 import com.synchtask.board.application.service.BoardService
 import com.synchtask.board.domain.repository.BoardRepository
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
@@ -108,7 +109,7 @@ class BoardControllerTest {
     fun `should delete board`() {
         every { boardService.deleteBoard(10L, userEntity) } just runs
         val result = controller.deleteBoard(10L, userDetails)
-        assertEquals("Board deleted successfully.", result.body)
+        assertEquals(ApiMessageResponseDTO("Board deleted successfully."), result.body)
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.synchtask.security.infrastructure.config
 import com.synchtask.security.infrastructure.filter.RateLimitFilter
 import com.synchtask.security.infrastructure.jwt.CustomJwtAuthenticationConverter
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
@@ -77,8 +78,8 @@ class SecurityConfig(
                     // OAuth2 Endpoints
                     .requestMatchers("/oauth2/**").permitAll()
                     // Actuator endpoints
-                    .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                    .requestMatchers("/actuator/**").hasRole("ADMIN")
+                    .requestMatchers(EndpointRequest.to("health", "info")).permitAll()
+                    .requestMatchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
                     // Protected Endpoints (Require Authentication)
                     .requestMatchers("/notifications/**").authenticated()
                     // All other requests require authentication

@@ -81,11 +81,14 @@ class SecurityConfigIntegrationTest {
 @RestController
 class SecurityConfigTestController {
     @GetMapping("/auth/login")
-    fun loginPublic(): ResponseEntity<Map<String, String>> = ResponseEntity.ok(mapOf("status" to "UP"))
+    fun loginPublic(): ResponseEntity<Map<String, String>> =
+        ResponseEntity.ok(mapOf("status" to "UP"))
 
     @GetMapping("/notifications/test")
-    fun notifications(): ResponseEntity<Map<String, String>> = ResponseEntity.ok(mapOf("notifications" to "ok"))
+    fun notifications(): ResponseEntity<Map<String, String>> =
+        ResponseEntity.ok(mapOf("notifications" to "ok"))
 
     @GetMapping("/boards")
-    fun boards(): ResponseEntity<List<String>> = ResponseEntity.ok(listOf("b1"))
+    fun boards(): ResponseEntity<List<String>> =
+        ResponseEntity.ok(listOf("b1"))
 }

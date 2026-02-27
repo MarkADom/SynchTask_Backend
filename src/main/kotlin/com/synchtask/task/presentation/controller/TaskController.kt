@@ -1,5 +1,6 @@
 package com.synchtask.task.presentation.controller
 
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
 import com.synchtask.task.application.dto.TaskCreateDTO
@@ -34,7 +35,7 @@ class TaskController(
 ) {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
+    fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
         val creator = authenticatedUserService.requireUser(user)
         val created = taskService.createTask(creator, request)
         return TaskMapper.toResponse(created)
@@ -68,7 +69,7 @@ class TaskController(
     @GetMapping("/{taskId}")
     @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
-    fun getTaskDetail(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): TaskResponseDTO {
+    fun getTaskDetail(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
         val task = taskService.findTaskById(taskId)
         val userEntity = authenticatedUserService.requireUser(user)
 
@@ -92,13 +93,13 @@ class TaskController(
         return ResponseEntity.ok(TaskMapper.toResponse(updated))
     }
 
-    @PutMapping("/{taskId}/status")
+    @PutMapping("/{taskId}/status", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun updateStatus(
         @PathVariable taskId: Long,
         @RequestParam status: TaskStatus,
         @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ApiMessageResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
 
         taskService.updateTaskStatus(
@@ -106,54 +107,54 @@ class TaskController(
             newStatus = status,
             actor = actor
         )
-
-        return ResponseEntity.ok("Task status updated successfully")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Task status updated successfully"))
     }
 
-    @DeleteMapping("/{taskId}")
+    @DeleteMapping("/{taskId}", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
-    fun deleteTask(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails,): ResponseEntity<String> {
+    fun deleteTask(@PathVariable taskId: Long, @AuthenticationPrincipal user: UserDetails)
+        : ResponseEntity<ApiMessageResponseDTO> {
         val userEntity = authenticatedUserService.requireUser(user)
 
         taskService.deleteTask(taskId, userEntity)
-        return ResponseEntity.ok("Task deleted successfully")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Task deleted successfully"))
     }
 
-    @PostMapping("/{taskId}/assign")
+    @PostMapping("/{taskId}/assign", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun assignCollaborator(
         @PathVariable taskId: Long,
         @RequestParam email: String,
         @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ApiMessageResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
         taskService.assignCollaborator(taskId, email, actor)
-        return ResponseEntity.ok("Collaborator assigned successfully")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Collaborator assigned successfully"))
     }
 
-    @PutMapping("/{taskId}/labels")
+    @PutMapping("/{taskId}/labels", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun updateLabels(
         @PathVariable taskId: Long,
         @RequestBody request: TaskLabelUpdateDTO,
         @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ApiMessageResponseDTO> {
         val userEntity = authenticatedUserService.requireUser(user)
 
         taskService.updateTaskLabels(taskId, request.labels, userEntity)
-        return ResponseEntity.ok("Labels updated successfully")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Labels updated successfully"))
     }
 
-    @PutMapping("/{taskId}/assignees")
+    @PutMapping("/{taskId}/assignees", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun updateAssignees(
         @PathVariable taskId: Long,
         @RequestBody request: TaskAssigneeUpdateDTO,
         @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ApiMessageResponseDTO> {
         val userEntity = authenticatedUserService.requireUser(user)
 
         taskService.updateTaskAssignees(taskId, request.userIds, userEntity)
-        return ResponseEntity.ok("Assignees updated successfully")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Assignees updated successfully"))
     }
 }

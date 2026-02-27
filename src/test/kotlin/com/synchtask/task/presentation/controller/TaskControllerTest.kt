@@ -2,6 +2,7 @@ package com.synchtask.task.presentation.controller
 
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.shared.domain.membership.MembershipRole
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.application.dto.TaskAssigneeUpdateDTO
@@ -242,7 +243,7 @@ class TaskControllerTest {
 
         val response = controller.deleteTask(1L, userDetails)
 
-        assertEquals("Task deleted successfully", response.body)
+        assertEquals(ApiMessageResponseDTO("Task deleted successfully"), response.body)
     }
 
     @Test
@@ -252,7 +253,7 @@ class TaskControllerTest {
 
         val response = controller.assignCollaborator(1L, "collab@test.com", userDetails)
 
-        assertEquals("Collaborator assigned successfully", response.body)
+        assertEquals(ApiMessageResponseDTO("Collaborator assigned successfully"), response.body)
     }
 
     @Test
@@ -264,7 +265,7 @@ class TaskControllerTest {
 
         val response = controller.updateLabels(1L, dto, userDetails)
 
-        assertEquals("Labels updated successfully", response.body)
+        assertEquals(ApiMessageResponseDTO("Labels updated successfully"), response.body)
     }
 
     @Test
@@ -276,6 +277,6 @@ class TaskControllerTest {
 
         val response = controller.updateAssignees(1L, dto, userDetails)
 
-        assertEquals("Assignees updated successfully", response.body)
+        assertEquals(ApiMessageResponseDTO("Assignees updated successfully"), response.body)
     }
 }
