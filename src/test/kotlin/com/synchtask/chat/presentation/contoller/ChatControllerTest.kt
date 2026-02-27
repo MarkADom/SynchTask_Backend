@@ -5,6 +5,7 @@ import com.synchtask.chat.application.dto.ChatRoomDTO
 import com.synchtask.chat.application.service.ChatService
 import com.synchtask.chat.application.service.KeyExchangeService
 import com.synchtask.chat.presentation.controller.ChatController
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import io.mockk.every
 import io.mockk.just
@@ -79,7 +80,7 @@ class ChatControllerTest {
         val response = controller.savePublicKey(principal, "pubkey")
 
         assertEquals(HttpStatus.OK, response.statusCode)
-        assertEquals("Public key saved successfully.", response.body)
+        assertEquals(ApiMessageResponseDTO("Public key saved successfully."), response.body)
         verify(exactly = 1) { keyExchangeService.saveUserPublicKey("me@example.com", "pubkey") }
     }
 

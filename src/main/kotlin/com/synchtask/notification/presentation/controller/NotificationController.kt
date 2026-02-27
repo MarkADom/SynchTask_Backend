@@ -97,12 +97,13 @@ class NotificationController(
     ): ResponseEntity<ApiMessageResponseDTO> {
         if (userEmail != user.username) {
             throw UnauthorizedAccessException(
-                "Deprecated endpoint only supports the authenticated principal; use /notifications/mark-all-as-read/me")
+                "Deprecated endpoint only supports the authenticated principal; use /notifications/mark-all-as-read/me"
+            )
         }
         return markAllMyNotificationsAsRead(user)
     }
 
-    @DeleteMapping("/clear-cache/me")
+    @DeleteMapping("/clear-cache/me", produces = ["application/json"] )
     @PreAuthorize("isAuthenticated()")
     fun clearMyNotificationCache(@AuthenticationPrincipal user: UserDetails): ResponseEntity<ApiMessageResponseDTO> {
         val deletedCount = notificationService.clearRedisCacheForUser(user.username)
@@ -111,7 +112,7 @@ class NotificationController(
 
     @Deprecated("Use /notifications/clear-cache/me")
     @Operation(deprecated = true, summary = "Deprecated alias for /notifications/clear-cache/me")
-    @DeleteMapping("/clear-cache/{userEmail}")
+    @DeleteMapping("/clear-cache/{userEmail}", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun clearNotificationCache(
         @PathVariable userEmail: String,
@@ -119,7 +120,8 @@ class NotificationController(
     ): ResponseEntity<ApiMessageResponseDTO> {
         if (userEmail != user.username) {
             throw UnauthorizedAccessException(
-                "Deprecated endpoint only supports the authenticated principal; use /notifications/clear-cache/me")
+                "Deprecated endpoint only supports the authenticated principal; use /notifications/clear-cache/me"
+            )
         }
         return clearMyNotificationCache(user)
     }
