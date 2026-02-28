@@ -14,7 +14,7 @@ Main groups:
 - **Database**: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
 - **Redis**: `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DATABASE`, `REDIS_TIMEOUT`
 - **OAuth2 (Google)**: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
-- **JWT**: `JWT_EXPIRATION`, `JWT_REFRESH_EXPIRATION`, `JWT_ISSUER`, `JWT_AUDIENCE`, `JWT_ALGORITHM`
+- **JWT**: `JWT_EXPIRATION`, `JWT_REFRESH_EXPIRATION`, `JWT_ISSUER`, `JWT_JWK_SET_URI`, `JWT_AUDIENCE`, `JWT_ALGORITHM`
 - **CORS**: `CORS_ALLOWED_ORIGINS`
 
 ## Operational hardening flags
@@ -55,7 +55,8 @@ Legacy notification mutation paths remain temporarily available as backward-comp
 ## Notes
 
 - Never commit `.envrc` or real credentials.
-- For local development, JPA uses `ddl-auto: update`.
+- Default profile is hardened for release (`ddl-auto: validate`, `show-sql: false`, actuator exposure `health,info`).
+- `dev` profile keeps local convenience (`ddl-auto: update`, `show-sql: true`, expanded actuator exposure).
 - Test profile uses H2 and `create-drop` (`application-test.yml`).
 - In production, use migrations (Flyway/Liquibase) instead of auto-DDL.
 

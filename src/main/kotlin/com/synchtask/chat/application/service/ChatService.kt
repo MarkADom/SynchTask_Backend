@@ -9,6 +9,7 @@ import com.synchtask.chat.domain.repository.ChatRoomRepository
 import com.synchtask.chat.presentation.mapper.ChatMapper
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -67,14 +68,31 @@ class ChatService(
         return ChatMapper.toMessageDto(chatMessage)
     }
 
-    fun getChatHistory(chatRoomId: Long): List<ChatMessageDTO> {
+    /**
+     * Returns chat history only to participants.
+     *
+     * We intentionally return 404 (via [ResourceNotFoundException]) when the requester is not a
+     * participant, instead of 403, to avoid revealing whether a given chat room exists.
+     */
+    @Transactional(readOnly = true)
+    fun getChatHistory(chatRoomId: Long, requesterEmail: String): List<ChatMessageDTO> {
         val chatRoom =
             chatRoomRepository.findById(chatRoomId)
                 .orElseThrow { ResourceNotFoundException("Chat room not found") }
+
+        val requester = resolveRequester(requesterEmail)
+        if (!chatRoom.participants.contains(requester)) {
+            throw ResourceNotFoundException("Chat room not found")
+        }
 
         val messages = chatMessageRepository.findByChatRoomOrderByTimestampAsc(chatRoom)
         logger.info("Retrieved ${messages.size} messages from chatRoom ${chatRoom.id}")
 
         return messages.map { ChatMapper.toMessageDto(it) }
+    }
+
+    private fun resolveRequester(requesterEmail: String): User {
+        return userRepository.findByEmail(requesterEmail)
+            .orElseThrow { ResourceNotFoundException("Requester not found") }
     }
 }

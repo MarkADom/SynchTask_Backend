@@ -27,6 +27,7 @@ export GOOGLE_REDIRECT_URI="http://localhost:8081/login/oauth2/code/google"
 export JWT_EXPIRATION=3600000
 export JWT_REFRESH_EXPIRATION=1209600000
 export JWT_ISSUER="synchtask-backend"
+export JWT_JWK_SET_URI="http://localhost:8081/jwks"
 export JWT_AUDIENCE="synchtask-client"
 export JWT_ALGORITHM="RS256"
 

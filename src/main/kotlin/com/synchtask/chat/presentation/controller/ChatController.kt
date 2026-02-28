@@ -63,7 +63,7 @@ class ChatController(
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<List<ChatMessageDTO>> {
         logger.info("Fetching chat history for chatRoomId=$chatRoomId")
-        val messages = chatService.getChatHistory(chatRoomId)
+        val messages = chatService.getChatHistory(chatRoomId, user.username)
         return ResponseEntity.ok(messages)
     }
 

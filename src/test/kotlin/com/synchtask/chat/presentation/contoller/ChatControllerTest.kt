@@ -61,15 +61,15 @@ class ChatControllerTest {
 
     @Test
     fun `should return chat history`() {
-        val principal = mockk<UserDetails>()
+        val principal = mockk<UserDetails> { every { username } returns "me@example.com" }
         val history = listOf(ChatMessageDTO(1L, 4L, "me@example.com", "m1", LocalDateTime.now()))
-        every { chatService.getChatHistory(4L) } returns history
+        every { chatService.getChatHistory(4L, "me@example.com") } returns history
 
         val response = controller.getChatHistory(4L, principal)
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals(history, response.body)
-        verify(exactly = 1) { chatService.getChatHistory(4L) }
+        verify(exactly = 1) { chatService.getChatHistory(4L, "me@example.com") }
     }
 
     @Test
