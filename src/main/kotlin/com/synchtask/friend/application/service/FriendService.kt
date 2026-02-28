@@ -91,9 +91,12 @@ class FriendService(
             userRepository.findByEmail(email)
                 .orElseThrow { ResourceNotFoundException("User not found: $email") }
 
-        return friendRepository
-            .findAllByRequesterIdOrFriendId(user.id!!, user.id!!)
-            .map { mapper.toResponse(it, user.id!!) }
+        // Performance rationale: load all referenced users in one query to avoid N+1 lookups per friendship row.
+        val friendships = friendRepository.findAllByRequesterIdOrFriendId(user.id!!, user.id!!)
+        val userIds = friendships.flatMap { listOf(it.requesterId, it.friendId) }.distinct()
+        val usersById = userRepository.findAllById(userIds).associateBy { it.id!! }
+
+        return friendships.map { mapper.toResponse(it, user.id!!, usersById) }
     }
 
     @Transactional
