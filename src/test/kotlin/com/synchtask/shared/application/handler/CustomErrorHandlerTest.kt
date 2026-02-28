@@ -1,5 +1,6 @@
 package com.synchtask.shared.application.handler
 
+import com.synchtask.friend.domain.exception.FriendRequestAlreadySentException
 import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.shared.dto.ErrorResponseDTO
 import com.synchtask.shared.exception.ResourceNotFoundException
@@ -10,6 +11,8 @@ import io.jsonwebtoken.JwtException
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.springframework.http.HttpStatus
+import org.springframework.security.access.AccessDeniedException
 
 class CustomErrorHandlerTest {
     private val handler = CustomErrorHandler()
@@ -75,5 +78,23 @@ class CustomErrorHandlerTest {
 
         Assertions.assertEquals("An internal server error occurred.", response.message)
         Assertions.assertEquals("Internal Server Error", response.error)
+    }
+
+    @Test
+    fun `should handle access denied exceptions`() {
+        val response = handler.handleAccessDenied(AccessDeniedException("denied"))
+
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+        Assertions.assertEquals("Access Denied", response.body?.message)
+        Assertions.assertEquals("Forbidden", response.body?.error)
+    }
+
+    @Test
+    fun `should handle friend request already sent`() {
+        val response = handler.handleFriendRequestAlreadySent(FriendRequestAlreadySentException("Already sent"))
+
+        Assertions.assertEquals(HttpStatus.CONFLICT, response.statusCode)
+        Assertions.assertEquals("Already sent", response.body?.message)
+        Assertions.assertEquals("Conflict", response.body?.error)
     }
 }
