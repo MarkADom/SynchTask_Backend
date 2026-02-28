@@ -22,10 +22,10 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
-import io.mockk.spyk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.test.assertFailsWith
 import java.util.Optional
 import kotlin.test.assertEquals
 
@@ -173,6 +173,68 @@ class TaskServiceTest {
                         it.user.id == owner.id &&
                         it.role == MembershipRole.OWNER
                 }
+            )
+        }
+    }
+
+    @Test
+    fun `assignCollaborator saves membership when collaborator is friend`() {
+        val existingTask = task(104L)
+
+        every { taskRepository.findById(existingTask.id!!) } returns Optional.of(existingTask)
+        every { taskMemberRepository.existsByTaskIdAndUserId(existingTask.id!!, owner.id!!) } returns true
+        every { userRepository.findByEmail(collaborator.email) } returns Optional.of(collaborator)
+        every { friendshipChecker.areFriends(owner.id!!, collaborator.id!!) } returns true
+        every { taskMemberRepository.findByTaskIdAndUserId(existingTask.id!!, collaborator.id!!) } returns null
+
+        service.assignCollaborator(existingTask.id!!, collaborator.email, owner)
+
+        verify(exactly = 1) {
+            taskMemberRepository.save(
+                match<TaskMember> {
+                    it.task.id == existingTask.id &&
+                        it.user.id == collaborator.id &&
+                        it.role == MembershipRole.COLLABORATOR
+                }
+            )
+        }
+        verify(exactly = 1) { notificationService.sendNotification(collaborator.email, any(), any(), existingTask.id) }
+    }
+
+    @Test
+    fun `assignCollaborator rejects non friend collaborator`() {
+        val existingTask = task(105L)
+
+        every { taskRepository.findById(existingTask.id!!) } returns Optional.of(existingTask)
+        every { taskMemberRepository.existsByTaskIdAndUserId(existingTask.id!!, owner.id!!) } returns true
+        every { userRepository.findByEmail(collaborator.email) } returns Optional.of(collaborator)
+        every { friendshipChecker.areFriends(owner.id!!, collaborator.id!!) } returns false
+
+        assertFailsWith<com.synchtask.shared.exception.UnauthorizedAccessException> {
+            service.assignCollaborator(existingTask.id!!, collaborator.email, owner)
+        }
+    }
+
+    @Test
+    fun `sync assignees does not add owner membership when owner already exists`() {
+        val existingTask = task(106L)
+        val ownerMembership = TaskMember(
+            task = existingTask,
+            user = owner,
+            role = MembershipRole.OWNER
+        )
+
+        every { taskRepository.findById(existingTask.id!!) } returns Optional.of(existingTask)
+        every { taskMemberRepository.existsByTaskIdAndUserId(existingTask.id!!, owner.id!!) } returns true
+        every { userRepository.findAllById(listOf(collaborator.id!!)) } returns listOf(collaborator)
+        every { taskMemberRepository.findAllByTaskId(existingTask.id!!) } returns listOf(ownerMembership)
+        every { taskRepository.save(existingTask) } returns existingTask
+
+        service.updateTaskAssignees(existingTask.id!!, listOf(collaborator.id!!), owner)
+
+        verify(exactly = 0) {
+            taskMemberRepository.save(
+                match<TaskMember> { it.role == MembershipRole.OWNER && it.task.id == existingTask.id }
             )
         }
     }

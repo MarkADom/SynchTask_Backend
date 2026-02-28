@@ -79,11 +79,23 @@ class BoardServiceTest {
 
     @Test
     fun `updateCollaborators replaces only membership records`() {
-        val board = Board(id = 11L, name = "Board", owner = owner)
+        val board = Board(
+            id = 11L,
+            name = "Board",
+            owner = owner
+        )
         val dto = BoardCollaboratorUpdateDTO(userIds = listOf(collaborator.id!!))
 
-        val ownerMember = BoardMember(board = board, user = owner, role = MembershipRole.OWNER)
-        val oldCollaboratorMember = BoardMember(board = board, user = collaborator, role = MembershipRole.COLLABORATOR)
+        val ownerMember = BoardMember(
+            board = board,
+            user = owner,
+            role = MembershipRole.OWNER
+        )
+        val oldCollaboratorMember = BoardMember(
+            board = board,
+            user = collaborator,
+            role = MembershipRole.COLLABORATOR
+        )
 
         every { boardRepository.findById(board.id!!) } returns Optional.of(board)
         every { boardMemberRepository.findByBoardIdAndUserId(board.id!!, owner.id!!) } returns ownerMember
@@ -110,8 +122,67 @@ class BoardServiceTest {
     }
 
     @Test
+    fun `deleteBoard records snapshot for notifications`() {
+        val board = Board(
+            id = 13L,
+            name = "Board",
+            owner = owner
+        )
+        board.members.add(
+            BoardMember(
+                board = board,
+                user = collaborator,
+                role = MembershipRole.COLLABORATOR
+            )
+        )
+
+        every { boardRepository.findById(board.id!!) } returns Optional.of(board)
+        every { boardMemberRepository.findByBoardIdAndUserId(board.id!!, owner.id!!) } returns
+            BoardMember(
+                board = board,
+                user = owner,
+                role = MembershipRole.OWNER
+            )
+
+        service.deleteBoard(board.id!!, owner)
+
+        verify(exactly = 1) { boardRepository.delete(board) }
+        verify(exactly = 1) {
+            activityService.record(
+                actor = owner,
+                type = com.synchtask.activity.domain.model.ActivityType.BOARD_DELETED,
+                referenceId = board.id,
+                description = any(),
+                contextSnapshot = withArg { snapshot ->
+                    assertEquals(owner.email, snapshot?.ownerEmail)
+                    assertEquals(setOf(collaborator.email), snapshot?.collaboratorEmails)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `getSimpleBoardsForUser returns empty when actor has null id`() {
+        val anonymous = User(
+            id = null,
+            name = "Anon",
+            email = "anon@test.com",
+            passwordHash = "hash"
+        )
+
+        val boards = service.getSimpleBoardsForUser(anonymous)
+
+        assertEquals(emptyList(), boards)
+    }
+
+
+    @Test
     fun `getBoardAccessibleByUser checks access through BoardMemberRepository`() {
-        val board = Board(id = 12L, name = "Board", owner = owner)
+        val board = Board(
+            id = 12L,
+            name = "Board",
+            owner = owner
+        )
         every { boardRepository.findById(board.id!!) } returns Optional.of(board)
         every { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, owner.id!!) } returns true
 
@@ -119,5 +190,4 @@ class BoardServiceTest {
 
         verify(exactly = 1) { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, owner.id!!) }
     }
-
 }

@@ -18,10 +18,12 @@ import com.synchtask.user.domain.entity.User
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.Optional
+import kotlin.collections.emptySet
 
 class NotificationPoliciesTest {
     private val actor = User(
@@ -195,5 +197,25 @@ class NotificationPoliciesTest {
         )
         assertEquals(NotificationType.GROUP, boardPolicy.notificationType())
         assertEquals(NotificationType.GROUP, projectPolicy.notificationType())
+    }
+
+    @Test
+    fun `board and project policies cover supports and fallback branches`() {
+        val boardPolicy = BoardNotificationPolicy(mockk<BoardRepository>())
+        val projectPolicy = ProjectNotificationPolicy(mockk<ProjectRepository>())
+
+        val unrelated = Activity(actor = actor, type = ActivityType.TASK_CREATED)
+        assertFalse(boardPolicy.supports(unrelated))
+        assertFalse(projectPolicy.supports(unrelated))
+
+        val boardCreated = Activity(actor = owner, type = ActivityType.BOARD_CREATED)
+        val projectCreated = Activity(actor = owner, type = ActivityType.PROJECT_CREATED)
+
+        assertTrue(boardPolicy.supports(boardCreated))
+        assertTrue(projectPolicy.supports(projectCreated))
+        assertEquals("Board updated", boardPolicy.buildMessage(boardCreated))
+        assertEquals("Project updated", projectPolicy.buildMessage(projectCreated))
+        assertEquals(emptySet<String>(), boardPolicy.resolveRecipients(boardCreated, null))
+        assertEquals(emptySet<String>(), projectPolicy.resolveRecipients(projectCreated, null))
     }
 }

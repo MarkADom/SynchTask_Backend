@@ -13,6 +13,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -84,6 +85,139 @@ class ProjectServiceTest {
         assertEquals(MembershipRole.OWNER, memberSlot.captured.role)
         assertEquals(owner.id, memberSlot.captured.createdByUser?.id)
     }
+
+    @Test
+    fun `update with boards emits project boards updated activity`() {
+        val project = Project(
+            id = 70L,
+            name = "Project",
+            description = "desc",
+            owner = owner,
+            dueDate = LocalDate.now()
+        )
+        val boardOne = com.synchtask.board.domain.entity.Board(
+            id = 20L,
+            name = "B1",
+            owner = owner
+        )
+        val boardTwo = com.synchtask.board.domain.entity.Board(
+            id = 21L,
+            name = "B2",
+            owner = owner
+        )
+
+        every { projectRepository.findById(project.id!!) } returns java.util.Optional.of(project)
+        every { projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!) } returns
+
+            ProjectMember(
+                project = project,
+                user = owner,
+                role = MembershipRole.OWNER,
+                createdByUser = owner
+            )
+        every { boardRepository.findAllById(listOf(boardOne.id!!, boardTwo.id!!)) } returns listOf(boardOne, boardTwo)
+        every { projectRepository.save(project) } returns project
+
+        service.update(
+            project.id!!,
+            com.synchtask.project.application.dto.ProjectUpdateDTO(boardIds = listOf(boardOne.id!!, boardTwo.id!!)),
+            owner
+        )
+
+        verify(exactly = 1) {
+            activityService.record(
+                actor = owner,
+                type = com.synchtask.activity.domain.model.ActivityType.PROJECT_UPDATED,
+                referenceId = project.id,
+                description = any(),
+                contextSnapshot = null
+            )
+        }
+        verify(exactly = 1) {
+            activityService.record(
+                actor = owner,
+                type = com.synchtask.activity.domain.model.ActivityType.PROJECT_BOARDS_UPDATED,
+                referenceId = project.id,
+                description = any(),
+                contextSnapshot = null
+            )
+        }
+    }
+
+    @Test
+    fun `delete records activity snapshot with owner and members`() {
+        val project = Project(
+            id = 71L,
+            name = "Project",
+            description = "desc",
+            owner = owner,
+            dueDate = LocalDate.now()
+        )
+        val member = User(
+            id = 2L,
+            name = "Member",
+            email = "member@test.com",
+            passwordHash = "hash"
+        )
+
+        every { projectRepository.findById(project.id!!) } returns java.util.Optional.of(project)
+        every { projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!) } returns
+            ProjectMember(
+                project = project,
+                user = owner,
+                role = MembershipRole.OWNER,
+                createdByUser = owner
+            )
+        every { projectMemberRepository.findAllByProjectId(project.id!!) } returns listOf(
+            ProjectMember(
+                project =
+                    project,
+                user = owner,
+                role = MembershipRole.OWNER,
+                createdByUser = owner
+            ),
+            ProjectMember(
+                project = project,
+                user = member,
+                role = MembershipRole.COLLABORATOR,
+                createdByUser = owner
+            )
+        )
+
+        service.delete(project.id!!, owner)
+
+        verify(exactly = 1) { projectRepository.delete(project) }
+        verify(exactly = 1) {
+            activityService.record(
+                actor = owner,
+                type = com.synchtask.activity.domain.model.ActivityType.PROJECT_DELETED,
+                referenceId = project.id,
+                description = any(),
+                contextSnapshot = withArg { snapshot ->
+                    kotlin.test.assertEquals(owner.email, snapshot?.ownerEmail)
+                    kotlin.test.assertEquals(setOf(owner.email, member.email), snapshot?.memberEmails)
+                })
+        }
+    }
+
+    @Test
+    fun `getById throws when actor has no project access`() {
+        val project = Project(
+            id = 72L,
+            name = "Project",
+            description = "desc",
+            owner = owner,
+            dueDate = LocalDate.now()
+        )
+
+        every { projectRepository.findById(project.id!!) } returns java.util.Optional.of(project)
+        every { projectMemberRepository.existsByProjectIdAndUserId(project.id!!, owner.id!!) } returns false
+
+        assertThrows(NoSuchElementException::class.java) {
+            service.getById(project.id!!, owner)
+        }
+    }
+
 
     @Test
     fun `listAll resolves project scope through ProjectMemberRepository`() {
