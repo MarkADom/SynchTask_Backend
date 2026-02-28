@@ -4,10 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.notification.presentation.mapper.NotificationMapper
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
+import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
@@ -23,8 +26,11 @@ class NotificationService(
     private val notificationWebSocketService: NotificationWebSocketService,
     private val userRepository: UserRepository,
     private val boardRepository: BoardRepository,
+    private val boardMemberRepository: BoardMemberRepository,
     private val projectRepository: ProjectRepository,
+    private val projectMemberRepository: ProjectMemberRepository,
     private val taskRepository: TaskRepository,
+    private val taskMemberRepository: TaskMemberRepository,
 ) {
     private val logger = LoggerFactory.getLogger(NotificationService::class.java)
 
@@ -101,29 +107,29 @@ class NotificationService(
             )
         }
 
+        val actorId = actor.id ?: throw UnauthorizedAccessException("Actor ${actor.email} has invalid id")
+
         val hasBoardContextAccess =
             boardRepository.findById(groupId)
                 .map { board ->
-                    board.owner.email == actor.email ||
-                        board.members.any { collaborator -> collaborator.user.email == actor.email }
+                    val boardId = board.id ?: return@map false
+                    boardMemberRepository.existsByBoardIdAndUserId(boardId, actorId)
                 }
                 .orElse(false)
 
         val hasProjectContextAccess =
             projectRepository.findById(groupId)
                 .map { project ->
-                    project.owner.email == actor.email ||
-                        project.projectMembers.any { member -> member.user.email == actor.email }
+                    val projectId = project.id ?: return@map false
+                    projectMemberRepository.existsByProjectIdAndUserId(projectId, actorId)
                 }
                 .orElse(false)
 
         val hasTaskContextAccess =
             taskRepository.findById(groupId)
                 .map { task ->
-                    task.owner.email == actor.email ||
-                        task.members.any { collaborator -> collaborator.user.email == actor.email } ||
-                        task.board.owner.email == actor.email ||
-                        task.board.members.any { member -> member.user.email == actor.email }
+                    val taskId = task.id ?: return@map false
+                    taskMemberRepository.existsByTaskIdAndUserId(taskId, actorId)
                 }
                 .orElse(false)
 
