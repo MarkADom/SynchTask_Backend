@@ -17,7 +17,7 @@ class TaskCommentNotificationPolicy(
         val taskId = activity.referenceId ?: return emptySet()
         val task = taskRepository.findById(taskId).orElse(null) ?: return emptySet()
 
-        return (task.collaborators.map { it.email } + task.owner.email)
+        return (task.members.map { it.user.email } + task.owner.email)
             .filter { it != activity.actor.email }
             .toSet()
     }

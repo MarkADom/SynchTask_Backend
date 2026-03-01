@@ -35,7 +35,7 @@ class BoardNotificationPolicy(
 
             ActivityType.BOARD_UPDATED,
             ActivityType.BOARD_COLLABORATORS_UPDATED ->
-                (board.collaborators.map { it.email } + board.owner.email)
+                (board.members.map { it.user.email } + board.owner.email)
                     .filter { it != activity.actor.email }
                     .toSet()
 

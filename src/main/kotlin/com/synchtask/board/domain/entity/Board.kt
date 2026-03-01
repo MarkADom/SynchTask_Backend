@@ -14,12 +14,9 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 import java.time.LocalDateTime
 
 /**
@@ -53,27 +50,10 @@ class Board(
     val createdAt: LocalDateTime = LocalDateTime.now(),
     @Column(name = "updated_at", nullable = true)
     var updatedAt: LocalDateTime? = null,
+
     /**
-     * Users collaborating on this board.
-     * A unique constraint prevents duplicated (board_id, user_id) pairs.
-     */
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "board_collaborators",
-        joinColumns = [JoinColumn(name = "board_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")],
-        uniqueConstraints = [
-            UniqueConstraint(
-                name = "uk_board_collaborators_board_user",
-                columnNames = ["board_id", "user_id"]
-            )
-        ]
-    )
-    val collaborators: MutableSet<User> = mutableSetOf(),
-    /**
-     * Tasks that belong to this board.
-     * Orphan removal ensures consistency when tasks are deleted.
-     */
+     * Membership of this board
+    */
     @OneToMany(
         mappedBy = "board",
         cascade = [CascadeType.ALL],

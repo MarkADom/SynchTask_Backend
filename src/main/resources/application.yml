@@ -1,3 +1,5 @@
+# Default (non-dev) profile configuration.
+# This file is hardened for release environments; local development overrides belong in application-dev.yml.
 spring:
     datasource:
         url: ${DB_URL}
@@ -12,11 +14,10 @@ spring:
 
     jpa:
         hibernate:
-            # Uses ddl-auto=update for local development convenience.
-            # In a production-grade setup, schema migrations should be managed via Flyway or Liquibase.
-            ddl-auto: update
+            # Release posture: validate schema only; do not mutate database structure at runtime.
+            ddl-auto: validate
         open-in-view: false
-        show-sql: true
+        show-sql: false
         properties:
             hibernate:
                 format_sql: true
@@ -58,8 +59,8 @@ spring:
                         issuer-uri: https://accounts.google.com
             resourceserver:
                 jwt:
-                    issuer-uri: http://localhost:${SERVER_PORT}
-                    jwk-set-uri: http://localhost:${SERVER_PORT}/jwks
+                    issuer-uri: ${JWT_ISSUER_URI}
+                    jwk-set-uri: ${JWT_JWK_SET_URI}
                     audiences: ${JWT_AUDIENCE}
 
 server:
@@ -84,7 +85,7 @@ springdoc:
         persistAuthorization: true
         oauth:
             clientId: synchtask-client
-            clientSecret: synchtask-secret
+            clientSecret: ${SWAGGER_OAUTH_CLIENT_SECRET}
 
 ratelimiter:
     user:
@@ -102,10 +103,10 @@ management:
         web:
             base-path: /actuator
             exposure:
-                include: health,info,env
+                include: health,info
     endpoint:
         health:
-            show-details: always
+            show-details: never
         redis:
             enabled: true
         mappings:

@@ -4,6 +4,8 @@ import com.synchtask.board.domain.entity.Board
 import com.synchtask.project.domain.entity.Project
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment
+import com.synchtask.shared.domain.membership.MembershipRole
+import com.synchtask.task.domain.entity.TaskMember
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.user.domain.entity.User
@@ -54,7 +56,6 @@ class TaskMapperTest {
             title = "Test Task",
             description = "This is a test task",
             owner = owner,
-            collaborators = mutableSetOf(collaborator),
             status = TaskStatus.TODO,
             priority = TaskPriority.MID,
             labels = mutableSetOf("urgent", "backend"),
@@ -62,6 +63,16 @@ class TaskMapperTest {
             updatedAt = now,
             board = board
         )
+
+    init {
+        task.members.add(
+            TaskMember(
+                task = task,
+                user = collaborator,
+                role = MembershipRole.COLLABORATOR
+            )
+        )
+    }
 
     @Test
     fun `should map Task to TaskListItemDTO correctly`() {
@@ -133,7 +144,6 @@ class TaskMapperTest {
                 title = task.title,
                 description = task.description,
                 owner = task.owner,
-                collaborators = task.collaborators,
                 labels = task.labels,
                 status = task.status,
                 priority = task.priority,

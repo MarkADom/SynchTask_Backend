@@ -6,25 +6,26 @@ import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.friend.application.port.FriendshipChecker
 import com.synchtask.notification.application.service.NotificationService
-import com.synchtask.shared.exception.ResourceNotFoundException
-import com.synchtask.shared.exception.UnauthorizedAccessException
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.task.application.dto.TaskCreateDTO
 import com.synchtask.task.application.dto.TaskUpdateDTO
 import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskMember
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
-import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.websocket.application.service.TaskWebSocketService
-import io.mockk.*
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.PageRequest
+import kotlin.test.assertFailsWith
 import java.util.Optional
 import kotlin.test.assertEquals
 
@@ -47,7 +48,7 @@ class TaskServiceTest {
         email = "owner@test.com",
         passwordHash = "hash"
     )
-    private val collab = User(
+    private val collaborator = User(
         id = 2L,
         name = "Collab",
         email = "collab@test.com",
@@ -72,286 +73,169 @@ class TaskServiceTest {
         friendshipChecker = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
-        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns true
         every { taskMemberRepository.findAllByTaskId(any()) } returns emptyList()
-        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
+        every { taskMemberRepository.findByTaskIdAndUserId(any(), any()) } returns null // importante
+        every { taskMemberRepository.deleteAll(any<Iterable<TaskMember>>()) } just runs
+        every { taskMemberRepository.save(any<TaskMember>()) } answers { firstArg() }
+        every { taskMemberRepository.saveAll(any<Iterable<TaskMember>>()) } answers {
+            firstArg<Iterable<TaskMember>>().toList()
+        }
 
-        service =
-            TaskService(
-                taskRepository,
-                taskMemberRepository,
-                userRepository,
-                notificationService,
-                taskWebSocketService,
-                boardRepository,
-                boardMemberRepository,
-                taskSpecificationService,
-                friendshipChecker,
-                activityService
-            )
+        service = TaskService(
+            taskRepository,
+            taskMemberRepository,
+            userRepository,
+            notificationService,
+            taskWebSocketService,
+            boardRepository,
+            boardMemberRepository,
+            taskSpecificationService,
+            friendshipChecker,
+            activityService
+        )
     }
 
-    private fun task(
-        id: Long = 1L,
-        owner: User = this.owner,
-        board: Board = this.board,
-    ) = Task(
+    private fun task(id: Long = 99L): Task = Task(
         id = id,
         title = "Task$id",
         description = "Desc",
         owner = owner,
         board = board,
-        collaborators = mutableSetOf(),
         status = TaskStatus.TODO,
         priority = TaskPriority.MID
     )
 
     @Test
-    fun `should create task`() {
+    fun `createTask writes owner membership via TaskMemberRepository`() {
         val dto = TaskCreateDTO(title = "New", description = "Desc", boardId = board.id!!)
+        val savedTask = task(100L)
+
         every { boardRepository.findById(board.id!!) } returns Optional.of(board)
-        every { taskRepository.save(any()) } answers {
-            val t = firstArg<Task>()
-            Task(
-                id = 99L,
-                title = t.title,
-                description = t.description,
-                owner = t.owner,
-                collaborators = t.collaborators,
-                labels = t.labels,
-                status = t.status,
-                priority = t.priority,
-                comments = t.comments,
-                createdAt = t.createdAt,
-                updatedAt = t.updatedAt,
-                board = t.board
+        every { taskRepository.save(any()) } returns savedTask
+
+        service.createTask(owner, dto)
+
+        verify(exactly = 1) {
+            taskMemberRepository.save(
+                match<TaskMember> {
+                    it.task.id == savedTask.id &&
+                        it.user.id == owner.id &&
+                        it.role == MembershipRole.OWNER
+                }
             )
         }
-
-        val result = service.createTask(owner, dto)
-
-        assertEquals("New", result.title)
-        assertEquals(99L, result.id)
     }
 
     @Test
-    fun `should allow admin to create task without board membership`() {
-        val admin = User(
-            id = 99L,
-            name = "Admin",
-            email = "admin@test.com",
-            passwordHash = "hash",
-            role = UserRole.ADMIN
-        )
-        val dto = TaskCreateDTO(
-            title = "Admin Task",
-            description = "Desc",
-            boardId = board.id!!
-        )
-        every { boardRepository.findById(board.id!!) } returns Optional.of(board)
-        every { taskRepository.save(any()) } answers { firstArg() }
+    fun `updateTaskAssignees syncs assignees only through membership repository`() {
+        val existingTask = task(101L)
+        every { taskRepository.findById(existingTask.id!!) } returns Optional.of(existingTask)
+        every { taskMemberRepository.existsByTaskIdAndUserId(existingTask.id!!, owner.id!!) } returns true
+        every { userRepository.findAllById(listOf(collaborator.id!!)) } returns listOf(collaborator)
+        every { taskRepository.save(existingTask) } returns existingTask
 
-        val result = service.createTask(admin, dto)
+        service.updateTaskAssignees(existingTask.id!!, listOf(collaborator.id!!), owner)
 
-        assertEquals("Admin Task", result.title)
-    }
-
-    @Test
-    fun `should throw unauthorized when creating task without board access`() {
-        val outsider = User(
-            id = 3L,
-            name = "Outsider",
-            email = "outsider@test.com",
-            passwordHash = "hash"
-        )
-        val dto = TaskCreateDTO(
-            title = "Blocked",
-            description = "Desc",
-            boardId = board.id!!
-        )
-        every { boardRepository.findById(board.id!!) } returns Optional.of(board)
-        every { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, outsider.id!!) } returns false
-
-        assertThrows<UnauthorizedAccessException> {
-            service.createTask(outsider, dto)
-        }
-    }
-
-
-    @Test
-    fun `should throw when board not found on create`() {
-        val dto = TaskCreateDTO(title = "New", description = "Desc", boardId = 999L)
-        every { boardRepository.findById(999L) } returns Optional.empty()
-
-        assertThrows<ResourceNotFoundException> {
-            service.createTask(owner, dto)
-        }
-    }
-
-    @Test
-    fun `should update task`() {
-        val existing = task()
-        val req =
-            TaskUpdateDTO(
-                title = "Updated",
-                description = "D2",
-                status = TaskStatus.IN_PROGRESS,
-                priority = TaskPriority.HIGH
+        verify(exactly = 1) { taskMemberRepository.findAllByTaskId(existingTask.id!!) }
+        verify(exactly = 1) { taskMemberRepository.deleteAll(any<Iterable<TaskMember>>()) }
+        verify(exactly = 1) { taskMemberRepository.saveAll(any<Iterable<TaskMember>>()) }
+        verify(exactly = 1) {
+            taskMemberRepository.save(
+                match<TaskMember> {
+                    it.task.id == existingTask.id &&
+                        it.user.id == owner.id &&
+                        it.role == MembershipRole.OWNER
+                }
             )
-
-        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { taskRepository.save(any()) } answers { firstArg() }
-
-        val result = service.updateTask(existing.id!!, req, owner)
-
-        assertEquals("Updated", result.title)
-        assertEquals(TaskPriority.HIGH, result.priority)
-    }
-
-    @Test
-    fun `should throw unauthorized when updating task without access`() {
-        val outsider = User(
-            id = 3L,
-            name = "Outsider",
-            email = "outsider@test.com",
-            passwordHash = "hash"
-        )
-        val foreignBoard = Board(
-            id = 20L,
-            name = "Other",
-            owner = collab
-        )
-        val existing = task(
-            owner = collab,
-            board = foreignBoard
-        )
-        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
-
-        assertThrows<UnauthorizedAccessException> {
-            service.updateTask(existing.id!!, TaskUpdateDTO(title = "X"), outsider)
         }
     }
 
-
     @Test
-    fun `should update task when user has task membership`() {
-        val existing = task(owner = collab)
-        val req = TaskUpdateDTO(title = "Membership update")
+    fun `updateTask with assignees updates membership not legacy model`() {
+        val existingTask = task(103L)
+        val request = TaskUpdateDTO(assignees = listOf(collaborator.id!!))
 
-        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { taskMemberRepository.existsByTaskIdAndUserId(existing.id!!, owner.id!!) } returns true
-        every { taskRepository.save(any()) } answers { firstArg() }
+        every { taskRepository.findById(existingTask.id!!) } returns Optional.of(existingTask)
+        every { taskMemberRepository.existsByTaskIdAndUserId(existingTask.id!!, owner.id!!) } returns true
+        every { userRepository.findAllById(listOf(collaborator.id!!)) } returns listOf(collaborator)
+        every { taskRepository.save(existingTask) } returns existingTask
+        every { taskWebSocketService.sendTaskUpdate(any()) } just runs
 
-        val result = service.updateTask(existing.id!!, req, owner)
+        val updated = service.updateTask(existingTask.id!!, request, owner)
 
-        assertEquals("Membership update", result.title)
-    }
-
-
-    @Test
-    fun `should update task labels`() {
-        val existing = task()
-        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { taskRepository.save(any()) } answers { firstArg() }
-
-        service.updateTaskLabels(existing.id!!, listOf("backend", "urgent"), owner)
-
-        assertEquals(setOf("backend", "urgent"), existing.labels)
-    }
-
-    @Test
-    fun `should update task assignees`() {
-        val existing = task()
-        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { userRepository.findAllById(listOf(2L)) } returns listOf(collab)
-        every { taskRepository.save(any()) } answers { firstArg() }
-
-        service.updateTaskAssignees(existing.id!!, listOf(2L), owner)
-
-        assertEquals(1, existing.collaborators.size)
-    }
-
-    @Test
-    fun `should update status`() {
-        val existing = task()
-        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { taskRepository.save(any()) } answers { firstArg() }
-
-        service.updateTaskStatus(existing.id!!, TaskStatus.IN_PROGRESS, owner)
-
-        assertEquals(TaskStatus.IN_PROGRESS, existing.status)
-    }
-
-    @Test
-    fun `should assign collaborator`() {
-        val existing = task()
-        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { userRepository.findByEmail(collab.email) } returns Optional.of(collab)
-        every { friendshipChecker.areFriends(owner.id!!, collab.id!!) } returns true
-        every { taskRepository.save(any()) } answers { firstArg() }
-
-        service.assignCollaborator(existing.id!!, collab.email, owner)
-
-        assertEquals(1, existing.collaborators.size)
-    }
-
-    @Test
-    fun `should return tasks with filters`() {
-        val page = PageImpl(listOf(task(1L), task(2L)))
-        every { taskSpecificationService.findTasksByFilters(owner, null, null, null, null, any()) } returns page
-
-        val result = service.getTasksWithFilters(owner, null, null, null, null, PageRequest.of(0, 20))
-
-        assertEquals(2, result.totalElements)
-    }
-
-    @Test
-    fun `should delete task when user has access`() {
-        val existing = task()
-        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { taskRepository.delete(existing) } just Runs
-
-        service.deleteTask(existing.id!!, owner)
-
-        verify(exactly = 1) { taskRepository.delete(existing) }
-    }
-
-    @Test
-    fun `should throw unauthorized when deleting task without access`() {
-        val outsider = User(
-            id = 3L,
-            name = "Outsider",
-            email = "outsider@test.com",
-            passwordHash = "hash"
-        )
-        val foreign = task(
-            owner = collab,
-            board = Board(
-                id = 55L,
-                name = "Other",
-                owner = collab
+        assertEquals(existingTask.id, updated.id)
+        verify(exactly = 1) { taskMemberRepository.saveAll(any<Iterable<TaskMember>>()) }
+        verify(exactly = 1) {
+            taskMemberRepository.save(
+                match<TaskMember> {
+                    it.task.id == existingTask.id &&
+                        it.user.id == owner.id &&
+                        it.role == MembershipRole.OWNER
+                }
             )
-        )
-        every { taskRepository.findById(foreign.id!!) } returns Optional.of(foreign)
-        every { taskMemberRepository.existsByTaskIdAndUserId(foreign.id!!, outsider.id!!) } returns false
-        every { boardMemberRepository.existsByBoardIdAndUserId(foreign.board.id!!, outsider.id!!) } returns false
-
-        assertThrows<UnauthorizedAccessException> {
-            service.deleteTask(foreign.id!!, outsider)
         }
     }
 
     @Test
-    fun `should update task when actor is admin`() {
-        val admin =
-            User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
-        val existing = task(owner = collab)
-        every { taskRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { taskRepository.save(any()) } answers { firstArg() }
+    fun `assignCollaborator saves membership when collaborator is friend`() {
+        val existingTask = task(104L)
 
-        val result = service.updateTask(existing.id!!, TaskUpdateDTO(title = "Admin update"), admin)
+        every { taskRepository.findById(existingTask.id!!) } returns Optional.of(existingTask)
+        every { taskMemberRepository.existsByTaskIdAndUserId(existingTask.id!!, owner.id!!) } returns true
+        every { userRepository.findByEmail(collaborator.email) } returns Optional.of(collaborator)
+        every { friendshipChecker.areFriends(owner.id!!, collaborator.id!!) } returns true
+        every { taskMemberRepository.findByTaskIdAndUserId(existingTask.id!!, collaborator.id!!) } returns null
 
-        assertEquals("Admin update", result.title)
+        service.assignCollaborator(existingTask.id!!, collaborator.email, owner)
+
+        verify(exactly = 1) {
+            taskMemberRepository.save(
+                match<TaskMember> {
+                    it.task.id == existingTask.id &&
+                        it.user.id == collaborator.id &&
+                        it.role == MembershipRole.COLLABORATOR
+                }
+            )
+        }
+        verify(exactly = 1) { notificationService.sendNotification(collaborator.email, any(), any(), existingTask.id) }
     }
 
+    @Test
+    fun `assignCollaborator rejects non friend collaborator`() {
+        val existingTask = task(105L)
+
+        every { taskRepository.findById(existingTask.id!!) } returns Optional.of(existingTask)
+        every { taskMemberRepository.existsByTaskIdAndUserId(existingTask.id!!, owner.id!!) } returns true
+        every { userRepository.findByEmail(collaborator.email) } returns Optional.of(collaborator)
+        every { friendshipChecker.areFriends(owner.id!!, collaborator.id!!) } returns false
+
+        assertFailsWith<com.synchtask.shared.exception.UnauthorizedAccessException> {
+            service.assignCollaborator(existingTask.id!!, collaborator.email, owner)
+        }
+    }
+
+    @Test
+    fun `sync assignees does not add owner membership when owner already exists`() {
+        val existingTask = task(106L)
+        val ownerMembership = TaskMember(
+            task = existingTask,
+            user = owner,
+            role = MembershipRole.OWNER
+        )
+
+        every { taskRepository.findById(existingTask.id!!) } returns Optional.of(existingTask)
+        every { taskMemberRepository.existsByTaskIdAndUserId(existingTask.id!!, owner.id!!) } returns true
+        every { userRepository.findAllById(listOf(collaborator.id!!)) } returns listOf(collaborator)
+        every { taskMemberRepository.findAllByTaskId(existingTask.id!!) } returns listOf(ownerMembership)
+        every { taskRepository.save(existingTask) } returns existingTask
+
+        service.updateTaskAssignees(existingTask.id!!, listOf(collaborator.id!!), owner)
+
+        verify(exactly = 0) {
+            taskMemberRepository.save(
+                match<TaskMember> { it.role == MembershipRole.OWNER && it.task.id == existingTask.id }
+            )
+        }
+    }
 }

@@ -72,7 +72,7 @@ You must have:
 - An ADMIN user inserted manually
 
 Example:
-```mysql
+```
         INSERT INTO users (
           name,
           email,
@@ -103,12 +103,13 @@ Open:
 bruno/environments/local.bru
     
 Ensure:
-
+```
     vars {
         baseUrl: http://localhost:8081
         adminEmail: admin@example.com
         adminPassword: AdminPass123!
     }
+```
 
 Tokens are generated dynamically. Do NOT store tokens manually.
 

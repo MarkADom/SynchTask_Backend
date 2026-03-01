@@ -1,15 +1,15 @@
 package com.synchtask.notification.application.service
 
-import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.notification.application.dto.NotificationRedisDTO
 import com.synchtask.notification.application.dto.NotificationResponseDTO
 import com.synchtask.notification.domain.entity.Notification
 import com.synchtask.notification.domain.entity.NotificationType
 import com.synchtask.notification.presentation.mapper.NotificationMapper
-import com.synchtask.project.domain.entity.Project
+import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
-import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.entity.User
@@ -29,8 +29,11 @@ class NotificationServiceTest {
     private lateinit var webSocketService: NotificationWebSocketService
     private lateinit var userRepository: UserRepository
     private lateinit var boardRepository: BoardRepository
+    private lateinit var boardMemberRepository: BoardMemberRepository
     private lateinit var projectRepository: ProjectRepository
+    private lateinit var projectMemberRepository: ProjectMemberRepository
     private lateinit var taskRepository: TaskRepository
+    private lateinit var taskMemberRepository: TaskMemberRepository
     private lateinit var notificationService: NotificationService
 
     @BeforeEach
@@ -39,15 +42,21 @@ class NotificationServiceTest {
         webSocketService = mockk()
         userRepository = mockk()
         boardRepository = mockk()
+        boardMemberRepository = mockk()
         projectRepository = mockk()
+        projectMemberRepository = mockk()
         taskRepository = mockk()
+        taskMemberRepository = mockk()
         notificationService = NotificationService(
             storageService,
             webSocketService,
             userRepository,
             boardRepository,
+            boardMemberRepository,
             projectRepository,
+            projectMemberRepository,
             taskRepository,
+            taskMemberRepository,
         )
     }
 
@@ -367,9 +376,6 @@ class NotificationServiceTest {
                 email = "recipient@example.com",
                 passwordHash = "pw"
             )
-        val board = mockk<Board>()
-        every { board.owner } returns actor
-        every { board.collaborators } returns mutableSetOf()
 
         val notification =
             Notification(
@@ -381,7 +387,8 @@ class NotificationServiceTest {
             )
 
         every { userRepository.findByEmail(actor.email) } returns java.util.Optional.of(actor)
-        every { boardRepository.findById(5L) } returns java.util.Optional.of(board)
+        every { boardRepository.findById(5L) } returns java.util.Optional.of(mockk(relaxed = true))
+        every { boardMemberRepository.existsByBoardIdAndUserId(5L, actor.id!!) } returns true
         every { projectRepository.findById(5L) } returns java.util.Optional.empty()
         every { taskRepository.findById(5L) } returns java.util.Optional.empty()
         every {
@@ -404,6 +411,7 @@ class NotificationServiceTest {
                 groupId = 5L
             )
         }
+        verify(exactly = 1) { boardMemberRepository.existsByBoardIdAndUserId(5L, actor.id!!) }
     }
 
     @Test
@@ -423,9 +431,6 @@ class NotificationServiceTest {
                 email = "recipient2@example.com",
                 passwordHash = "pw"
             )
-        val project = mockk<Project>()
-        every { project.owner } returns recipient
-        every { project.members } returns mutableSetOf(actor)
 
         val notification =
             Notification(
@@ -438,7 +443,8 @@ class NotificationServiceTest {
 
         every { userRepository.findByEmail(actor.email) } returns java.util.Optional.of(actor)
         every { boardRepository.findById(77L) } returns java.util.Optional.empty()
-        every { projectRepository.findById(77L) } returns java.util.Optional.of(project)
+        every { projectRepository.findById(77L) } returns java.util.Optional.of(mockk(relaxed = true))
+        every { projectMemberRepository.existsByProjectIdAndUserId(77L, actor.id!!) } returns true
         every { taskRepository.findById(77L) } returns java.util.Optional.empty()
         every {
             storageService.storeNotification(
@@ -460,6 +466,7 @@ class NotificationServiceTest {
                 groupId = 77L
             )
         }
+        verify(exactly = 1) { projectMemberRepository.existsByProjectIdAndUserId(77L, actor.id!!) }
     }
 
     @Test
@@ -483,24 +490,27 @@ class NotificationServiceTest {
 
     @Test
     fun `sendNotificationAsActor should allow member on task context`() {
-        val actor = User(id = 31L, name = "Member", email = "member@x.com", passwordHash = "pw", role = UserRole.USER)
+        val actor = User(
+            id = 31L,
+            name = "Member",
+            email = "member@x.com",
+            passwordHash = "pw",
+            role = UserRole.USER
+        )
         val recipient =
-            User(id = 32L, name = "Recipient", email = "recipient@x.com", passwordHash = "pw", role = UserRole.USER)
-        val task = mockk<Task>()
-        val board = mockk<Board>()
+            User(
+                id = 32L,
+                name = "Recipient",
+                email = "recipient@x.com",
+                passwordHash = "pw",
+                role = UserRole.USER
+            )
 
         every { userRepository.findByEmail(actor.email) } returns java.util.Optional.of(actor)
         every { boardRepository.findById(222L) } returns java.util.Optional.empty()
         every { projectRepository.findById(222L) } returns java.util.Optional.empty()
-        every { taskRepository.findById(222L) } returns java.util.Optional.of(task)
-
-        every { task.owner } returns recipient
-        every { task.collaborators } returns mutableSetOf()
-        every { task.members } returns mutableSetOf(mockk { every { user } returns actor })
-        every { task.board } returns board
-        every { board.owner } returns recipient
-        every { board.members } returns mutableSetOf()
-        every { board.collaborators } returns mutableSetOf()
+        every { taskRepository.findById(222L) } returns java.util.Optional.of(mockk(relaxed = true))
+        every { taskMemberRepository.existsByTaskIdAndUserId(222L, actor.id!!) } returns true
 
         val notification = Notification(
             id = 401L,
@@ -529,6 +539,7 @@ class NotificationServiceTest {
                 groupId = 222L
             )
         }
+        verify(exactly = 1) { taskMemberRepository.existsByTaskIdAndUserId(222L, actor.id!!) }
     }
 
     @Test
@@ -563,5 +574,4 @@ class NotificationServiceTest {
 
         verify(exactly = 1) { storageService.markAllAsRead("other@x.com") }
     }
-
 }

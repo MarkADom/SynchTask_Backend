@@ -119,11 +119,36 @@ class ChatServiceTest {
             )
 
         every { chatRoomRepository.findById(chatRoom.id!!) } returns Optional.of(chatRoom)
-        every { chatMessageRepository.findByChatRoomOrderByTimestampAsc(chatRoom) } returns messages
+        every { userRepository.findByEmail(sender.email) } returns Optional.of(sender)
+        every { chatMessageRepository.findByChatRoomOrderByTimestampAsc(any()) } returns messages
 
-        val result = chatService.getChatHistory(chatRoom.id!!)
+        val result = chatService.getChatHistory(chatRoom.id!!, sender.email)
 
         assertEquals(messages.map { ChatMapper.toMessageDto(it) }, result)
+    }
+
+    @Test
+    fun `should throw when requester is not a participant for chat history`() {
+        val outsider =
+            User(
+                id = 3L,
+                name = "Outsider",
+                email = "outsider@example.com",
+                passwordHash = "hashed3",
+                profilePictureUrl = "",
+                role = UserRole.USER,
+                isActive = true
+            )
+
+        every { chatRoomRepository.findById(chatRoom.id!!) } returns Optional.of(chatRoom)
+        every { userRepository.findByEmail(outsider.email) } returns Optional.of(outsider)
+
+        val ex =
+            assertThrows<ResourceNotFoundException> {
+                chatService.getChatHistory(chatRoom.id!!, outsider.email)
+            }
+
+        assertEquals("Chat room not found", ex.message)
     }
 
     @Test

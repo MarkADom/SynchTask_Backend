@@ -153,12 +153,12 @@ class FriendServiceTest {
 
         every { userRepository.findByEmail(alice.email) } returns Optional.of(alice)
         every { friendRepository.findAllByRequesterIdOrFriendId(alice.id!!, alice.id!!) } returns listOf(friendship)
-        every { userRepository.findById(alice.id!!) } returns Optional.of(alice)
-        every { userRepository.findById(bob.id!!) } returns Optional.of(bob)
+        every { userRepository.findAllById(any<Iterable<Long>>()) } returns listOf(alice, bob)
 
         val result = service.listFriends(alice.email)
 
         Assertions.assertEquals(1, result.size)
         Assertions.assertEquals("bob@example.com", result.first().friendEmail)
+        verify(exactly = 1) { userRepository.findAllById(any<Iterable<Long>>()) }
     }
 }

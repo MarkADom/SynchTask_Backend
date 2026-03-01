@@ -9,6 +9,7 @@ import com.synchtask.project.application.dto.ProjectCreateDTO
 import com.synchtask.project.application.dto.ProjectResponseDTO
 import com.synchtask.project.application.dto.ProjectUpdateDTO
 import com.synchtask.project.domain.entity.Project
+import com.synchtask.project.domain.entity.ProjectMember
 import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.project.presentation.mapper.ProjectMapper
@@ -46,6 +47,14 @@ class ProjectService(
             )
 
         val savedProject = projectRepository.save(project)
+        projectMemberRepository.save(
+            ProjectMember(
+                project = savedProject,
+                user = owner,
+                role = MembershipRole.OWNER,
+                createdByUser = owner
+            )
+        )
 
         boards.forEach { board ->
             board.project = savedProject

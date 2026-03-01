@@ -13,7 +13,7 @@ object ProjectMapper {
         tag = project.tag,
         color = project.color,
         dueDate = project.dueDate,
-        members = project.members.map { it.email },
+        members = project.projectMembers.map { it.user.email },
         boards =
         project.boards.map { board ->
             BoardSimpleDTO(

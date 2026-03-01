@@ -12,8 +12,8 @@ spring:
 
     jpa:
         hibernate:
-            # Uses ddl-auto=update for local development convenience.
-            # In a production-grade setup, schema migrations should be managed via Flyway or Liquibase.
+            # Development profile: allow schema auto-update for local iteration.
+            # Release profile uses ddl-auto=validate in application.yml.
             ddl-auto: update
         open-in-view: false
         show-sql: true
@@ -84,7 +84,8 @@ springdoc:
         persistAuthorization: true
         oauth:
             clientId: synchtask-client
-            clientSecret: synchtask-secret
+            clientSecret: ${SWAGGER_OAUTH_CLIENT_SECRET}
+
 
 ratelimiter:
     user:

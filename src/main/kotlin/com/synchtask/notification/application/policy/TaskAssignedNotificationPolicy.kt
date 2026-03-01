@@ -4,6 +4,7 @@ import com.synchtask.activity.application.event.ActivityContextSnapshot
 import com.synchtask.activity.domain.entity.Activity
 import com.synchtask.activity.domain.model.ActivityType
 import com.synchtask.notification.domain.entity.NotificationType
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.task.domain.repository.TaskRepository
 import org.springframework.stereotype.Component
 
@@ -17,9 +18,10 @@ class TaskAssignedNotificationPolicy(
         val taskId = activity.referenceId ?: return emptySet()
         val task = taskRepository.findById(taskId).orElse(null) ?: return emptySet()
 
-        return task.collaborators
+        return task.members
             .asSequence()
-            .map { it.email }
+            .filter { it.role == MembershipRole.COLLABORATOR }
+            .map { it.user.email }
             .filter { it != activity.actor.email }
             .toSet()
     }

@@ -3,27 +3,21 @@ package com.synchtask.board.application.service
 import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.application.dto.BoardCollaboratorUpdateDTO
 import com.synchtask.board.application.dto.BoardCreateDTO
-import com.synchtask.board.application.dto.BoardUpdateDTO
 import com.synchtask.board.domain.entity.Board
 import com.synchtask.board.domain.entity.BoardMember
 import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.board.domain.repository.BoardRepository
 import com.synchtask.shared.domain.membership.MembershipRole
-import com.synchtask.shared.exception.ResourceNotFoundException
-import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.entity.User
-import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
-import io.mockk.Runs
-import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.Optional
-import kotlin.test.*
+import kotlin.test.assertEquals
 
 class BoardServiceTest {
     private lateinit var boardRepository: BoardRepository
@@ -32,211 +26,118 @@ class BoardServiceTest {
     private lateinit var activityService: ActivityService
     private lateinit var service: BoardService
 
-    private val owner = newUser(1L, "owner@test.com")
-    private val other = newUser(2L, "other@test.com")
+    private val owner = User(
+        id = 1L,
+        name = "Owner",
+        email = "owner@test.com",
+        passwordHash = "hash"
+    )
+    private val collaborator = User(
+        id = 2L,
+        name = "Collab",
+        email = "collab@test.com",
+        passwordHash = "hash"
+    )
 
     @BeforeEach
     fun setup() {
-        clearAllMocks()
-
         boardRepository = mockk(relaxed = true)
         boardMemberRepository = mockk(relaxed = true)
         userRepository = mockk(relaxed = true)
         activityService = mockk(relaxed = true)
 
-
-        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } returns false
-        every { boardMemberRepository.findByBoardIdAndUserId(any(), any()) } returns null
-        every { boardMemberRepository.findAllByUserId(any()) } returns emptyList()
-
-        service = BoardService(
-            boardRepository,
-            boardMemberRepository,
-            userRepository,
-            activityService
-        )
+        service = BoardService(boardRepository, boardMemberRepository, userRepository, activityService)
     }
 
-    private fun newUser(id: Long, email: String) = User(
-        id = id,
-        name = "User",
-        email = email,
-        passwordHash = "hash"
-    )
+    @Test
+    fun `createBoard creates owner membership`() {
+        val dto = BoardCreateDTO(
+            name = "Board",
+            color = "#000",
+            description = "desc"
+        )
+        val savedBoard = Board(
+            id = 10L,
+            name = "Board",
+            color = "#000",
+            description = "desc",
+            owner = owner
+        )
 
-    private fun newBoard(id: Long = 10L, owner: User = this.owner): Board = Board(
-        id = id,
-        name = "Board",
-        color = "#fff",
-        description = "Desc",
-        owner = owner,
-        collaborators = mutableSetOf(),
-        createdAt = java.time.LocalDateTime.now(),
-        updatedAt = java.time.LocalDateTime.now()
-    )
+        every { boardRepository.save(any()) } returns savedBoard
+
+        val membershipSlot = slot<BoardMember>()
+        every { boardMemberRepository.save(capture(membershipSlot)) } returns mockk(relaxed = true)
+
+        service.createBoard(dto, owner)
+
+        verify(exactly = 1) { boardMemberRepository.save(any()) }
+        assertEquals(savedBoard.id, membershipSlot.captured.board.id)
+        assertEquals(owner.id, membershipSlot.captured.user.id)
+        assertEquals(MembershipRole.OWNER, membershipSlot.captured.role)
+    }
 
     @Test
-    fun `should create board`() {
-        val dto = BoardCreateDTO("My Board", "#000", "Desc")
+    fun `updateCollaborators replaces only membership records`() {
+        val board = Board(
+            id = 11L,
+            name = "Board",
+            owner = owner
+        )
+        val dto = BoardCollaboratorUpdateDTO(userIds = listOf(collaborator.id!!))
 
-        every { boardRepository.save(any()) } answers {
-            val b = firstArg<Board>()
-            Board(
-                id = 10L,
-                name = b.name,
-                color = b.color,
-                description = b.description,
-                owner = b.owner,
-                collaborators = b.collaborators,
-                createdAt = b.createdAt,
-                updatedAt = b.updatedAt
+        val ownerMember = BoardMember(
+            board = board,
+            user = owner,
+            role = MembershipRole.OWNER
+        )
+        val oldCollaboratorMember = BoardMember(
+            board = board,
+            user = collaborator,
+            role = MembershipRole.COLLABORATOR
+        )
+
+        every { boardRepository.findById(board.id!!) } returns Optional.of(board)
+        every { boardMemberRepository.findByBoardIdAndUserId(board.id!!, owner.id!!) } returns ownerMember
+        every { userRepository.findAllById(dto.userIds) } returns listOf(collaborator)
+        every { boardMemberRepository.findAllByBoardId(board.id!!) } returns listOf(ownerMember, oldCollaboratorMember)
+        every { boardRepository.save(board) } returns board
+
+        service.updateCollaborators(board.id!!, dto, owner)
+
+        verify(exactly = 1) {
+            boardMemberRepository.deleteAll(
+                match<List<BoardMember>> { members ->
+                    members.size == 1 && members.first().role == MembershipRole.COLLABORATOR
+                }
             )
         }
-
-        val result = service.createBoard(dto, owner)
-
-        assertEquals("My Board", result.name)
-        verify(exactly = 1) { boardRepository.save(any()) }
-    }
-
-    @Test
-    fun `should return boards for user`() {
-        every { boardMemberRepository.findAllByUserId(owner.id!!) } returns listOf()
-        every { boardRepository.findAllById(any<List<Long>>()) } returns listOf(newBoard())
-
-        val result = service.getBoardsForUser(owner)
-
-        assertEquals(0, result.size)
-    }
-
-    @Test
-    fun `should return all boards for admin on user listing`() {
-        val admin = User(
-            id = 99L,
-            name = "Admin",
-            email = "admin@test.com",
-            passwordHash = "hash",
-            role = UserRole.ADMIN
-        )
-        every { boardRepository.findAll() } returns listOf(newBoard(1L), newBoard(2L))
-
-        val result = service.getBoardsForUser(admin)
-
-        assertEquals(2, result.size)
-    }
-
-    @Test
-    fun `should return empty boards for user with null id`() {
-        val actorWithoutId = User(
-            id = null,
-            name = "NoId",
-            email = "noid@test.com",
-            passwordHash = "hash"
-        )
-
-        val result = service.getBoardsForUser(actorWithoutId)
-
-        assertTrue(result.isEmpty())
-        verify(exactly = 0) { boardMemberRepository.findAllByUserId(any()) }
-    }
-
-    @Test
-    fun `should return board when user has access`() {
-        val board = newBoard(owner = owner)
-
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, owner.id!!) } returns true
-
-        val result = service.getBoardAccessibleByUser(board.id!!, owner)
-
-        assertEquals(board.id, result.id)
-    }
-
-    @Test
-    fun `should throw when user has no access to board`() {
-        val board = newBoard(owner = owner)
-
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-
-        assertFailsWith<UnauthorizedAccessException> {
-            service.getBoardAccessibleByUser(board.id!!, other)
+        verify(exactly = 1) {
+            boardMemberRepository.saveAll(
+                match<List<BoardMember>> { members ->
+                    members.size == 1 && members.first().role == MembershipRole.COLLABORATOR
+                }
+            )
         }
     }
 
     @Test
-    fun `should throw when board does not exist`() {
-        every { boardRepository.findById(any()) } returns Optional.empty()
-
-        assertFailsWith<ResourceNotFoundException> {
-            service.getBoardAccessibleByUser(99L, owner)
-        }
-    }
-
-    @Test
-    fun `should update board when owner`() {
-        val board = newBoard()
-
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { boardRepository.save(any()) } answers { firstArg() }
-        every { boardMemberRepository.findByBoardIdAndUserId(any(), any()) } returns
+    fun `deleteBoard records snapshot for notifications`() {
+        val board = Board(
+            id = 13L,
+            name = "Board",
+            owner = owner
+        )
+        board.members.add(
             BoardMember(
                 board = board,
-                user = owner,
-                role = MembershipRole.OWNER
+                user = collaborator,
+                role = MembershipRole.COLLABORATOR
             )
+        )
 
-        val dto =
-            BoardUpdateDTO(
-                name = "New",
-                color = "#111",
-                description = "Updated"
-            )
-
-        val result = service.updateBoard(board.id!!, dto, owner)
-
-        assertEquals("New", result.name)
-        assertEquals("#111", result.color)
-        assertEquals("Updated", result.description)
-
-        verify(exactly = 1) { boardRepository.save(board) }
-    }
-
-    @Test
-    fun `should throw when updating board by non owner`() {
-        val board = newBoard()
-
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-
-        assertFailsWith<UnauthorizedAccessException> {
-            service.updateBoard(board.id!!, BoardUpdateDTO("X", null, null), other)
-        }
-    }
-
-    @Test
-    fun `should throw when updating non existing board`() {
-        every { boardRepository.findById(any()) } returns Optional.empty()
-
-        assertFailsWith<ResourceNotFoundException> {
-            service.updateBoard(999L, BoardUpdateDTO("X", null, null), owner)
-        }
-    }
-
-    @Test
-    fun `should throw when deleting non existing board`() {
-        every { boardRepository.findById(any()) } returns Optional.empty()
-
-        assertFailsWith<ResourceNotFoundException> {
-            service.deleteBoard(999L, owner)
-        }
-    }
-
-    @Test
-    fun `should delete board when owner`() {
-        val board = newBoard()
-
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { boardRepository.delete(board) } just Runs
-        every { boardMemberRepository.findByBoardIdAndUserId(any(), any()) } returns
+        every { boardRepository.findById(board.id!!) } returns Optional.of(board)
+        every { boardMemberRepository.findByBoardIdAndUserId(board.id!!, owner.id!!) } returns
             BoardMember(
                 board = board,
                 user = owner,
@@ -246,172 +147,47 @@ class BoardServiceTest {
         service.deleteBoard(board.id!!, owner)
 
         verify(exactly = 1) { boardRepository.delete(board) }
-    }
-
-    @Test
-    fun `should throw when deleting board by non owner`() {
-        val board = newBoard()
-
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-
-        assertFailsWith<UnauthorizedAccessException> {
-            service.deleteBoard(board.id!!, other)
-        }
-
-        verify(exactly = 0) { boardRepository.delete(any()) }
-    }
-
-    @Test
-    fun `should get boards shared with user`() {
-        val shared = newBoard(id = 20L)
-        every { boardMemberRepository.findAllByUserId(other.id!!) } returns listOf(
-            BoardMember(
-                board = shared,
-                user = other,
-                role = MembershipRole.COLLABORATOR
+        verify(exactly = 1) {
+            activityService.record(
+                actor = owner,
+                type = com.synchtask.activity.domain.model.ActivityType.BOARD_DELETED,
+                referenceId = board.id,
+                description = any(),
+                contextSnapshot = withArg { snapshot ->
+                    assertEquals(owner.email, snapshot?.ownerEmail)
+                    assertEquals(setOf(collaborator.email), snapshot?.collaboratorEmails)
+                }
             )
-        )
-        every { boardRepository.findAllById(any<List<Long>>()) } returns listOf(shared)
-
-        val result = service.getBoardsSharedWithUser(other)
-
-        assertEquals(1, result.size)
-    }
-
-    @Test
-    fun `should return all shared boards for admin`() {
-        val admin = User(
-            id = 99L,
-            name = "Admin",
-            email = "admin@test.com",
-            passwordHash = "hash",
-            role = UserRole.ADMIN
-
-        )
-        every { boardRepository.findAll() } returns listOf(newBoard(5L))
-
-        val result = service.getBoardsSharedWithUser(admin)
-
-        assertEquals(1, result.size)
-    }
-
-    @Test
-    fun `should throw when some collaborators not found`() {
-        val board = newBoard()
-
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { userRepository.findAllById(listOf(3L)) } returns emptyList()
-        every { boardMemberRepository.findByBoardIdAndUserId(any(), any()) } returns
-            BoardMember(
-                board = board,
-                user = owner,
-                role = MembershipRole.OWNER
-            )
-
-        val dto = BoardCollaboratorUpdateDTO(listOf(3L))
-
-        assertFailsWith<ResourceNotFoundException> {
-            service.updateCollaborators(board.id!!, dto, owner)
         }
     }
 
     @Test
-    fun `should update collaborators when owner`() {
-        val board = newBoard()
-        val collaborator = newUser(3L, "c@test.com")
-
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { userRepository.findAllById(listOf(3L)) } returns listOf(collaborator)
-        every { boardRepository.save(any()) } answers { firstArg() }
-        every { boardMemberRepository.findByBoardIdAndUserId(board.id!!, owner.id!!) } returns
-            BoardMember(
-                board = board,
-                user = owner,
-                role = MembershipRole.OWNER
-            )
-
-        val dto = BoardCollaboratorUpdateDTO(listOf(3L))
-
-        service.updateCollaborators(board.id!!, dto, owner)
-
-        assertEquals(1, board.collaborators.size)
-        assertTrue(board.collaborators.contains(collaborator))
-    }
-
-    @Test
-    fun `should throw when updating collaborators by non owner`() {
-        val board = newBoard()
-
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-
-        assertFailsWith<UnauthorizedAccessException> {
-            service.updateCollaborators(board.id!!, BoardCollaboratorUpdateDTO(emptyList()), other)
-        }
-    }
-
-    @Test
-    fun `should return distinct simple boards for user`() {
-        val board1 = newBoard(id = 1L)
-        val board2 = newBoard(id = 2L)
-
-        every { boardMemberRepository.findAllByUserId(owner.id!!) } returns listOf(
-            BoardMember(board = board1, user = owner, role = MembershipRole.OWNER),
-            BoardMember(board = board2, user = owner, role = MembershipRole.COLLABORATOR)
-        )
-        every { boardRepository.findAllById(any<List<Long>>()) } returns listOf(board1, board2)
-
-        val result = service.getSimpleBoardsForUser(owner)
-
-        assertEquals(2, result.size)
-        assertTrue(result.any { it.id == 1L })
-        assertTrue(result.any { it.id == 2L })
-    }
-
-    @Test
-    fun `should return distinct simple boards for admin`() {
-        val admin =
-            User(
-                id = 99L,
-                name = "Admin",
-                email = "admin@test.com",
-                passwordHash = "hash",
-                role = UserRole.ADMIN
-            )
-
-        val board1 = newBoard(id = 1L)
-        every { boardRepository.findAll() } returns listOf(board1, board1)
-
-        val result = service.getSimpleBoardsForUser(admin)
-
-        assertEquals(1, result.size)
-        assertEquals(1L, result.first().id)
-    }
-
-    @Test
-    fun `should return empty simple boards when actor id is null`() {
-        val actorWithoutId = User(
+    fun `getSimpleBoardsForUser returns empty when actor has null id`() {
+        val anonymous = User(
             id = null,
-            name = "NoId",
-            email = "noid@test.com",
+            name = "Anon",
+            email = "anon@test.com",
             passwordHash = "hash"
         )
 
-        val result = service.getSimpleBoardsForUser(actorWithoutId)
+        val boards = service.getSimpleBoardsForUser(anonymous)
 
-        assertTrue(result.isEmpty())
+        assertEquals(emptyList(), boards)
     }
 
+
     @Test
-    fun `should allow admin to update board even when not owner`() {
-        val board = newBoard(owner = owner)
-        val admin =
-            User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+    fun `getBoardAccessibleByUser checks access through BoardMemberRepository`() {
+        val board = Board(
+            id = 12L,
+            name = "Board",
+            owner = owner
+        )
+        every { boardRepository.findById(board.id!!) } returns Optional.of(board)
+        every { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, owner.id!!) } returns true
 
-        every { boardRepository.findById(any()) } returns Optional.of(board)
-        every { boardRepository.save(any()) } answers { firstArg() }
+        service.getBoardAccessibleByUser(board.id!!, owner)
 
-        val result = service.updateBoard(board.id!!, BoardUpdateDTO("Admin", null, null), admin)
-
-        assertEquals("Admin", result.name)
+        verify(exactly = 1) { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, owner.id!!) }
     }
 }

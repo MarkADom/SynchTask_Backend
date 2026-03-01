@@ -13,12 +13,9 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -57,23 +54,7 @@ class Project(
     var updatedAt: LocalDateTime? = null,
     @Column(name = "due_date", nullable = false)
     var dueDate: LocalDate,
-    /**
-     * Users that are members of this project.
-     * A unique constraint prevents duplicated (project_id, user_id) pairs.
-     */
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "project_members",
-        joinColumns = [JoinColumn(name = "project_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")],
-        uniqueConstraints = [
-            UniqueConstraint(
-                name = "uk_project_members_project_user",
-                columnNames = ["project_id", "user_id"]
-            )
-        ]
-    )
-    val members: MutableSet<User> = mutableSetOf(),
+
     @OneToMany(
         mappedBy = "project",
         cascade = [CascadeType.ALL],
@@ -92,7 +73,7 @@ class Project(
         orphanRemoval = true,
         fetch = FetchType.LAZY
     )
-    val boards: MutableSet<Board> = mutableSetOf()
+    val boards: MutableSet<Board> = mutableSetOf(),
 ) {
 
     fun hasAccess(user: User): Boolean {
