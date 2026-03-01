@@ -1,0 +1,38 @@
+meta {
+  name: 13 Owner assigns task to member
+  type: http
+  seq: 13
+}
+
+put {
+  url: {{baseUrl}}/tasks/{{taskId}}/assignees
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ownerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const ownerToken = bru.getVar("ownerToken");
+  const taskId = bru.getVar("taskId");
+  const memberId = bru.getVar("memberId");
+  if (!ownerToken) throw new Error("Missing required variable: ownerToken");
+  if (!taskId) throw new Error("Missing required variable: taskId");
+  if (!memberId) throw new Error("Missing required variable: memberId");
+}
+
+body:json {
+  "userIds": [{{memberId}}]
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,39 @@
+meta {
+  name: 04 Login member
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const memberEmail = bru.getVar("memberEmail");
+  if (!memberEmail) throw new Error("Missing required variable: memberEmail");
+}
+
+body:json {
+  "email": "{{memberEmail}}",
+  "password": "{{memberPassword}}"
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("capture member token", function () {
+    const body = res.getBody();
+    expect(body.accessToken).to.be.a('string');
+    expect(body.user.id).to.be.a('number');
+    bru.setVar("memberToken", body.accessToken);
+    bru.setVar("memberId", String(body.user.id));
+  });
+}

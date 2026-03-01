@@ -1,0 +1,28 @@
+meta {
+  name: 16 Owner deletes task (optional cleanup)
+  type: http
+  seq: 16
+}
+
+delete {
+  url: {{baseUrl}}/tasks/{{taskId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ownerToken}}
+}
+
+script:pre-request {
+  const ownerToken = bru.getVar("ownerToken");
+  const taskId = bru.getVar("taskId");
+  if (!ownerToken) throw new Error("Missing required variable: ownerToken");
+  if (!taskId) throw new Error("Missing required variable: taskId");
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

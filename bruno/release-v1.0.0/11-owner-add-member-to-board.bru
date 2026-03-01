@@ -1,0 +1,38 @@
+meta {
+  name: 11 Owner adds member to board
+  type: http
+  seq: 11
+}
+
+put {
+  url: {{baseUrl}}/boards/{{boardId}}/collaborators
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ownerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const ownerToken = bru.getVar("ownerToken");
+  const boardId = bru.getVar("boardId");
+  const memberId = bru.getVar("memberId");
+  if (!ownerToken) throw new Error("Missing required variable: ownerToken");
+  if (!boardId) throw new Error("Missing required variable: boardId");
+  if (!memberId) throw new Error("Missing required variable: memberId");
+}
+
+body:json {
+  "userIds": [{{memberId}}]
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

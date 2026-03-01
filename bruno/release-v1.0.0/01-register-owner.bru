@@ -1,0 +1,39 @@
+meta {
+  name: 01 Register owner
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const runId = String(Date.now());
+  bru.setVar("runId", runId);
+  bru.setVar("ownerEmail", `owner.${runId}@example.com`);
+}
+
+body:json {
+  "name": "Owner User",
+  "email": "{{ownerEmail}}",
+  "password": "{{ownerPassword}}"
+}
+
+tests {
+  test("status 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("capture owner id", function () {
+    const body = res.getBody();
+    expect(body.id).to.be.a('number');
+    bru.setVar("ownerId", String(body.id));
+  });
+}

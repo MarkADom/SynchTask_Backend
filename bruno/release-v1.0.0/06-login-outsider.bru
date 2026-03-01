@@ -1,0 +1,39 @@
+meta {
+  name: 06 Login outsider
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const outsiderEmail = bru.getVar("outsiderEmail");
+  if (!outsiderEmail) throw new Error("Missing required variable: outsiderEmail");
+}
+
+body:json {
+  "email": "{{outsiderEmail}}",
+  "password": "{{outsiderPassword}}"
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("capture outsider token", function () {
+    const body = res.getBody();
+    expect(body.accessToken).to.be.a('string');
+    expect(body.user.id).to.be.a('number');
+    bru.setVar("outsiderToken", body.accessToken);
+    bru.setVar("outsiderId", String(body.user.id));
+  });
+}

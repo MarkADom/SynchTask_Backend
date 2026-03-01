@@ -1,0 +1,50 @@
+meta {
+  name: 12 Owner creates task
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/tasks
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ownerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const ownerToken = bru.getVar("ownerToken");
+  const boardId = bru.getVar("boardId");
+  const runId = bru.getVar("runId");
+  if (!ownerToken) throw new Error("Missing required variable: ownerToken");
+  if (!boardId) throw new Error("Missing required variable: boardId");
+  if (!runId) throw new Error("Missing required variable: runId");
+}
+
+body:json {
+  "title": "Task {{runId}}",
+  "description": "Core validation task",
+  "assignees": [],
+  "labels": ["release"],
+  "boardId": {{boardId}},
+  "status": "TODO",
+  "priority": "MID"
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("capture task id", function () {
+    const body = res.getBody();
+    expect(body.id).to.be.a('number');
+    bru.setVar("taskId", String(body.id));
+  });
+}

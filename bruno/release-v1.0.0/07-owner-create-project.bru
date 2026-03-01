@@ -1,0 +1,43 @@
+meta {
+  name: 07 Owner creates project
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/projects
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ownerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const token = bru.getVar("ownerToken");
+  if (!token) throw new Error("Missing required variable: ownerToken");
+  const runId = bru.getVar("runId");
+  if (!runId) throw new Error("Missing required variable: runId");
+}
+
+body:json {
+  "name": "Project {{runId}}",
+  "description": "Release v1.0.0 validation project"
+}
+
+tests {
+  test("status 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("capture project id", function () {
+    const body = res.getBody();
+    expect(body.id).to.be.a('number');
+    bru.setVar("projectId", String(body.id));
+  });
+}

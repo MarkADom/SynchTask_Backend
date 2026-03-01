@@ -83,14 +83,11 @@ Default docs endpoints:
 
 ## API Testing (Bruno)
 
-Bruno collections are maintained as `.bru` files in:
+Release validation collection lives in `bruno/`.
 
-- `docs/bruno/auth`
-- `docs/bruno/security`
-- `docs/bruno/smoke`
-- `docs/bruno/environments`
-
-Use `docs/bruno/bruno.json` as the collection metadata file.
+- Collection metadata: `bruno/bruno.json`
+- Environment file: `bruno/environments/local.bru`
+- Release suite docs and execution semantics: `bruno/README.md`
 
 ---
 
