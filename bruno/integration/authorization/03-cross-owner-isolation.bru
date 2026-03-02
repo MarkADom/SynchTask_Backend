@@ -20,36 +20,11 @@ headers {
 
 script:pre-request {
   const baseUrl = bru.getVar("baseUrl") || "http://localhost:8081";
-  let firstOwnerToken = bru.getVar("authorizationOwnerToken");
+  const firstOwnerToken = bru.getVar("authorizationOwnerToken");
   const runId = String(Date.now());
   const ownerPassword = bru.getVar("ownerPassword") || "StrongPass123!";
 
-  if (!firstOwnerToken) {
-    let authorizationOwnerEmail = bru.getVar("authorizationOwnerEmail");
-    if (!authorizationOwnerEmail) {
-      const authorizationRunId = String(Date.now());
-      authorizationOwnerEmail = `authorization.owner.${authorizationRunId}@example.com`;
-      bru.setVar("authorizationOwnerEmail", authorizationOwnerEmail);
-
-      const registerOwnerRes = await bru.sendRequest({
-        method: 'POST',
-        url: `${baseUrl}/auth/register`,
-        headers: { 'Content-Type': 'application/json' },
-        body: { mode: 'json', json: { name: 'Authorization Owner', email: authorizationOwnerEmail, password: ownerPassword } }
-      });
-      if (registerOwnerRes.status !== 201) throw new Error(`Owner register failed: ${registerOwnerRes.status}`);
-    }
-
-    const loginOwnerRes = await bru.sendRequest({
-      method: 'POST',
-      url: `${baseUrl}/auth/login`,
-      headers: { 'Content-Type': 'application/json' },
-      body: { mode: 'json', json: { email: authorizationOwnerEmail, password: ownerPassword } }
-    });
-    if (loginOwnerRes.status !== 200) throw new Error(`Owner login failed: ${loginOwnerRes.status}`);
-    firstOwnerToken = loginOwnerRes.body.accessToken;
-    bru.setVar("authorizationOwnerToken", firstOwnerToken);
-  }
+  if (!firstOwnerToken) throw new Error("Missing required variable: authorizationOwnerToken");
 
   const secondOwnerEmail = `authorization.second.owner.${runId}@example.com`;
 
@@ -57,16 +32,25 @@ script:pre-request {
     method: 'POST',
     url: `${baseUrl}/auth/register`,
     headers: { 'Content-Type': 'application/json' },
-    body: { mode: 'json', json: { name: 'Authorization Second Owner', email: secondOwnerEmail, password: ownerPassword } }
+    data: {
+      name: 'Authorization Second Owner',
+      email: secondOwnerEmail,
+      password: ownerPassword
+    }
   });
+
   if (registerSecondOwnerRes.status !== 201) throw new Error(`Second owner register failed: ${registerSecondOwnerRes.status}`);
 
   const loginSecondOwnerRes = await bru.sendRequest({
     method: 'POST',
     url: `${baseUrl}/auth/login`,
     headers: { 'Content-Type': 'application/json' },
-    body: { mode: 'json', json: { email: secondOwnerEmail, password: ownerPassword } }
+    data: {
+      email: secondOwnerEmail,
+      password: ownerPassword
+    }
   });
+
   if (loginSecondOwnerRes.status !== 200) throw new Error(`Second owner login failed: ${loginSecondOwnerRes.status}`);
 
   const createBoardRes = await bru.sendRequest({
@@ -76,19 +60,17 @@ script:pre-request {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${firstOwnerToken}`
     },
-    body: {
-      mode: 'json',
-      json: {
-        name: `Authorization Cross Owner Board ${runId}`,
-        color: '#34D399',
-        description: 'Owned by first owner'
-      }
+    data: {
+      name: `Authorization Cross Owner Board ${runId}`,
+      color: '#34D399',
+      description: 'Owned by first owner'
     }
   });
+
   if (createBoardRes.status !== 200) throw new Error(`Board creation failed: ${createBoardRes.status}`);
 
-  bru.setVar("authorizationSecondOwnerToken", loginSecondOwnerRes.body.accessToken);
-  bru.setVar("authorizationCrossBoardId", String(createBoardRes.body.id));
+  bru.setVar("authorizationSecondOwnerToken", loginSecondOwnerRes.data.accessToken);
+  bru.setVar("authorizationCrossBoardId", String(createBoardRes.data.id));
 }
 
 body:json {

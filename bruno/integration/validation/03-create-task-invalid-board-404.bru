@@ -20,36 +20,12 @@ headers {
 
 script:pre-request {
   const validationOwnerToken = bru.getVar("validationOwnerToken");
-  const validationRunId = bru.getVar("validationRunId") || String(Date.now());
-  const baseUrl = bru.getVar("baseUrl") || "http://localhost:8081";
   if (!validationOwnerToken) throw new Error("Missing required variable: validationOwnerToken");
-
-  bru.setVar("validationRunId", validationRunId);
-
-  const createBoardRes = await bru.sendRequest({
-    method: 'POST',
-    url: `${baseUrl}/boards`,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${validationOwnerToken}`
-    },
-    body: {
-      mode: 'json',
-      json: {
-        name: `Validation Board ${validationRunId}`,
-        color: '#F59E0B',
-        description: 'Validation board for invalid project link'
-      }
-    }
-  });
-
-  if (createBoardRes.status !== 200) throw new Error(`Board creation failed: ${createBoardRes.status}`);
-  bru.setVar("validationBoardId", String(createBoardRes.body.id));
 }
 
 body:json {
   {
-    "boardIds": [{{validationBoardId}}]
+    "boardIds": [999999999]
   }
 }
 

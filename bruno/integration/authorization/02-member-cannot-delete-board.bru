@@ -16,82 +16,37 @@ auth:bearer {
 
 script:pre-request {
   const baseUrl = bru.getVar("baseUrl") || "http://localhost:8081";
-  let ownerToken = bru.getVar("authorizationOwnerToken");
+  const ownerToken = bru.getVar("authorizationOwnerToken");
   const runId = String(Date.now());
-
   const ownerPassword = bru.getVar("ownerPassword") || "StrongPass123!";
 
-  if (!ownerToken) {
-    let authorizationOwnerEmail = bru.getVar("authorizationOwnerEmail");
-    if (!authorizationOwnerEmail) {
-      const authorizationRunId = String(Date.now());
-      authorizationOwnerEmail = `authorization.owner.${authorizationRunId}@example.com`;
-      bru.setVar("authorizationOwnerEmail", authorizationOwnerEmail);
-
-      const registerOwnerRes = await bru.sendRequest({
-        method: 'POST',
-        url: `${baseUrl}/auth/register`,
-        headers: { 'Content-Type': 'application/json' },
-        body: {
-          mode: 'json',
-          json: {
-            name: 'Authorization Owner',
-            email: authorizationOwnerEmail,
-            password: ownerPassword
-          }
-        }
-      });
-      if (registerOwnerRes.status !== 201) throw new Error(`Owner register failed: ${registerOwnerRes.status}`);
-      bru.setVar("authorizationOwnerId", String(registerOwnerRes.body.id));
-    }
-
-    const loginOwnerRes = await bru.sendRequest({
-      method: 'POST',
-      url: `${baseUrl}/auth/login`,
-      headers: { 'Content-Type': 'application/json' },
-      body: {
-        mode: 'json',
-        json: {
-          email: authorizationOwnerEmail,
-          password: ownerPassword
-        }
-      }
-    });
-    if (loginOwnerRes.status !== 200) throw new Error(`Owner login failed: ${loginOwnerRes.status}`);
-    ownerToken = loginOwnerRes.body.accessToken;
-    bru.setVar("authorizationOwnerToken", ownerToken);
-  }
+  if (!ownerToken) throw new Error("Missing required variable: authorizationOwnerToken");
 
   const memberEmail = `authorization.member.${runId}@example.com`;
-  const memberPassword = bru.getVar("memberPassword") || ownerPassword;
 
   const registerMemberRes = await bru.sendRequest({
     method: 'POST',
     url: `${baseUrl}/auth/register`,
     headers: { 'Content-Type': 'application/json' },
-    body: {
-      mode: 'json',
-      json: {
-        name: 'Authorization Member',
-        email: memberEmail,
-        password: memberPassword
-      }
+    data: {
+      name: 'Authorization Member',
+      email: memberEmail,
+      password: ownerPassword
     }
   });
+
   if (registerMemberRes.status !== 201) throw new Error(`Member register failed: ${registerMemberRes.status}`);
 
   const loginMemberRes = await bru.sendRequest({
     method: 'POST',
     url: `${baseUrl}/auth/login`,
     headers: { 'Content-Type': 'application/json' },
-    body: {
-      mode: 'json',
-      json: {
-        email: memberEmail,
-        password: memberPassword
-      }
+    data: {
+      email: memberEmail,
+      password: ownerPassword
     }
   });
+
   if (loginMemberRes.status !== 200) throw new Error(`Member login failed: ${loginMemberRes.status}`);
 
   const createBoardRes = await bru.sendRequest({
@@ -101,22 +56,17 @@ script:pre-request {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${ownerToken}`
     },
-    body: {
-      mode: 'json',
-      json: {
-        name: `Authorization Board ${runId}`,
-        color: '#60A5FA',
-        description: 'Authorization delete protection board'
-      }
+    data: {
+      name: `Authorization Board ${runId}`,
+      color: '#60A5FA',
+      description: 'Authorization delete protection board'
     }
   });
+
   if (createBoardRes.status !== 200) throw new Error(`Board creation failed: ${createBoardRes.status}`);
 
-  const memberToken = loginMemberRes.body.accessToken;
-  const boardId = createBoardRes.body.id;
-
-  bru.setVar("authorizationMemberToken", memberToken);
-  bru.setVar("authorizationBoardId", String(boardId));
+  bru.setVar("authorizationMemberToken", loginMemberRes.data.accessToken);
+  bru.setVar("authorizationBoardId", String(createBoardRes.data.id));
 }
 
 tests {
