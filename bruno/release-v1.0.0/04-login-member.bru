@@ -20,8 +20,10 @@ script:pre-request {
 }
 
 body:json {
+{
   "email": "{{memberEmail}}",
   "password": "{{memberPassword}}"
+  }
 }
 
 tests {
@@ -30,7 +32,7 @@ tests {
   });
 
   test("capture member token", function () {
-    const body = res.getBody();
+    const body = res.getBody({ parse: true });
     expect(body.accessToken).to.be.a('string');
     expect(body.user.id).to.be.a('number');
     bru.setVar("memberToken", body.accessToken);

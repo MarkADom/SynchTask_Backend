@@ -21,9 +21,11 @@ script:pre-request {
 }
 
 body:json {
+{
   "name": "Owner User",
   "email": "{{ownerEmail}}",
   "password": "{{ownerPassword}}"
+  }
 }
 
 tests {
@@ -32,7 +34,7 @@ tests {
   });
 
   test("capture owner id", function () {
-    const body = res.getBody();
+    const body = res.getBody({ parse: true });
     expect(body.id).to.be.a('number');
     bru.setVar("ownerId", String(body.id));
   });

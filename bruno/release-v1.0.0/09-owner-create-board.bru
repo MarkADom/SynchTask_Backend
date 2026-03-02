@@ -26,9 +26,11 @@ script:pre-request {
 }
 
 body:json {
+{
   "name": "Board {{runId}}",
   "color": "#60A5FA",
   "description": "Release board"
+  }
 }
 
 tests {
@@ -37,7 +39,7 @@ tests {
   });
 
   test("capture board id", function () {
-    const body = res.getBody();
+    const body = res.getBody({ parse: true });
     expect(body.id).to.be.a('number');
     bru.setVar("boardId", String(body.id));
   });

@@ -6,8 +6,6 @@ meta {
 
 post {
   url: {{baseUrl}}/projects
-  body: json
-  auth: bearer
 }
 
 auth:bearer {
@@ -21,6 +19,7 @@ headers {
 script:pre-request {
   const token = bru.getVar("ownerToken");
   if (!token) throw new Error("Missing required variable: ownerToken");
+
   const runId = bru.getVar("runId");
   if (!runId) throw new Error("Missing required variable: runId");
 }
@@ -36,7 +35,7 @@ tests {
   });
 
   test("capture project id", function () {
-    const body = res.getBody();
+    const body = res.getBody({ parse: true });
     expect(body.id).to.be.a('number');
     bru.setVar("projectId", String(body.id));
   });

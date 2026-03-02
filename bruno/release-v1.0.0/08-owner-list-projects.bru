@@ -27,7 +27,7 @@ tests {
   });
 
   test("project appears in owner listing", function () {
-    const body = res.getBody();
+    const body = res.getBody({ parse: true });
     const projectId = Number(bru.getVar("projectId"));
     expect(Array.isArray(body)).to.equal(true);
     expect(body.some(p => p.id === projectId)).to.equal(true);

@@ -20,8 +20,9 @@ script:pre-request {
 }
 
 body:json {
-  "email": "{{ownerEmail}}",
-  "password": "{{ownerPassword}}"
+{  "email": "{{ownerEmail}}",
+  "password": "{{ownerPassword}}"}
+  }
 }
 
 tests {
@@ -30,7 +31,7 @@ tests {
   });
 
   test("capture owner access token", function () {
-    const body = res.getBody();
+    const body = res.getBody({ parse: true });
     expect(body.accessToken).to.be.a('string');
     expect(body.user.id).to.be.a('number');
     bru.setVar("ownerToken", body.accessToken);

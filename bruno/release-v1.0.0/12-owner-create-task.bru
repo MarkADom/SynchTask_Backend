@@ -28,6 +28,7 @@ script:pre-request {
 }
 
 body:json {
+{
   "title": "Task {{runId}}",
   "description": "Core validation task",
   "assignees": [],
@@ -35,6 +36,7 @@ body:json {
   "boardId": {{boardId}},
   "status": "TODO",
   "priority": "MID"
+  }
 }
 
 tests {

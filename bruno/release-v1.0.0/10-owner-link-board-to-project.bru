@@ -28,7 +28,9 @@ script:pre-request {
 }
 
 body:json {
+  {
   "boardIds": [{{boardId}}]
+  }
 }
 
 tests {
@@ -37,7 +39,7 @@ tests {
   });
 
   test("board linked to project", function () {
-    const body = res.getBody();
+    const body = res.getBody({ parse: true });
     const boardId = Number(bru.getVar("boardId"));
     expect(Array.isArray(body.boards)).to.equal(true);
     expect(body.boards.some(b => b.id === boardId)).to.equal(true);

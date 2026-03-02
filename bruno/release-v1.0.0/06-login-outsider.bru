@@ -20,8 +20,10 @@ script:pre-request {
 }
 
 body:json {
+{
   "email": "{{outsiderEmail}}",
   "password": "{{outsiderPassword}}"
+  }
 }
 
 tests {
@@ -30,7 +32,7 @@ tests {
   });
 
   test("capture outsider token", function () {
-    const body = res.getBody();
+    const body = res.getBody({ parse: true });
     expect(body.accessToken).to.be.a('string');
     expect(body.user.id).to.be.a('number');
     bru.setVar("outsiderToken", body.accessToken);

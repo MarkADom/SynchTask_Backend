@@ -27,7 +27,7 @@ tests {
   });
 
   test("member sees expected task", function () {
-    const body = res.getBody();
+    const body = res.getBody({ parse: true });
     expect(body.id).to.equal(Number(bru.getVar("taskId")));
   });
 }
