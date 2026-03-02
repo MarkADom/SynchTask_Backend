@@ -1,0 +1,116 @@
+meta {
+  name: 04 Cannot assign task to outsider
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/tasks/{{authorizationTaskId}}/assign?email={{authorizationOutsiderEmail}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{authorizationOwnerToken}}
+}
+
+script:pre-request {
+  const baseUrl = bru.getVar("baseUrl") || "http://localhost:8081";
+  let ownerToken = bru.getVar("authorizationOwnerToken");
+  const runId = String(Date.now());
+  const ownerPassword = bru.getVar("ownerPassword") || "StrongPass123!";
+
+  if (!ownerToken) {
+    let authorizationOwnerEmail = bru.getVar("authorizationOwnerEmail");
+    if (!authorizationOwnerEmail) {
+      const authorizationRunId = String(Date.now());
+      authorizationOwnerEmail = `authorization.owner.${authorizationRunId}@example.com`;
+      bru.setVar("authorizationOwnerEmail", authorizationOwnerEmail);
+
+      const registerOwnerRes = await bru.sendRequest({
+        method: 'POST',
+        url: `${baseUrl}/auth/register`,
+        headers: { 'Content-Type': 'application/json' },
+        body: { mode: 'json', json: { name: 'Authorization Owner', email: authorizationOwnerEmail, password: ownerPassword } }
+      });
+      if (registerOwnerRes.status !== 201) throw new Error(`Owner register failed: ${registerOwnerRes.status}`);
+      bru.setVar("authorizationOwnerId", String(registerOwnerRes.body.id));
+    }
+
+    const loginOwnerRes = await bru.sendRequest({
+      method: 'POST',
+      url: `${baseUrl}/auth/login`,
+      headers: { 'Content-Type': 'application/json' },
+      body: { mode: 'json', json: { email: authorizationOwnerEmail, password: ownerPassword } }
+    });
+    if (loginOwnerRes.status !== 200) throw new Error(`Owner login failed: ${loginOwnerRes.status}`);
+    ownerToken = loginOwnerRes.body.accessToken;
+    bru.setVar("authorizationOwnerToken", ownerToken);
+  }
+
+  const outsiderEmail = `authorization.outsider.${runId}@example.com`;
+
+  const registerOutsiderRes = await bru.sendRequest({
+    method: 'POST',
+    url: `${baseUrl}/auth/register`,
+    headers: { 'Content-Type': 'application/json' },
+    body: {
+      mode: 'json',
+      json: {
+        name: 'Authorization Outsider',
+        email: outsiderEmail,
+        password: ownerPassword
+      }
+    }
+  });
+  if (registerOutsiderRes.status !== 201) throw new Error(`Outsider register failed: ${registerOutsiderRes.status}`);
+
+  const createBoardRes = await bru.sendRequest({
+    method: 'POST',
+    url: `${baseUrl}/boards`,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${ownerToken}`
+    },
+    body: {
+      mode: 'json',
+      json: {
+        name: `Authorization Assignment Board ${runId}`,
+        color: '#A78BFA',
+        description: 'Authorization outsider assignment check'
+      }
+    }
+  });
+  if (createBoardRes.status !== 200) throw new Error(`Board creation failed: ${createBoardRes.status}`);
+
+  const createTaskRes = await bru.sendRequest({
+    method: 'POST',
+    url: `${baseUrl}/tasks`,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${ownerToken}`
+    },
+    body: {
+      mode: 'json',
+      json: {
+        title: `Authorization Task ${runId}`,
+        description: 'Task used for outsider assignment denial',
+        assignees: [],
+        labels: ['authorization'],
+        boardId: createBoardRes.body.id,
+        status: 'TODO',
+        priority: 'MID'
+      }
+    }
+  });
+  if (createTaskRes.status !== 200) throw new Error(`Task creation failed: ${createTaskRes.status}`);
+
+  bru.setVar("authorizationTaskId", String(createTaskRes.body.id));
+  bru.setVar("authorizationOutsiderEmail", outsiderEmail);
+}
+
+tests {
+  test("status 403", function () {
+    expect(res.getStatus()).to.equal(403);
+  });
+}
