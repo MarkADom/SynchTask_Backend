@@ -14,25 +14,25 @@ headers {
   Content-Type: application/json
 }
 
+body:json {
+  {
+    "name": "Owner User",
+    "email": "{{ownerEmail}}",
+    "password": "{{ownerPassword}}"
+  }
+}
+
 script:pre-request {
   const runId = String(Date.now());
   bru.setVar("runId", runId);
   bru.setVar("ownerEmail", `owner.${runId}@example.com`);
 }
 
-body:json {
-{
-  "name": "Owner User",
-  "email": "{{ownerEmail}}",
-  "password": "{{ownerPassword}}"
-  }
-}
-
 tests {
   test("status 201", function () {
     expect(res.getStatus()).to.equal(201);
   });
-
+  
   test("capture owner id", function () {
     const body = res.getBody({ parse: true });
     expect(body.id).to.be.a('number');

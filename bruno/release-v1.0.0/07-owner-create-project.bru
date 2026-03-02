@@ -6,14 +6,12 @@ meta {
 
 post {
   url: {{baseUrl}}/projects
-}
-
-auth:bearer {
-  token: {{ownerToken}}
+  body: json
 }
 
 headers {
   Content-Type: application/json
+  Authorization: Bearer {{ownerToken}}
 }
 
 script:pre-request {
@@ -25,8 +23,10 @@ script:pre-request {
 }
 
 body:json {
+  {
   "name": "Project {{runId}}",
   "description": "Release v1.0.0 validation project"
+  }
 }
 
 tests {
@@ -36,7 +36,7 @@ tests {
 
   test("capture project id", function () {
     const body = res.getBody({ parse: true });
-    expect(body.id).to.be.a('number');
+    expect(body.id).to.be.a("number");
     bru.setVar("projectId", String(body.id));
   });
 }
