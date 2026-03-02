@@ -1,0 +1,41 @@
+meta {
+  name: 00 Register authorization owner
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Authorization Owner",
+    "email": "{{authorizationOwnerEmail}}",
+    "password": "{{ownerPassword}}"
+  }
+}
+
+script:pre-request {
+  const authorizationRunId = String(Date.now());
+  bru.setVar("authorizationRunId", authorizationRunId);
+  bru.setVar("authorizationOwnerEmail", `authorization.owner.${authorizationRunId}@example.com`);
+}
+
+tests {
+  test("status 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("capture owner id", function () {
+    const body = res.getBody({ parse: true });
+    expect(body.id).to.be.a('number');
+    bru.setVar("authorizationOwnerId", String(body.id));
+  });
+}

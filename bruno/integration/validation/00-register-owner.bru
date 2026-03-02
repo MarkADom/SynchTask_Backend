@@ -1,0 +1,41 @@
+meta {
+  name: 00 Register validation owner
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Validation Owner",
+    "email": "{{validationOwnerEmail}}",
+    "password": "{{ownerPassword}}"
+  }
+}
+
+script:pre-request {
+  const validationRunId = String(Date.now());
+  bru.setVar("validationRunId", validationRunId);
+  bru.setVar("validationOwnerEmail", `validation.owner.${validationRunId}@example.com`);
+}
+
+tests {
+  test("status 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("capture owner id", function () {
+    const body = res.getBody({ parse: true });
+    expect(body.id).to.be.a('number');
+    bru.setVar("validationOwnerId", String(body.id));
+  });
+}

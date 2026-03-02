@@ -1,0 +1,21 @@
+meta {
+  name: 03 Malformed token returns 401
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/projects
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: invalid.token.value
+}
+
+tests {
+  test("status 401", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

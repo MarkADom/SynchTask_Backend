@@ -1,0 +1,40 @@
+meta {
+  name: 01 Login authorization owner
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{authorizationOwnerEmail}}",
+    "password": "{{ownerPassword}}"
+  }
+}
+
+script:pre-request {
+  const authorizationOwnerEmail = bru.getVar("authorizationOwnerEmail");
+  if (!authorizationOwnerEmail) throw new Error("Missing required variable: authorizationOwnerEmail");
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("capture owner access token", function () {
+    const body = res.getBody({ parse: true });
+    expect(body.accessToken).to.be.a('string');
+    bru.setVar("authorizationOwnerToken", body.accessToken);
+    bru.setVar("authorizationOwnerId", String(body.user.id));
+  });
+}

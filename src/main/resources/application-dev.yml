@@ -113,11 +113,8 @@ management:
             enabled: true
 
 jwt:
-    expiration: ${JWT_EXPIRATION}
-    refreshExpiration: ${JWT_REFRESH_EXPIRATION}
-    issuer: ${JWT_ISSUER}
-    audience: ${JWT_AUDIENCE}
-    algorithm: ${JWT_ALGORITHM}
+    jwk-set-uri: ${JWT_JWK_SET_URI}
+    audiences: ${JWT_AUDIENCE}
 
 websocket:
     enabled: true

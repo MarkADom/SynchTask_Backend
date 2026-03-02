@@ -1,0 +1,47 @@
+meta {
+  name: 10 Owner links board to project
+  type: http
+  seq: 10
+}
+
+put {
+  url: {{baseUrl}}/projects/{{projectId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{ownerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const ownerToken = bru.getVar("ownerToken");
+  const projectId = bru.getVar("projectId");
+  const boardId = bru.getVar("boardId");
+  if (!ownerToken) throw new Error("Missing required variable: ownerToken");
+  if (!projectId) throw new Error("Missing required variable: projectId");
+  if (!boardId) throw new Error("Missing required variable: boardId");
+}
+
+body:json {
+  {
+  "boardIds": [{{boardId}}]
+  }
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("board linked to project", function () {
+    const body = res.getBody({ parse: true });
+    const boardId = Number(bru.getVar("boardId"));
+    expect(Array.isArray(body.boards)).to.equal(true);
+    expect(body.boards.some(b => b.id === boardId)).to.equal(true);
+  });
+}

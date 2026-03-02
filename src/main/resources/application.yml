@@ -59,7 +59,6 @@ spring:
                         issuer-uri: https://accounts.google.com
             resourceserver:
                 jwt:
-                    issuer-uri: ${JWT_ISSUER_URI}
                     jwk-set-uri: ${JWT_JWK_SET_URI}
                     audiences: ${JWT_AUDIENCE}
 

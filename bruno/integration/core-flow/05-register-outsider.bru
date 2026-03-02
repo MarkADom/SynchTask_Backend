@@ -1,0 +1,41 @@
+meta {
+  name: 05 Register outsider
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const runId = bru.getVar("runId");
+  if (!runId) throw new Error("Missing required variable: runId");
+  bru.setVar("outsiderEmail", `outsider.${runId}@example.com`);
+}
+
+body:json {
+{
+  "name": "Outsider User",
+  "email": "{{outsiderEmail}}",
+  "password": "{{outsiderPassword}}"
+  }
+}
+
+tests {
+  test("status 201", function () {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("capture outsider id", function () {
+    const body = res.getBody({ parse: true });
+    expect(body.id).to.be.a('number');
+    bru.setVar("outsiderId", String(body.id));
+  });
+}
