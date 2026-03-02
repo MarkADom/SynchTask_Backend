@@ -1,57 +1,55 @@
-# Bruno Suite — SynchTask Backend
+# Bruno API Test Suites
 
-This directory contains Bruno collections for integration-level API testing of the Spring Boot + Kotlin backend.
+This folder contains integration suites for SynchTask backend.
 
-## Folder structure
+## Structure
 
 ```text
 bruno/
   environments/
     local.bru
   integration/
-    core-flow/        # Happy path end-to-end actor flow
-    security/         # JWT hardening and token validation negatives
-    authorization/    # Membership and ownership domain access controls
-    validation/       # Request and reference validation negatives
+    core-flow/
+    security/
+    authorization/
+    validation/
   bruno.json
 ```
 
-## Suite categories
+## Independence between suites
 
-- **core-flow**: deterministic happy-path flow (register/login actors, create project/board/task, assign, verify access).
-- **security**: token-level hardening checks (expired JWT, tampered JWT, invalid audience).
-- **authorization**: domain authorization checks (role/membership restrictions and cross-owner isolation).
-- **validation**: payload/reference robustness checks (invalid inputs and missing resource references).
+Each suite bootstraps its own test users in its own folder (`00-register-*`, `01-login-*`) and can be run independently.
+- You **do not** need to run `core-flow` before `security`, `authorization`, or `validation`.
+- Run suites separately or all together, depending on what you are validating.
 
-## Running the Bruno suite
+## Environment variables
 
-1. Start the backend locally:
-   ```bash
-   SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
-   ```
-2. Open Bruno and load collection:
-    - `bruno/bruno.json`
-3. Select environment:
-    - `bruno/environments/local.bru`
-4. Run folders as needed:
-    - `integration/core-flow` for happy-path baseline
-    - `integration/security` for JWT negative checks
-    - `integration/authorization` for access-control negatives
-    - `integration/validation` for input/resource validation negatives
+Required in `environments/local.bru`:
 
-## Required environment variables
-
-At minimum, ensure these are defined in the active Bruno environment:
-
-- `baseUrl` (example: `http://localhost:8081`)
+- `baseUrl` (default: `http://localhost:8081`)
 - `ownerPassword`
 - `memberPassword`
 - `outsiderPassword`
 
-For tests that perform direct login for pre-existing users, set:
+Most user emails/tokens are generated dynamically by pre-request scripts.
 
-- `ownerEmail`
-- `memberEmail`
-- `outsiderEmail`
+## Variable strategy
 
-Most integration negatives in this suite self-register users per run to remain isolated and repeatable.
+- Shared runtime variable: `runId` (core-flow uses timestamp-based isolation).
+- Suite-scoped runtime variables:
+    - `securityRunId`, `securityOwnerEmail`, `securityOwnerToken`
+    - `authorizationRunId`, `authorizationOwnerEmail`, `authorizationOwnerToken`
+    - `validationRunId`, `validationOwnerEmail`, `validationOwnerToken`
+- Core-flow runtime variables include `ownerEmail`, `memberEmail`, `outsiderEmail`, plus related tokens and ids.
+
+## Run
+
+1. Start backend:
+
+```bash
+SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
+```
+
+2. Open Bruno collection: `bruno/bruno.json`
+3. Select environment: `bruno/environments/local.bru`
+4. Run the desired folder under `integration/`.

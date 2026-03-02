@@ -4,28 +4,32 @@ This is a concise view of how the backend is organized.
 
 ## Layers
 
-- **API / Controllers**: input validation, request/response mapping, auth entry points
-- **Application layer**: orchestrates use-cases and transactions
-- **Domain layer**: business rules and aggregate boundaries
-- **Infrastructure layer**: persistence, security adapters, external integrations
+- **Presentation** (`presentation/controller`): HTTP endpoints and DTO mapping.
+- **Application** (`application/service`): use-case orchestration and transactions.
+- **Domain** (`domain`): entities, invariants, ownership rules.
+- **Infrastructure** (`infrastructure`): persistence, security, integrations.
 
-## Design principles
 
-- Keep business logic outside framework-specific code
-- Respect aggregate boundaries (User, Board, Project, ChatRoom)
-- Prefer explicit use-cases over “smart controllers”
-- Keep repository access aggregate-scoped
+## Access model (important)
 
-## Request flow (high-level)
+- Authentication uses JWT/OAuth2.
+- Most business endpoints require `isAuthenticated()` at controller level.
+- Business authorization for boards/projects/tasks is enforced by ownership/membership checks in services (not only by global roles).
+- `ROLE_ADMIN` is reserved for admin endpoints (for example user/admin operations and protected actuator endpoints).
 
-1. Request reaches controller
-2. Controller delegates to application service/use-case
-3. Domain rules are applied
-4. Repositories persist/fetch data
-5. Response DTO is returned
+
+## Request flow 
+
+1. Controller validates/parses request.
+2. Application service resolves actor (`AuthenticatedUserService`) and coordinates use-case.
+3. Domain/service rules enforce ownership or collaborator membership.
+4. Repository persists/loads data.
+5. Controller returns response DTO.
+
 
 ## Related docs
 
-- Aggregate boundaries: `docs/dataBase/aggregates.md`
-- Schema notes: `docs/dataBase/database.md`
-- Endpoint auth test planning: `docs/bruno/security-open-endpoints.md`
+- Configuration and profiles: [`configuration.md`](configuration.md)
+- Public endpoint posture: [`security-open-endpoints.md`](security-open-endpoints.md)
+- Aggregate boundaries: [`dataBase/aggregates.md`](dataBase/aggregates.md)
+.md`

@@ -1,22 +1,23 @@
 # Documentation Index
 
-This folder contains technical documentation for SynchTask Backend.
+Use this folder for concise technical references. Start from the root [`README.md`](../README.md) for local setup.
 
-## Core guides
+## Core references
 
-- `architecture.md` — practical architecture overview (layers + request flow)
-- `configuration.md` — environment/config setup for local development
+- [`architecture.md`](architecture.md): module/layer boundaries and request flow.
+- [`configuration.md`](configuration.md): profiles and required environment variables.
+- [`security-open-endpoints.md`](security-open-endpoints.md): public endpoints and authentication posture.
 
-## API testing
+## Database references
 
-- `bruno/` — Bruno collections and local environment template
-- `bruno/security-open-endpoints.md` — public vs protected endpoint notes for test planning
+- [`dataBase/database.md`](dataBase/database.md): schema notes and constraints.
+- [`dataBase/aggregates.md`](dataBase/aggregates.md): aggregate ownership boundaries.
+- [`dataBase/er-diagram.md`](dataBase/er-diagram.md): ER diagram snapshot.
 
-## Database and domain model
+## API references
 
-- `dataBase/database.md` — relational schema, constraints, indexes, release notes
-- `dataBase/aggregates.md` — DDD aggregate boundaries and ownership rules
-- `dataBase/er-diagram.md` — Mermaid ER snapshot kept in version control
+[`openapi/api-docs.json`](openapi/api-docs.json): exported OpenAPI spec.
+
 
 ## Repo-level docs
 

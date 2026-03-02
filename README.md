@@ -1,59 +1,23 @@
 # SynchTask Backend
 
-Backend service for **SynchTask**, a collaborative task management platform focused on
-**clean architecture, security, and code quality**.
+![CI workflow](docs/assets/badge-ci.svg)
+![OpenAPI](docs/assets/badge-openapi.svg)
+![Bruno API tests](docs/assets/badge-bruno.svg)
 
-This repository contains only the backend API (Spring Boot + Kotlin) and realtime
-actions via WebSockets.
+Spring Boot 3 + Kotlin backend for SynchTask.
 
----
+## Tech stack
 
-## Overview
+- Kotlin + Spring Boot 3
+- MySQL + Redis
+- JWT/OAuth2 security
+- OpenAPI / Swagger UI
+- Bruno integration test suites
 
-The backend is responsible for:
+## Run locally
 
-- authentication and authorization
-- domain/business logic for users, projects, boards, tasks, and chat
-- realtime communication via WebSockets
-- stable REST API exposure with OpenAPI docs
-- code quality gates (tests, static analysis, coverage)
+1. Configure environment variables:
 
----
-
-## Project Status
-
-- Backend feature-complete baseline (`v0.1-backend-quality`)
-- Sonar quality gate integrated
-- Coverage baseline above 80%
-
----
-
-## Tech Stack
-
-- **Language:** Kotlin (JDK 21+)
-- **Framework:** Spring Boot 3.x
-- **Database:** MySQL (local dev), H2 (tests)
-- **Cache / Messaging:** Redis
-- **Security:** JWT + OAuth2 (Google)
-- **Realtime:** WebSockets
-- **Docs:** OpenAPI 3 / Swagger
-- **Build:** Gradle
-- **Quality:** Detekt, Ktlint, JaCoCo, SonarQube/SonarCloud
-
----
-
-## Quick Start (Local)
-
-### 1) Prerequisites
-
-- JDK 21+
-- Docker (optional, for local services/SonarQube)
-- MySQL + Redis (local install or containers)
-- `direnv` (optional but recommended)
-
-### 2) Configure environment variables
-
-Create your local env file from template:
 
 ```bash
 cp .envrc.example .envrc
@@ -66,28 +30,23 @@ If you use direnv:
 direnv allow
 ```
 
-> Never commit secrets. `.envrc` is ignored by Git.
 
-### 3) Run the application
+2. Run the application
 
 ```bash
 ./gradlew bootRun
 ```
 
-Default docs endpoints:
+3. Run with dev profile:
+
+```bash
+SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun`
+```
+
+4. Open API docs:
 
 - Swagger UI: `http://localhost:8081/swagger-ui/index.html`
 - OpenAPI JSON: `http://localhost:8081/v3/api-docs`
-
----
-
-## API Testing (Bruno)
-
-Release validation collection lives in `bruno/`.
-
-- Collection metadata: `bruno/bruno.json`
-- Environment file: `bruno/environments/local.bru`
-- Release suite docs and execution semantics: `bruno/README.md`
 
 ---
 
@@ -100,6 +59,7 @@ Run the main local checks:
 ./gradlew detekt
 ./gradlew jacocoTestReport
 ```
+---
 
 ### SonarQube local (optional)
 
@@ -124,6 +84,14 @@ docker compose -f docker/docker-compose.sonar.yml down
 - SonarQube UI: http://localhost:9001/projects
 ---
 
+## API Testing (Bruno)
+
+For full configuration and profile notes, see [`docs/configuration.md`](docs/configuration.md).
+Bruno collections live in [`bruno/`](bruno).
+Run instructions and suite details are in [`bruno/README.md`](bruno/README.md).
+
+---
+
 ## Architecture & Data Model
 
 Main aggregate roots:
@@ -137,6 +105,16 @@ Detailed docs live in [`docs/README.md`](docs/README.md).
 
 ---
 
+## Docs map
+
+- Documentation index: [`docs/README.md`](docs/README.md)
+- Architecture overview: [`docs/architecture.md`](docs/architecture.md)
+- Database notes and ER diagram: [`docs/dataBase/`](docs/dataBase)
+- OpenAPI export and usage: [`docs/openapi/`](docs/openapi)
+- Documentation audit for v1.0: [`docs/documentation-audit.md`](docs/documentation-audit.md)
+
+---
+
 ## Contributing
 
 Contributions are welcome. Keep changes:
@@ -145,3 +123,8 @@ Contributions are welcome. Keep changes:
 - aligned with architectural boundaries
 - documented when public API behavior changes
 
+---
+
+## License
+
+Licensed under the terms in [`LICENSE.md`](LICENSE.md).
