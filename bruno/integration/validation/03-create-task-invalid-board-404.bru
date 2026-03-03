@@ -1,0 +1,36 @@
+meta {
+  name: 04 Link board invalid project 404
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/projects/999999999
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{validationOwnerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const validationOwnerToken = bru.getVar("validationOwnerToken");
+  if (!validationOwnerToken) throw new Error("Missing required variable: validationOwnerToken");
+}
+
+body:json {
+  {
+    "boardIds": [999999999]
+  }
+}
+
+tests {
+  test("status 404", function () {
+      expect(res.getStatus()).to.equal(404);
+    });
+}

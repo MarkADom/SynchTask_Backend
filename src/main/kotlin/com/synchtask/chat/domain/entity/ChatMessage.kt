@@ -29,22 +29,17 @@ import java.time.LocalDateTime
     ]
 )
 class ChatMessage(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id", nullable = false)
     val chatRoom: ChatRoom,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
     val sender: User,
-
     @Column(nullable = false, length = 5000)
     val encryptedMessage: String,
-
     @Column(nullable = false)
     val timestamp: LocalDateTime = LocalDateTime.now()
 )

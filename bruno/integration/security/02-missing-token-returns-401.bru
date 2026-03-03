@@ -1,0 +1,17 @@
+meta {
+  name: 02 Missing token returns 401
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/projects
+  body: none
+  auth: none
+}
+
+tests {
+  test("status 401", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

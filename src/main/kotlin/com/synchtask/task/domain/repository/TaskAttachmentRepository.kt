@@ -8,5 +8,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface TaskAttachmentRepository : JpaRepository<TaskAttachment, Long> {
     fun findAllByTask(task: Task): List<TaskAttachment>
+
     fun deleteByTaskAndId(task: Task, attachmentId: Long): Int
 }

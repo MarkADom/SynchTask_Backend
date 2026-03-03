@@ -17,7 +17,6 @@ import java.time.LocalDateTime
  * Unit test for secure WebSocket notification dispatch.
  */
 class NotificationWebSocketControllerTest {
-
     private lateinit var messagingTemplate: SimpMessagingTemplate
     private lateinit var controller: NotificationWebSocketController
 
@@ -34,14 +33,15 @@ class NotificationWebSocketControllerTest {
 
     @Test
     fun `should send notification to authorized user`() {
-        val notification = NotificationDTO(
-            id = 1L,
-            recipientEmail = "user@email.com",
-            message = "You have a new task assigned.",
-            type = NotificationType.PERSONAL,
-            timestamp = LocalDateTime.now(),
-            read = false
-        )
+        val notification =
+            NotificationDTO(
+                id = 1L,
+                recipientEmail = "user@email.com",
+                message = "You have a new task assigned.",
+                type = NotificationType.PERSONAL,
+                timestamp = LocalDateTime.now(),
+                read = false
+            )
 
         controller.notifyUser("user@email.com", notification)
 
@@ -52,14 +52,15 @@ class NotificationWebSocketControllerTest {
 
     @Test
     fun `should not send notification to unauthorized user`() {
-        val notification = NotificationDTO(
-            id = 2L,
-            recipientEmail = "attacker@email.com",
-            message = "Unauthorized attempt!",
-            type = NotificationType.SYSTEM,
-            timestamp = LocalDateTime.now(),
-            read = false
-        )
+        val notification =
+            NotificationDTO(
+                id = 2L,
+                recipientEmail = "attacker@email.com",
+                message = "Unauthorized attempt!",
+                type = NotificationType.SYSTEM,
+                timestamp = LocalDateTime.now(),
+                read = false
+            )
 
         controller.notifyUser("attacker@email.com", notification)
 

@@ -1,75 +1,87 @@
 package com.synchtask.task.application.service
 
-import com.synchtask.task.application.dto.TaskCreateDTO
-import com.synchtask.task.application.dto.TaskResponseDTO
-import com.synchtask.task.application.dto.TaskUpdateDTO
-import com.synchtask.friend.domain.entity.FriendshipStatus
+import com.synchtask.activity.application.service.ActivityService
+import com.synchtask.activity.domain.model.ActivityType
+import com.synchtask.board.domain.repository.BoardMemberRepository
+import com.synchtask.board.domain.repository.BoardRepository
+import com.synchtask.friend.application.port.FriendshipChecker
+import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.notification.domain.entity.NotificationType
-import com.synchtask.task.domain.entity.Task
-import com.synchtask.task.domain.entity.TaskStatus
-import com.synchtask.user.domain.entity.User
-import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
-import com.synchtask.board.domain.repository.BoardRepository
-import com.synchtask.friend.domain.repository.FriendRepository
+import com.synchtask.task.application.dto.TaskCreateDTO
+import com.synchtask.task.application.dto.TaskUpdateDTO
+import com.synchtask.task.domain.entity.Task
+import com.synchtask.task.domain.entity.TaskMember
+import com.synchtask.task.domain.entity.TaskStatus
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
+import com.synchtask.task.presentation.mapper.TaskMapper
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
-import com.synchtask.notification.application.service.NotificationService
 import com.synchtask.websocket.application.service.TaskWebSocketService
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 
 @Service
 class TaskService(
     private val taskRepository: TaskRepository,
+    private val taskMemberRepository: TaskMemberRepository,
     private val userRepository: UserRepository,
     private val notificationService: NotificationService,
     private val taskWebSocketService: TaskWebSocketService,
     private val boardRepository: BoardRepository,
+    private val boardMemberRepository: BoardMemberRepository,
     private val taskSpecificationService: TaskSpecificationService,
-    private val friendRepository: FriendRepository,
+    private val friendshipChecker: FriendshipChecker,
+    private val activityService: ActivityService,
 ) {
-
     private val logger = LoggerFactory.getLogger(TaskService::class.java)
 
     @Transactional
     fun createTask(owner: User, request: TaskCreateDTO): Task {
-        val board = boardRepository.findById(request.boardId)
-            .orElseThrow { ResourceNotFoundException("Board not found: ${request.boardId}") }
+        val board =
+            boardRepository.findById(request.boardId)
+                .orElseThrow { ResourceNotFoundException("Board not found: ${request.boardId}") }
 
-        if (!board.hasAccess(owner)) {
-            throw UnauthorizedAccessException("User ${owner.email} is not allowed to create tasks in board ${board.id}.")
+        if (!canAccessBoard(board.id, owner)) {
+            throw UnauthorizedAccessException(
+                "User ${owner.email} is not allowed to create tasks in board ${board.id}."
+            )
         }
 
-        val newTask = Task(
-            owner = owner,
-            title = request.title,
-            description = request.description,
-            labels = request.labels.toMutableSet(),
-            status = request.status,
-            board = board,
-            priority = request.priority,
-        )
+        val newTask =
+            Task(
+                owner = owner,
+                title = request.title,
+                description = request.description,
+                labels = request.labels.toMutableSet(),
+                status = request.status,
+                board = board,
+                priority = request.priority,
+            )
 
         val savedTask = taskRepository.save(newTask)
-        logger.info("Task '${newTask.title}' created by ${owner.email}")
+        syncTaskAssignees(savedTask, request.assignees, owner)
+
+        activityService.record(
+            actor = owner,
+            type = ActivityType.TASK_CREATED,
+            referenceId = savedTask.id,
+            description = "Task '${savedTask.title}' criada"
+        )
+
+        logger.info("Task '${savedTask.title}' created by ${owner.email}")
         return savedTask
     }
 
-    fun findTaskById(taskId: Long): Task =
-        taskRepository.findById(taskId)
-            .orElseThrow { ResourceNotFoundException("Task not found with ID: $taskId") }
-
-    fun getTaskDetail(taskId: Long): Task = findTaskById(taskId)
-
-    fun getTasksForUser(user: User, pageable: Pageable): Page<Task> {
-        return taskSpecificationService.findTasksByFilters(user, null, null, null, null, pageable)
-    }
+    fun findTaskById(taskId: Long): Task = taskRepository.findById(taskId)
+        .orElseThrow { ResourceNotFoundException("Task not found with ID: $taskId") }
 
     fun getTasksWithFilters(
         user: User,
@@ -78,91 +90,128 @@ class TaskService(
         assigneeId: Long?,
         boardId: Long?,
         pageable: Pageable,
-    ): Page<Task> {
-        return taskSpecificationService.findTasksByFilters(user, status, label, assigneeId, boardId, pageable)
-    }
+    ): Page<Task> = taskSpecificationService.findTasksByFilters(
+        user,
+        status,
+        label,
+        assigneeId,
+        boardId,
+        pageable
+    )
 
     @Transactional
-    fun updateTask(taskId: Long, request: TaskUpdateDTO, user: User): Task {
+    fun updateTask(
+        taskId: Long,
+        request: TaskUpdateDTO,
+        user: User,
+    ): Task {
         val task = findTaskById(taskId)
 
         if (!canEditTask(task, user)) {
-            throw UnauthorizedAccessException("User ${user.email} is not authorized to update task ${task.id}")
+            throw UnauthorizedAccessException(
+                "User ${user.email} is not authorized to update task ${task.id}"
+            )
         }
 
-        request.title?.let { task.title = it }
-        request.description?.let { task.description = it }
-        request.labels?.let { task.labels = it.toMutableSet() }
-        request.status?.let { task.status = it }
-        request.priority?.let { task.priority = it }
+        task.updateDetails(
+            title = request.title,
+            description = request.description,
+            labels = request.labels?.toSet(),
+            status = request.status,
+            priority = request.priority
+        )
 
         request.assignees?.let { assigneeIds ->
-            val collaborators = userRepository.findAllById(assigneeIds).toMutableSet()
-            if (collaborators.size != assigneeIds.size) {
-                val foundIds = collaborators.mapNotNull { it.id }.toSet()
-                val missing = assigneeIds.filter { it !in foundIds }
-                throw ResourceNotFoundException("Some users not found: $missing")
-            }
-
-            task.collaborators.clear()
-            task.collaborators.addAll(collaborators)
+            syncTaskAssignees(task, assigneeIds, user)
         }
 
-        markUpdated(task)
         val updated = taskRepository.save(task)
-        taskWebSocketService.sendTaskUpdate(TaskResponseDTO.fromEntity(updated))
-        logger.info("Task '${task.title}' updated and WebSocket notification sent.")
+
+        activityService.record(
+            actor = user,
+            type = ActivityType.TASK_UPDATED,
+            referenceId = updated.id,
+            description = "Task '${updated.title}' atualizada"
+        )
+
+        taskWebSocketService.sendTaskUpdate(TaskMapper.toResponse(updated))
         return updated
     }
 
     @Transactional
-    fun updateTaskLabels(taskId: Long, labels: List<String>, user: User) {
+    fun updateTaskLabels(
+        taskId: Long,
+        labels: List<String>,
+        user: User,
+    ) {
         val task = findTaskById(taskId)
+
         if (!canEditTask(task, user)) {
-            throw UnauthorizedAccessException("You are not authorized to update labels on this task.")
+            throw UnauthorizedAccessException(
+                "You are not authorized to update labels on this task."
+            )
         }
 
         task.labels = labels.toMutableSet()
-        markUpdated(task)
         taskRepository.save(task)
-        logger.info("Updated labels for task '${task.title}': $labels")
+
+        activityService.record(
+            actor = user,
+            type = ActivityType.TASK_UPDATED,
+            referenceId = task.id,
+            description = "Labels updated"
+        )
     }
 
     @Transactional
-    fun updateTaskAssignees(taskId: Long, userIds: List<Long>, user: User) {
+    fun updateTaskAssignees(
+        taskId: Long,
+        userIds: List<Long>,
+        user: User,
+    ) {
         val task = findTaskById(taskId)
+
         if (!canEditTask(task, user)) {
-            throw UnauthorizedAccessException("You are not authorized to update assignees on this task.")
+            throw UnauthorizedAccessException(
+                "You are not authorized to update assignees on this task."
+            )
         }
-
-        val assignees = userRepository.findAllById(userIds).toMutableSet()
-        if (assignees.size != userIds.size) {
-            val foundIds = assignees.map { it.id }.toSet()
-            val missing = userIds.filter { it !in foundIds }
-            throw ResourceNotFoundException("Some users not found: $missing")
-        }
-
-        task.collaborators.clear()
-        task.collaborators.addAll(assignees)
-        markUpdated(task)
+        syncTaskAssignees(task, userIds, user)
         taskRepository.save(task)
-        logger.info("Updated assignees for task '${task.title}': ${userIds.joinToString()}")
+
+        activityService.record(
+            actor = user,
+            type = ActivityType.TASK_ASSIGNED,
+            referenceId = task.id,
+            description = "Assignees updated"
+        )
     }
 
     @Transactional
-    fun updateTaskStatus(taskId: Long, newStatus: TaskStatus) {
+    fun updateTaskStatus(
+        taskId: Long,
+        newStatus: TaskStatus,
+        actor: User,
+    ) {
         val task = findTaskById(taskId)
 
-        if (task.status == newStatus) {
-            logger.warn("Task '${task.title}' is already in status: $newStatus.")
-            return
+        if (!canEditTask(task, actor)) {
+            throw UnauthorizedAccessException(
+                "Not allowed to change task status"
+            )
         }
 
-        task.status = newStatus
-        markUpdated(task)
+        task.changeStatus(newStatus)
         taskRepository.save(task)
 
-        task.collaborators.forEach {
+        activityService.record(
+            actor = actor,
+            type = ActivityType.TASK_STATUS_CHANGED,
+            referenceId = task.id,
+            description = "Status alterado para $newStatus"
+        )
+
+        resolveTaskCollaborators(task).forEach {
             notificationService.sendNotification(
                 userEmail = it.email,
                 message = "Task '${task.title}' status updated to: $newStatus.",
@@ -171,41 +220,48 @@ class TaskService(
             )
         }
 
-        taskWebSocketService.sendTaskUpdate(TaskResponseDTO.fromEntity(task))
-        logger.info("Task '${task.title}' status updated to '$newStatus' and notification sent.")
+        taskWebSocketService.sendTaskUpdate(TaskMapper.toResponse(task))
     }
 
     @Transactional
-    fun assignCollaborator(taskId: Long, collaboratorEmail: String) {
+    fun assignCollaborator(
+        taskId: Long,
+        collaboratorEmail:
+        String,
+        actor: User,
+    ) {
         val task = findTaskById(taskId)
-        val collaborator = userRepository.findByEmail(collaboratorEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $collaboratorEmail") }
 
-        // Verifies friendship
-        val friendships = friendRepository.findFriendsByRequesterEmailOrFriendEmailAndStatus(
-            requesterEmail = task.owner.email,
-            friendEmail = task.owner.email,
-            status = FriendshipStatus.ACCEPTED
-        )
-
-        val isFriend = friendships.any {
-            (it.requester.email == task.owner.email && it.friend.email == collaborator.email) ||
-                    (it.friend.email == task.owner.email && it.requester.email == collaborator.email)
+        if (!canEditTask(task, actor)) {
+            throw UnauthorizedAccessException("Not allowed to assign collaborators")
         }
 
-        if (!isFriend) {
-            logger.warn("User ${task.owner.email} attempted to assign non-friend ${collaborator.email}")
+        val collaborator =
+            userRepository.findByEmail(collaboratorEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $collaboratorEmail") }
+
+        if (!friendshipChecker.areFriends(task.owner.id!!, collaborator.id!!)) {
             throw UnauthorizedAccessException("You can only assign friends as collaborators.")
         }
-
-        if (task.collaborators.contains(collaborator)) {
-            logger.warn("User ${collaborator.email} is already assigned to task '${task.title}'.")
-            return
+        val taskIdValue = task.id ?: throw ResourceNotFoundException("Task not found with ID: $taskId")
+        val existingMembership = taskMemberRepository.findByTaskIdAndUserId(taskIdValue, collaborator.id!!)
+        if (existingMembership == null) {
+            taskMemberRepository.save(
+                TaskMember(
+                    task = task,
+                    user = collaborator,
+                    role = MembershipRole.COLLABORATOR,
+                    createdByUser = actor
+                )
+            )
         }
 
-        task.collaborators.add(collaborator)
-        markUpdated(task)
-        taskRepository.save(task)
+        activityService.record(
+            actor = actor,
+            type = ActivityType.TASK_ASSIGNED,
+            referenceId = task.id,
+            description = "Colaborador ${collaborator.email} atribuído"
+        )
 
         notificationService.sendNotification(
             userEmail = collaborator.email,
@@ -213,37 +269,79 @@ class TaskService(
             type = NotificationType.TASK_UPDATE,
             groupId = task.id
         )
-
-        logger.info("Friend ${collaborator.email} assigned to task '${task.title}' by ${task.owner.email}")
     }
 
     @Transactional
-    fun deleteTask(taskId: Long, user: User) {
+    fun deleteTask(
+        taskId: Long,
+        user: User,
+    ) {
         val task = findTaskById(taskId)
+
         if (!canEditTask(task, user)) {
-            throw UnauthorizedAccessException("User ${user.email} is not authorized to delete this task.")
+            throw UnauthorizedAccessException(
+                "User ${user.email} is not authorized to delete this task."
+            )
         }
 
         taskRepository.delete(task)
-        logger.info("Task '${task.title}' (ID: ${task.id}) deleted by ${user.email}")
+        logger.info("Task '${task.title}' deleted by ${user.email}")
     }
 
-    fun canAccessTask(task: Task, user: User): Boolean {
-        val isSystemAdmin = user.role == UserRole.ADMIN
-        val isSystemOwner = user.role == UserRole.OWNER // if you use OWNER as a platform-wide role
-        val isTaskOwner = task.owner.id == user.id
-        val isTaskCollaborator = task.collaborators.any { it.id == user.id }
-        val isBoardOwner = task.board?.owner?.id == user.id
-        val isBoardCollaborator = task.board?.collaborators?.any { it.id == user.id } ?: false
+    private fun canAccessBoard(
+        boardId: Long?,
+        actor: User,
+    ): Boolean {
+        if (actor.role == UserRole.ADMIN) return true
+        val safeBoardId = boardId ?: return false
+        val actorId = actor.id ?: return false
 
-        return isSystemAdmin || isSystemOwner || isTaskOwner || isTaskCollaborator || isBoardOwner || isBoardCollaborator
+        return boardMemberRepository.existsByBoardIdAndUserId(safeBoardId, actorId)
     }
 
-    private fun canEditTask(task: Task, user: User): Boolean {
-        return user.role == UserRole.ADMIN || task.owner.id == user.id
-    }
+    private fun canEditTask(
+        task: Task,
+        actor: User,
+    ): Boolean =
+        hasTaskAccess(task, actor, taskMemberRepository, boardMemberRepository)
 
-    private fun markUpdated(task: Task) {
-        task.updatedAt = LocalDateTime.now()
+    private fun resolveTaskCollaborators(task: Task): Set<User> =
+        resolveTaskMembershipUsers(task, taskMemberRepository)
+
+    private fun syncTaskAssignees(task: Task, assigneeIds: List<Long>, actor: User) {
+        val usersById = userRepository.findAllById(assigneeIds).associateBy { it.id }
+        if (usersById.size != assigneeIds.size) {
+            throw ResourceNotFoundException("Some users not found")
+        }
+
+        val taskId = checkNotNull(task.id) { "Task not found" }
+        val existingMemberships = taskMemberRepository.findAllByTaskId(taskId)
+        val ownerMemberships = existingMemberships.filter { it.role == MembershipRole.OWNER }
+        taskMemberRepository.deleteAll(existingMemberships.filter { it.role != MembershipRole.OWNER })
+
+        val ownerIds = ownerMemberships.mapNotNull { it.user.id }.toSet()
+        val assigneeMemberships = assigneeIds
+            .distinct()
+            .filter { it !in ownerIds }
+            .map { assigneeId ->
+                TaskMember(
+                    task = task,
+                    user = usersById.getValue(assigneeId),
+                    role = MembershipRole.COLLABORATOR,
+                    createdByUser = actor
+                )
+            }
+        taskMemberRepository.saveAll(assigneeMemberships)
+
+        if (ownerIds.isEmpty()) {
+            taskMemberRepository.save(
+                TaskMember(
+                    task = task,
+                    user = task.owner,
+                    role = MembershipRole.OWNER,
+                    createdByUser = actor
+                )
+            )
+        }
     }
 }

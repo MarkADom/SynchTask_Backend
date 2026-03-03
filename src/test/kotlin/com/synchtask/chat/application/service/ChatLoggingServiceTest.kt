@@ -2,8 +2,8 @@ package com.synchtask.chat.application.service
 
 import com.synchtask.chat.domain.entity.ChatMessage
 import com.synchtask.chat.domain.entity.ChatRoom
-import com.synchtask.user.domain.entity.User
 import com.synchtask.chat.domain.repository.ChatMessageRepository
+import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -19,7 +19,6 @@ import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
 class ChatLoggingServiceTest {
-
     @MockK
     lateinit var chatMessageRepository: ChatMessageRepository
 
@@ -32,23 +31,25 @@ class ChatLoggingServiceTest {
 
     @BeforeEach
     fun setUp() {
-        sender = User(
-            id = 1L,
-            name = "Alice",
-            email = "alice@synchtask.com",
-            passwordHash = "hashedPassword",
-            role = UserRole.USER
-        )
+        sender =
+            User(
+                id = 1L,
+                name = "Alice",
+                email = "alice@synchtask.com",
+                passwordHash = "hashedPassword",
+                role = UserRole.USER
+            )
 
         chatRoom = ChatRoom(id = 100L)
 
-        chatMessage = ChatMessage(
-            id = 10L,
-            chatRoom = chatRoom,
-            sender = sender,
-            encryptedMessage = "Encrypted hello world",
-            timestamp = LocalDateTime.now()
-        )
+        chatMessage =
+            ChatMessage(
+                id = 10L,
+                chatRoom = chatRoom,
+                sender = sender,
+                encryptedMessage = "Encrypted hello world",
+                timestamp = LocalDateTime.now()
+            )
     }
 
     @Test
@@ -64,9 +65,10 @@ class ChatLoggingServiceTest {
     fun `should throw exception when repository fails`() {
         every { chatMessageRepository.save(chatMessage) } throws RuntimeException("DB down")
 
-        val ex = org.junit.jupiter.api.assertThrows<IllegalStateException> {
-            chatLoggingService.logMessage(chatMessage)
-        }
+        val ex =
+            org.junit.jupiter.api.assertThrows<IllegalStateException> {
+                chatLoggingService.logMessage(chatMessage)
+            }
 
         assertEquals("Unable to persist chat message.", ex.message)
 

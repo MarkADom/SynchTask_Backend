@@ -30,7 +30,6 @@ class WebSocketSecurityConfig(
     private val environment: Environment,
     private val corsProperties: CorsProperties
 ) : WebSocketMessageBrokerConfigurer {
-
     private val logger = LoggerFactory.getLogger(WebSocketSecurityConfig::class.java)
 
     override fun registerStompEndpoints(registry: StompEndpointRegistry) {
@@ -76,7 +75,7 @@ class WebSocketSecurityConfig(
     @Bean
     fun webSocketAuthorizationManager(): AuthorizationManager<Message<*>> {
         return MessageMatcherDelegatingAuthorizationManager.builder()
-            .simpTypeMatchers(SimpMessageType.CONNECT).permitAll() // TODO: change to authenticated() in production
+            .simpTypeMatchers(SimpMessageType.CONNECT).authenticated()
             .simpDestMatchers("/ws/**", "/ws-notifications/**").authenticated()
             .simpDestMatchers("/com/synchtask/user/queue/**").authenticated()
             .simpDestMatchers("/topic/**").permitAll()

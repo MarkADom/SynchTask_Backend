@@ -5,12 +5,12 @@ import com.synchtask.chat.application.context.ChatServiceContext
 import com.synchtask.chat.application.dto.WebSocketMessageDTO
 import com.synchtask.chat.domain.entity.ChatMessage
 import com.synchtask.chat.domain.entity.ChatRoom
-import com.synchtask.user.domain.entity.User
-import com.synchtask.websocket.application.manager.WebSocketManager
 import com.synchtask.chat.domain.repository.ChatMessageRepository
 import com.synchtask.chat.domain.repository.ChatRoomRepository
-import com.synchtask.user.domain.repository.UserRepository
 import com.synchtask.redis.application.service.RedisPublisher
+import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.websocket.application.manager.WebSocketManager
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -19,7 +19,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 class ChatWebSocketServiceTest {
-
     private lateinit var messagingTemplate: SimpMessagingTemplate
     private lateinit var chatMessageRepository: ChatMessageRepository
     private lateinit var chatRoomRepository: ChatRoomRepository
@@ -40,15 +39,16 @@ class ChatWebSocketServiceTest {
         redisPublisher = mockk(relaxed = true)
         objectMapper = mockk()
 
-        chatServiceContext = ChatServiceContext(
-            messagingTemplate,
-            chatMessageRepository,
-            chatRoomRepository,
-            userRepository,
-            webSocketManager,
-            redisPublisher,
-            objectMapper
-        )
+        chatServiceContext =
+            ChatServiceContext(
+                messagingTemplate,
+                chatMessageRepository,
+                chatRoomRepository,
+                userRepository,
+                webSocketManager,
+                redisPublisher,
+                objectMapper
+            )
 
         chatWebSocketService = ChatWebSocketService(chatServiceContext)
     }
@@ -61,13 +61,14 @@ class ChatWebSocketServiceTest {
         val chatRoomId = 99L
         val sender = User(name = "Alice", email = senderEmail, passwordHash = "123")
         val chatRoom = ChatRoom(id = chatRoomId, participants = mutableSetOf(sender))
-        val savedMessage = ChatMessage(
-            id = 1L,
-            chatRoom = chatRoom,
-            sender = sender,
-            encryptedMessage = message,
-            timestamp = LocalDateTime.now()
-        )
+        val savedMessage =
+            ChatMessage(
+                id = 1L,
+                chatRoom = chatRoom,
+                sender = sender,
+                encryptedMessage = message,
+                timestamp = LocalDateTime.now()
+            )
 
         every { chatRoomRepository.findById(chatRoomId) } returns Optional.of(chatRoom)
         every { userRepository.findByEmail(senderEmail) } returns Optional.of(sender)
@@ -78,9 +79,11 @@ class ChatWebSocketServiceTest {
 
         // Assert
         verify {
-            chatMessageRepository.save(match {
-                it.sender == sender && it.chatRoom == chatRoom && it.encryptedMessage == message
-            })
+            chatMessageRepository.save(
+                match {
+                    it.sender == sender && it.chatRoom == chatRoom && it.encryptedMessage == message
+                }
+            )
             messagingTemplate.convertAndSend("/topic/chat/$chatRoomId", any<WebSocketMessageDTO>())
             redisPublisher.publish("chat-messages", message)
         }

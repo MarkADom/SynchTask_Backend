@@ -15,7 +15,6 @@ plugins {
     kotlin("plugin.spring") version "1.9.22"
     kotlin("plugin.jpa") version "1.9.22"
 }
-
 group = "com.synchtask"
 version = "0.0.1-SNAPSHOT"
 
@@ -100,19 +99,22 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testImplementation("io.mockk:mockk:1.13.10")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testRuntimeOnly("com.h2database:h2")
 }
 
 // ───── Kotlin Compiler ─────
 tasks.withType<KotlinCompile> {
     kotlinOptions {
-        freeCompilerArgs = listOf(
-            "-Xjsr305=strict",
-            "-opt-in=kotlin.RequiresOptIn"
-        )
+        freeCompilerArgs =
+            listOf(
+                "-Xjsr305=strict",
+                "-opt-in=kotlin.RequiresOptIn"
+            )
         jvmTarget = "21"
     }
 }
@@ -136,7 +138,6 @@ tasks.jacocoTestReport {
     classDirectories.setFrom(
         fileTree(layout.buildDirectory.dir("classes/kotlin/main")) {
             exclude(
-                "**/config/**",
                 "**/dto/**",
                 "**/exception/**"
             )
@@ -173,34 +174,61 @@ tasks.withType<Jar> {
     }
 }
 
-// ───── SonarQube ─────
-val sonarToken: String? = System.getenv("SONAR_TOKEN")
-val sonarHost: String? = System.getenv("SONAR_HOST_URL")
+// SonarQube / SonarCloud Configuration
 
-tasks.named("sonarqube") {
-    dependsOn("jacocoTestReport", "detekt")
+val sonarHostUrl = System.getenv("SONAR_HOST_URL")
+val sonarToken = System.getenv("SONAR_TOKEN")
+val isCI = System.getenv("CI") == "true"
+
+val effectiveSonarHost = sonarHostUrl ?: "https://sonarcloud.io"
+val isSonarCloud = effectiveSonarHost.contains("sonarcloud.io")
+
+tasks.named("sonar") {
+    dependsOn("test", "jacocoTestReport", "detekt")
+
+    doFirst {
+        if (sonarToken.isNullOrBlank()) {
+            throw GradleException("SONAR_TOKEN must be defined to run Sonar analysis.")
+        }
+    }
 }
 
-sonarqube {
+sonar {
     properties {
-        property("sonar.host.url", sonarHost ?: "http://localhost:9001")
-        sonarToken?.let { property("sonar.login", it) }
 
-        property("sonar.projectKey", "com.synchtask:backend")
-        property("sonar.projectName", "SynchTask")
+        property("sonar.host.url", effectiveSonarHost)
+        property("sonar.token", sonarToken)
+
+        if (isSonarCloud) {
+            property("sonar.organization", "markadom")
+            property("sonar.projectKey", "MarkADom_SynchTask_Backend")
+            property("sonar.projectName", "SynchTask_Backend")
+        } else {
+            property("sonar.projectKey", "com.synchtask:backend")
+            property("sonar.projectName", "SynchTask")
+        }
+
         property("sonar.sourceEncoding", "UTF-8")
         property("sonar.sources", "src/main/kotlin")
         property("sonar.tests", "src/test/kotlin")
 
         property(
             "sonar.kotlin.detekt.reportPaths",
-            "${layout.buildDirectory.get()}/reports/detekt/detekt.xml"
+            layout.buildDirectory
+                .file("reports/detekt/detekt.xml")
+                .get()
+                .asFile
+                .absolutePath
         )
+
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
-            "${layout.buildDirectory.get()}/reports/jacoco/test/jacocoTestReport.xml"
+            layout.buildDirectory
+                .file("reports/jacoco/test/jacocoTestReport.xml")
+                .get()
+                .asFile
+                .absolutePath
         )
     }
 }
-
 

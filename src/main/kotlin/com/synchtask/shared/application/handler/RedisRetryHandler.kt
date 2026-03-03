@@ -9,9 +9,8 @@ import java.util.concurrent.TimeUnit
 
 @Component
 class RedisRetryHandler(
-    private val redisTemplate: StringRedisTemplate // Injecting Redis template to retry publishing
+    private val redisTemplate: StringRedisTemplate
 ) {
-
     private val logger = LoggerFactory.getLogger(RedisRetryHandler::class.java)
     private val scheduler = Executors.newScheduledThreadPool(1)
 
@@ -23,7 +22,6 @@ class RedisRetryHandler(
                 // Redis publishing retry logic
                 redisTemplate.convertAndSend(channel, message)
                 logger.info("Successfully published message to Redis channel '$channel' after $attempt attempts.")
-
             } catch (ex: RedisConnectionFailureException) {
                 logger.error("Redis connection failure on attempt $attempt for channel '$channel': ${ex.message}")
 
@@ -42,7 +40,7 @@ class RedisRetryHandler(
 
     companion object {
         private const val MAX_RETRIES = 5
-        private const val BASE_BACKOFF_DELAY_MS = 1000L // Base delay in milliseconds
-        private const val BACKOFF_MULTIPLIER = 2.0 // Exponential factor for retries
+        private const val BASE_BACKOFF_DELAY_MS = 1000L
+        private const val BACKOFF_MULTIPLIER = 2.0
     }
 }

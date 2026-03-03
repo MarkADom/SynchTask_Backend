@@ -8,7 +8,10 @@ import org.springframework.stereotype.Component
 import org.springframework.web.socket.messaging.SessionConnectEvent
 import org.springframework.web.socket.messaging.SessionDisconnectEvent
 import java.io.IOException
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.math.pow
 
 @Component
@@ -16,10 +19,9 @@ class WebSocketReconnectionHandler(
     private val webSocketManager: WebSocketManager,
     private val messagingTemplate: SimpMessagingTemplate
 ) {
-
     private val logger = LoggerFactory.getLogger(WebSocketReconnectionHandler::class.java)
-    private val activeSessions = ConcurrentHashMap<String, String>() // sessionId -> userEmail
-    private val scheduler = Executors.newScheduledThreadPool(1) // Scheduler for reconnection attempts
+    private val activeSessions = ConcurrentHashMap<String, String>()
+    private val scheduler = Executors.newScheduledThreadPool(1)
 
     fun handleConnect(event: SessionConnectEvent) {
         val accessor = StompHeaderAccessor.wrap(event.message)
@@ -27,7 +29,7 @@ class WebSocketReconnectionHandler(
         val userEmail = accessor.user?.name ?: return
 
         // Prevent multiple active sessions for the same user
-        activeSessions.values.remove(userEmail) // Remove any existing session for this user
+        activeSessions.values.remove(userEmail)
         activeSessions[sessionId] = userEmail
 
         logger.info("WebSocket connected: User=$userEmail, Session=$sessionId")
@@ -65,20 +67,15 @@ class WebSocketReconnectionHandler(
                 } else {
                     logger.info("User $userEmail reconnected before retry. Stopping reconnection attempts.")
                 }
-
             } catch (ex: InterruptedException) {
                 logger.warn("WebSocket reconnection interrupted for $userEmail: ${ex.message}", ex)
                 Thread.currentThread().interrupt()
-
             } catch (ex: IllegalStateException) {
                 logger.error("Invalid WebSocket reconnection state for $userEmail: ${ex.message}", ex)
-
             } catch (ex: TimeoutException) {
                 logger.warn("WebSocket reconnection timeout for $userEmail (Attempt $attempt)", ex)
-
             } catch (ex: IOException) {
                 logger.error("WebSocket error during reconnection for $userEmail: ${ex.message}", ex)
-
             } finally {
                 // ✅ Only schedule the next retry if user is still offline
                 if (!webSocketManager.isUserOnline(userEmail)) {

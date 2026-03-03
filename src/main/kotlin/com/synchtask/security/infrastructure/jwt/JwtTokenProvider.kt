@@ -5,7 +5,7 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jws
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
-import jakarta.servlet.http.HttpServletRequest
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.userdetails.UserDetails
@@ -25,9 +25,8 @@ class JwtTokenProvider(
     private val userRepository: UserRepository,
     @Value("\${jwt.expiration}") private val expiration: Long,
     @Value("\${jwt.issuer}") private val issuer: String,
-    @Value("\${jwt.audience}") private val audience: String
+    @Value("\${jwt.audience}") private val audience: String,
 ) {
-
     private val logger = LoggerFactory.getLogger(JwtTokenProvider::class.java)
     private val privateKey: PrivateKey by lazy { jwtKeyManager.getPrivateKey() }
     private val publicKey: PublicKey by lazy { jwtKeyManager.getPublicKey() }
@@ -36,8 +35,9 @@ class JwtTokenProvider(
         val now = Date()
         val expiryDate = Date(now.time + expiration)
 
-        val user = userRepository.findByEmail(userDetails.username)
-            .orElseThrow { IllegalArgumentException("User not found") }
+        val user =
+            userRepository.findByEmail(userDetails.username)
+                .orElseThrow { InvalidCredentialsException("User not found") }
 
         return Jwts.builder()
             .subject(user.email)
@@ -55,11 +55,12 @@ class JwtTokenProvider(
             val claims = parseToken(token).payload
             val username = claims.subject ?: return null
 
-            val userDetails = runCatching { userDetailsService.loadUserByUsername(username) }
-                .getOrElse {
-                    logger.warn("Failed to load user from JWT: ${it.message}")
-                    return null
-                }
+            val userDetails =
+                runCatching { userDetailsService.loadUserByUsername(username) }
+                    .getOrElse {
+                        logger.warn("Failed to load user from JWT: ${it.message}")
+                        return null
+                    }
 
             if (userDetails.authorities.isEmpty()) {
                 logger.warn("User has no assigned roles: $username")
@@ -73,14 +74,12 @@ class JwtTokenProvider(
         }
     }
 
-    fun extractTokenFromRequest(request: HttpServletRequest): String? {
-        val headerToken = request.getHeader("Authorization")
+    fun extractTokenFromHeader(authorizationHeader: String?): String? {
+        return authorizationHeader
             ?.takeIf { it.startsWith(BEARER_PREFIX) }
             ?.substring(BEARER_PREFIX_LENGTH)
+            ?.takeIf { it.isNotBlank() }
 
-        val queryToken = request.getParameter("token")?.takeIf { it.isNotBlank() }
-
-        return headerToken ?: queryToken
     }
 
     private fun parseToken(token: String): Jws<Claims> {

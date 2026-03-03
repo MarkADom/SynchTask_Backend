@@ -1,5 +1,6 @@
 package com.synchtask.security.infrastructure.jwt
 
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -15,16 +16,20 @@ import org.springframework.security.oauth2.jwt.Jwt
 class CustomJwtAuthenticationConverter(
     private val userDetailsService: UserDetailsService
 ) : Converter<Jwt, UsernamePasswordAuthenticationToken> {
-
     override fun convert(jwt: Jwt): UsernamePasswordAuthenticationToken {
-        val username = jwt.claims["sub"] as String?
-            ?: throw IllegalArgumentException("JWT does not contain 'sub' claim")
+        val username =
+            jwt.claims["sub"] as String?
+                ?: throw InvalidCredentialsException("JWT does not contain 'sub' claim")
 
         val userDetails = userDetailsService.loadUserByUsername(username)
 
         // Extract roles from the JWT (assuming the claim is "roles")
         val roles = extractRoles(jwt.claims["roles"])
-        val authorities = roles.map { SimpleGrantedAuthority("ROLE_$it") }
+        val authorities =
+            roles.map { role ->
+                val normalizedRole = if (role.startsWith("ROLE_")) role else "ROLE_$role"
+                SimpleGrantedAuthority(normalizedRole)
+            }
 
         return UsernamePasswordAuthenticationToken(userDetails, jwt.tokenValue, authorities)
     }

@@ -1,16 +1,25 @@
 package com.synchtask.security.presentation.controller
 
+import com.synchtask.security.application.dto.AuthLoginResponseDTO
+import com.synchtask.security.application.dto.JwksResponseDTO
+import com.synchtask.security.application.manager.AuthManager
+import com.synchtask.security.application.service.AuthService
+import com.synchtask.security.application.dto.OidcUserInfoDTO
+import com.synchtask.security.application.dto.RefreshTokenRequestDTO
+import com.synchtask.security.application.dto.TokenPairDTO
+import com.synchtask.security.infrastructure.jwt.JwtKeyManager
+import com.synchtask.security.domain.exception.InvalidCredentialsException
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.user.application.dto.UserLoginDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
 import com.synchtask.user.application.dto.UserResponseDTO
-import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.security.application.manager.AuthManager
-import com.synchtask.security.infrastructure.jwt.JwtKeyManager
-import com.synchtask.security.application.service.AuthService
-import com.synchtask.security.application.service.RefreshTokenService
+import com.synchtask.user.application.service.AuthenticatedUserService
 import com.synchtask.user.application.service.UserService
+import com.synchtask.user.domain.entity.UserRole
+import io.swagger.v3.oas.annotations.Operation
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -31,7 +40,9 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
+import com.synchtask.shared.exception.InvalidInputException
+import com.synchtask.shared.exception.ResourceNotFoundException
+
 
 /**
  * Authentication endpoints for registration, login and token management.
@@ -45,15 +56,15 @@ class AuthController(
     private val authManager: AuthManager,
     private val jwtKeyManager: JwtKeyManager,
     private val userService: UserService,
-    private val refreshTokenService: RefreshTokenService,
-    private val authService: AuthService
+    private val authenticatedUserService: AuthenticatedUserService,
+    private val authService: AuthService,
 ) {
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(AuthController::class.java)
     }
 
     @PostMapping("/register")
-    fun registerUser(@RequestBody signUpRequest: UserRegistrationDTO): ResponseEntity<UserResponseDTO> {
+    fun registerUser(@Valid @RequestBody signUpRequest: UserRegistrationDTO): ResponseEntity<UserResponseDTO> {
         logger.info("Registering new user: ${signUpRequest.email}")
 
         val newUser = authManager.registerUser(signUpRequest)
@@ -61,7 +72,7 @@ class AuthController(
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
             UserResponseDTO(
-                id = newUser.id ?: throw IllegalArgumentException("User ID cannot be null"),
+                id = newUser.id ?: throw ResourceNotFoundException("Registered user id is missing"),
                 name = newUser.name,
                 email = newUser.email,
                 profilePictureUrl = newUser.profilePictureUrl ?: "N/A"
@@ -70,77 +81,86 @@ class AuthController(
     }
 
     @PostMapping("/login")
-    fun login(@RequestBody loginRequest: UserLoginDTO): ResponseEntity<Map<String, Any>> {
+    fun login(@Valid @RequestBody loginRequest: UserLoginDTO): ResponseEntity<AuthLoginResponseDTO> {
         logger.info("Login attempt for email: ${loginRequest.email}")
 
         return try {
             val tokens = authManager.authenticateUser(loginRequest.email, loginRequest.password)
-            val user = userService.getUserByEmail(loginRequest.email)
-                ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+            val user =
+                userService.getUserByEmail(loginRequest.email)
+                    ?: throw ResourceNotFoundException("User not found")
 
-            val userDto = UserResponseDTO(
-                id = user.id ?: throw IllegalArgumentException("User ID cannot be null"),
-                name = user.name,
-                email = user.email,
-                profilePictureUrl = user.profilePictureUrl ?: "N/A"
+            val userDto =
+                UserResponseDTO(
+                    id = user.id ?: throw ResourceNotFoundException("User ID cannot be null"),
+                    name = user.name,
+                    email = user.email,
+                    profilePictureUrl = user.profilePictureUrl ?: "N/A"
+                )
+            ResponseEntity.ok(
+                AuthLoginResponseDTO(
+                    accessToken = tokens.accessToken,
+                    refreshToken = tokens.refreshToken ?: "",
+                    user = userDto
+                )
             )
 
-            val responseBody = mapOf(
-                "accessToken" to tokens["accessToken"]!!,
-                "refreshToken" to tokens["refreshToken"]!!,
-                "com/synchtask/user" to userDto
-            )
-
-            ResponseEntity.ok(responseBody)
         } catch (e: SecurityException) {
-            logger.warn("Authentication failed for user: ${loginRequest.email}", e)
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials", e)
+            logger.warn("Authentication failed", e)
+            throw InvalidCredentialsException("Invalid credentials")
         }
     }
 
     @GetMapping("/oauth2/success")
-    fun getOAuth2User(@AuthenticationPrincipal principal: OAuth2User): ResponseEntity<Map<String, Any>> {
-        logger.info("OAuth2 authentication successful for user: ${principal.attributes["email"]}")
-        return ResponseEntity.ok(principal.attributes)
+    fun getOAuth2User(@AuthenticationPrincipal principal: OAuth2User): ResponseEntity<OidcUserInfoDTO> {
+        logger.info("OAuth2 authentication successful")
+        return ResponseEntity.ok(
+            OidcUserInfoDTO(
+                email = principal.attributes["email"]?.toString().orEmpty(),
+                name = principal.attributes["name"]?.toString().orEmpty(),
+                roles = principal.authorities.map { it.authority }
+            )
+        )
     }
 
     @GetMapping("/oidc/success")
-    fun getOidcUser(@AuthenticationPrincipal oidcUser: OidcUser): ResponseEntity<Map<String, Any>> {
-        logger.info("OIDC authentication successful for user: ${oidcUser.email}")
-        return ResponseEntity.ok(oidcUser.claims)
+    fun getOidcUser(@AuthenticationPrincipal oidcUser: OidcUser): ResponseEntity<OidcUserInfoDTO> {
+        logger.info("OIDC authentication successful")
+        return ResponseEntity.ok(
+            OidcUserInfoDTO(
+                email = oidcUser.email ?: "",
+                name = oidcUser.fullName ?: oidcUser.subject,
+                roles = oidcUser.authorities.map { it.authority }
+            )
+        )
     }
 
-    @DeleteMapping("/logout")
+    @DeleteMapping("/logout", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun logout(
         request: HttpServletRequest,
         response: HttpServletResponse,
         @AuthenticationPrincipal user: UserDetails
-    ) {
-        val email = user.username
-        val userEntity = userService.getUserByEmail(email)
+    ): ResponseEntity<ApiMessageResponseDTO> {
+        val userEntity = authenticatedUserService.requireUser(user)
 
-        if (userEntity != null) {
-            refreshTokenService.revokeTokensForUser(userEntity)
-            logger.info("User logged out, refresh tokens revoked: $email")
-        } else {
-            logger.warn("Logout attempted but user not found: $email")
-        }
+        authManager.logoutUser(userEntity.email)
 
         SecurityContextLogoutHandler().logout(request, response, null)
         response.status = HttpServletResponse.SC_OK
+
+        return ResponseEntity.ok(ApiMessageResponseDTO("Logout successful"))
     }
 
+    @Deprecated("Use /jwks")
+    @Operation(deprecated = true, summary = "Deprecated alias for canonical /jwks endpoint")
     @GetMapping("/jwks")
-    fun getJwks(): Map<String, Any> = jwtKeyManager.getJwks()
+    fun getJwks(): JwksResponseDTO = jwtKeyManager.getJwks()
 
     @PostMapping("/refresh")
-    fun refresh(@RequestBody request: Map<String, String>): ResponseEntity<Map<String, String>> {
-        val refreshToken = request["refreshToken"]
-            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Refresh token is required")
-
-        val newAccessToken = authManager.refreshJwt(refreshToken)
-        return ResponseEntity.ok(mapOf("accessToken" to newAccessToken))
+    fun refresh(@Valid @RequestBody request: RefreshTokenRequestDTO): ResponseEntity<TokenPairDTO> {
+        val newAccessToken = authManager.refreshJwt(request.refreshToken)
+        return ResponseEntity.ok(TokenPairDTO(accessToken = newAccessToken))
     }
 
     /**
@@ -153,13 +173,13 @@ class AuthController(
     fun updateUserRole(
         @AuthenticationPrincipal adminUser: UserDetails,
         @PathVariable userId: Long,
-        @RequestParam newRole: UserRole
-    ): ResponseEntity<String> {
+        @RequestParam newRole: UserRole,
+    ): ResponseEntity<ApiMessageResponseDTO> {
         if (newRole == UserRole.ADMIN) {
-            throw IllegalArgumentException("Assigning 'ADMIN' role is blocked via API.")
+            throw InvalidInputException("Assigning 'ADMIN' role is blocked via API.")
         }
 
         authService.updateUserRole(adminUser.username, userId, newRole)
-        return ResponseEntity.ok("User role updated successfully")
+        return ResponseEntity.ok(ApiMessageResponseDTO("User role updated successfully"))
     }
 }

@@ -1,0 +1,35 @@
+# Copy to .envrc and set values for your local environment.
+# Example:
+#   cp .envrc.example .envrc
+#   direnv allow
+
+# Server
+export SERVER_PORT=8081
+
+# MySQL
+export DB_URL="jdbc:mysql://localhost:3306/synchtask"
+export DB_USERNAME="root"
+export DB_PASSWORD="change_me"
+
+# Redis
+export REDIS_HOST="localhost"
+export REDIS_PORT=6379
+export REDIS_PASSWORD=""
+export REDIS_DATABASE=0
+export REDIS_TIMEOUT=5000
+
+# OAuth2 (Google)
+export GOOGLE_CLIENT_ID=""
+export GOOGLE_CLIENT_SECRET=""
+export GOOGLE_REDIRECT_URI="http://localhost:8081/login/oauth2/code/google"
+
+# JWT
+export JWT_EXPIRATION=3600000
+export JWT_REFRESH_EXPIRATION=1209600000
+export JWT_ISSUER="synchtask-backend"
+export JWT_JWK_SET_URI="http://localhost:8081/jwks"
+export JWT_AUDIENCE="synchtask-client"
+export JWT_ALGORITHM="RS256"
+
+# CORS
+export CORS_ALLOWED_ORIGINS="http://localhost:3000"

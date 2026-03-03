@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.connection.RedisPassword
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration
@@ -24,15 +25,17 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 /**
  * Redis setup for caching and Pub/Sub messaging.
  */
+@Profile("!test")
 @Configuration
 class RedisConfig(
-    @Value("\${spring.redis.host}") private val redisHost: String,
-    @Value("\${spring.redis.port}") private val redisPort: Int,
-    @Value("\${spring.redis.password}") private val redisPassword: String,
-    @Value("\${spring.redis.database}") private val redisDatabase: Int,
-    @Value("\${spring.redis.pubsub.chat-topic}") private val chatTopic: String,
-    @Value("\${spring.redis.pubsub.notification-topic}") private val notificationTopic: String,
-    @Value("\${spring.redis.pubsub.task-topic}") private val taskTopic: String,
+    @Value("\${spring.data.redis.host}") private val redisHost: String,
+    @Value("\${spring.data.redis.port}") private val redisPort: Int,
+    @Value("\${spring.data.redis.password}") private val redisPassword: String,
+    @Value("\${spring.data.redis.database}") private val redisDatabase: Int,
+
+    @Value("\${synchtask.redis.pubsub.chat-topic}") private val chatTopic: String,
+    @Value("\${synchtask.redis.pubsub.notification-topic}") private val notificationTopic: String,
+    @Value("\${synchtask.redis.pubsub.task-topic}") private val taskTopic: String,
 ) {
 
     private val logger = LoggerFactory.getLogger(RedisConfig::class.java)
@@ -41,7 +44,8 @@ class RedisConfig(
     fun redisConnectionFactory(): RedisConnectionFactory {
         val config = RedisStandaloneConfiguration(redisHost, redisPort)
         config.database = redisDatabase
-        if (redisPassword.isNotEmpty()) {
+
+        if (redisPassword.isNotBlank()) {
             config.password = RedisPassword.of(redisPassword)
         }
 
@@ -55,7 +59,7 @@ class RedisConfig(
         template.connectionFactory = connectionFactory
 
         val objectMapper = ObjectMapper().apply {
-            registerModule(JavaTimeModule()) // Needed for LocalDateTime
+            registerModule(JavaTimeModule())
             findAndRegisterModules()
         }
 
@@ -94,5 +98,6 @@ class RedisConfig(
         logger.info(" - Database: {}", redisDatabase)
         logger.info(" - Chat Topic: {}", chatTopic)
         logger.info(" - Notification Topic: {}", notificationTopic)
+        logger.info(" - Task Topic: {}", taskTopic)
     }
 }

@@ -14,7 +14,6 @@ import java.time.LocalDateTime
 class ChatWebSocketService(
     private val chatContext: ChatServiceContext,
 ) {
-
     private val logger = LoggerFactory.getLogger(ChatWebSocketService::class.java)
 
     @Transactional
@@ -23,31 +22,35 @@ class ChatWebSocketService(
             "Message cannot be empty. Only encrypted messages are allowed."
         }
 
-        val chatRoom = chatContext.chatRoomRepository.findById(chatRoomId)
-            .orElseThrow { ResourceNotFoundException("Chat room not found") }
+        val chatRoom =
+            chatContext.chatRoomRepository.findById(chatRoomId)
+                .orElseThrow { ResourceNotFoundException("Chat room not found") }
 
-        val sender = chatContext.userRepository.findByEmail(senderEmail)
-            .orElseThrow { ResourceNotFoundException("Sender not found") }
+        val sender =
+            chatContext.userRepository.findByEmail(senderEmail)
+                .orElseThrow { ResourceNotFoundException("Sender not found") }
 
         if (chatRoom.participants.none { it.email == senderEmail }) {
             throw UnauthorizedAccessException("Sender is not a participant of the chat room")
         }
 
-        val chatMessage = chatContext.chatMessageRepository.save(
-            ChatMessage(
-                chatRoom = chatRoom,
-                sender = sender,
-                encryptedMessage = encryptedMessage,
-                timestamp = LocalDateTime.now()
+        val chatMessage =
+            chatContext.chatMessageRepository.save(
+                ChatMessage(
+                    chatRoom = chatRoom,
+                    sender = sender,
+                    encryptedMessage = encryptedMessage,
+                    timestamp = LocalDateTime.now()
+                )
             )
-        )
 
-        val webSocketMessage = WebSocketMessageDTO(
-            chatRoomId = chatRoom.id!!,
-            senderEmail = sender.email,
-            encryptedMessage = encryptedMessage,
-            timestamp = chatMessage.timestamp
-        )
+        val webSocketMessage =
+            WebSocketMessageDTO(
+                chatRoomId = chatRoom.id!!,
+                senderEmail = sender.email,
+                encryptedMessage = encryptedMessage,
+                timestamp = chatMessage.timestamp
+            )
 
         chatRoom.participants.forEach { participant ->
             chatContext.messagingTemplate.convertAndSend("/topic/chat/${chatRoom.id}", webSocketMessage)

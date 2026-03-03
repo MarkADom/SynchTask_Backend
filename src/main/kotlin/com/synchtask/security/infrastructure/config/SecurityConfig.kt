@@ -1,9 +1,9 @@
 package com.synchtask.security.infrastructure.config
 
-import com.synchtask.security.infrastructure.filter.JwtAuthenticationFilter
 import com.synchtask.security.infrastructure.filter.RateLimitFilter
 import com.synchtask.security.infrastructure.jwt.CustomJwtAuthenticationConverter
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.convert.converter.Converter
@@ -20,18 +20,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.JwtTimestampValidator
-import org.springframework.security.oauth2.jwt.JwtValidators
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler
-import java.time.Duration
 
 /**
  * Central security configuration for HTTP APIs and WebSocket access.
@@ -39,16 +32,13 @@ import java.time.Duration
 @Configuration
 @EnableMethodSecurity
 class SecurityConfig(
-    private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     private val rateLimitFilter: RateLimitFilter,
 ) {
-
     @Bean
     fun passwordEncoder(): BCryptPasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
-    fun authenticationManager(config: AuthenticationConfiguration): AuthenticationManager =
-        config.authenticationManager
+    fun authenticationManager(config: AuthenticationConfiguration): AuthenticationManager = config.authenticationManager
 
     @Bean
     fun securityFilterChain(http: HttpSecurity, userDetailsService: UserDetailsService): SecurityFilterChain {
@@ -57,10 +47,8 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
-
                     // Allow CORS preflight requests for the test endpoint
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
                     // Allow Public Access to Swagger & API Docs
                     .requestMatchers(
                         "/swagger-ui/**",
@@ -76,26 +64,24 @@ class SecurityConfig(
                         "/ws/**",
                         "/ws-notifications/**",
                     ).permitAll()
-
                     // Public Endpoints (Accessible Without Authentication)
                     .requestMatchers(
-                        "/actuator/**",
                         "/auth/.well-known/openid-configuration",
                         "/auth/.well-known/oauth-authorization-server",
                         "/jwks",
-                        "/auth/**",
                         "/auth/register",
                         "/auth/login",
-                        "/auth/logout",
+                        "/auth/refresh",
+                        "/auth/jwks",
                         "/error"
                     ).permitAll()
-
                     // OAuth2 Endpoints
                     .requestMatchers("/oauth2/**").permitAll()
-
+                    // Actuator endpoints
+                    .requestMatchers(EndpointRequest.to("health", "info")).permitAll()
+                    .requestMatchers(EndpointRequest.toAnyEndpoint()).hasRole("ADMIN")
                     // Protected Endpoints (Require Authentication)
                     .requestMatchers("/notifications/**").authenticated()
-
                     // All other requests require authentication
                     .anyRequest().authenticated()
             }
@@ -128,35 +114,15 @@ class SecurityConfig(
             .headers { headers ->
                 headers.frameOptions { it.disable() }
             }
-
-
-            // Security Filters (Rate Limiting & JWT)
+            // Security Filters (Rate Limiting)
             .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter::class.java)
-            .addFilterBefore(jwtAuthenticationFilter, BearerTokenAuthenticationFilter::class.java)
             .build()
     }
 
     @Bean
-    fun jwtDecoder(): JwtDecoder {
-        val decoder = NimbusJwtDecoder
-            .withJwkSetUri("http://localhost:8081/jwks")
-            .build()
-
-        // Clock skew tolerance of 5 minutes
-        val timestampValidator = JwtTimestampValidator(Duration.ofMinutes(5))
-
-        // Standard JWT validations + custom timestamp validator
-        val defaultValidator = JwtValidators.createDefault()
-        val compositeValidator = DelegatingOAuth2TokenValidator(timestampValidator, defaultValidator)
-
-        decoder.setJwtValidator(compositeValidator)
-
-        return decoder
-    }
-
-    @Bean
-
-    fun jwtAuthenticationConverter(userDetailsService: UserDetailsService): Converter<Jwt, out AbstractAuthenticationToken> {
+    fun jwtAuthenticationConverter(
+        userDetailsService: UserDetailsService
+    ): Converter<Jwt, out AbstractAuthenticationToken> {
         return CustomJwtAuthenticationConverter(userDetailsService)
     }
 
@@ -169,7 +135,9 @@ class SecurityConfig(
 
             object : OAuth2User {
                 override fun getAuthorities() = authorities
+
                 override fun getAttributes() = user.attributes
+
                 override fun getName() = user.attributes["name"]?.toString() ?: "Unknown"
             }
         }

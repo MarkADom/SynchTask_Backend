@@ -2,44 +2,36 @@ package com.synchtask.friend.domain.repository
 
 import com.synchtask.friend.domain.entity.Friend
 import com.synchtask.friend.domain.entity.FriendshipStatus
-import com.synchtask.user.domain.entity.User
-import org.springframework.data.jpa.repository.EntityGraph
+import io.lettuce.core.dynamic.annotation.Param
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
 @Repository
 interface FriendRepository : JpaRepository<Friend, Long> {
+    fun findByRequesterIdAndFriendId(requesterId: Long, friendId: Long): Friend?
 
-    @EntityGraph(attributePaths = ["requester", "friend"])
-    fun findByRequesterAndFriend(requester: User, friend: User): Friend?
+    fun findAllByRequesterIdOrFriendId(requesterId: Long, friendId: Long): List<Friend>
 
-    @EntityGraph(attributePaths = ["requester", "friend"])
-    fun findByFriendAndStatus(friend: User, status: FriendshipStatus): List<Friend>
+    fun findByRequesterIdAndStatus(requesterId: Long, status: FriendshipStatus): List<Friend>
 
-    @EntityGraph(attributePaths = ["requester", "friend"])
-    fun findByRequesterAndStatus(requester: User, status: FriendshipStatus): List<Friend>
+    fun findByFriendIdAndStatus(friendId: Long, status: FriendshipStatus): List<Friend>
 
     @Query(
         """
-        SELECT f FROM Friend f 
-        WHERE (f.requester.email = :requesterEmail OR f.friend.email = :friendEmail)
-        AND f.status = :status
+    select count(f) > 0
+    from Friend f
+    where f.status = :status
+      and (
+        (f.requesterId = :userId and f.friendId = :otherUserId)
+        or
+        (f.requesterId = :otherUserId and f.friendId = :userId)
+      )
     """
     )
-    fun findFriendsByRequesterEmailOrFriendEmailAndStatus(
-        requesterEmail: String,
-        friendEmail: String,
-        status: FriendshipStatus,
-    ): List<Friend>
-
-    @EntityGraph(attributePaths = ["requester", "friend"])
-    @Query(
-        """
-    SELECT f FROM Friend f
-    WHERE f.requester = :user OR f.friend = :user
-    """
-    )
-    fun findAllByUserInvolved(user: User): List<Friend>
-
+    fun existsFriendshipBetween(
+        @Param("userId") userId: Long,
+        @Param("otherUserId") otherUserId: Long,
+        @Param("status") status: FriendshipStatus = FriendshipStatus.ACCEPTED,
+    ): Boolean
 }

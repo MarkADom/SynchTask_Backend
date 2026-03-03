@@ -23,7 +23,6 @@ class RateLimitFilter(
     private val rateLimitConfig: RateLimitConfig,
     private val environment: Environment
 ) : Filter {
-
     private val logger = LoggerFactory.getLogger(RateLimitFilter::class.java)
     private val userBuckets = ConcurrentHashMap<String, Bucket>()
 
@@ -40,15 +39,16 @@ class RateLimitFilter(
 
         // Skip rate limiting in development profile
         if (environment.activeProfiles.contains("dev")) {
-            // TODO: Enable rate limiting for production environments only
+            // TODO(domain-repository): add aggregate-specific query methods (e.g. existsByBoardAndId) when a concrete use-case requires it
             chain.doFilter(request, response)
             return
         }
 
         val identifier = getUserOrIp(httpRequest)
-        val bucket = userBuckets.computeIfAbsent(identifier) {
-            rateLimitConfig.resolveBucket(identifier)
-        }
+        val bucket =
+            userBuckets.computeIfAbsent(identifier) {
+                rateLimitConfig.resolveBucket(identifier)
+            }
 
         if (!bucket.tryConsume(1)) {
             logger.warn("Rate limit exceeded for: $identifier - URI: $requestURI")
@@ -87,14 +87,20 @@ class RateLimitFilter(
         private const val RATE_LIMIT_MESSAGE = "Rate limit exceeded. Try again later."
         private const val RATE_LIMIT_RETRY_AFTER = 60
 
-        private val PUBLIC_ENDPOINTS = listOf(
-            "/auth/login",
-            "/auth/register",
-            "/actuator"
-        )
+        private val PUBLIC_ENDPOINTS =
+            listOf(
+                "/auth/login",
+                "/auth/register",
+                "/actuator"
+            )
 
-        private val PRIVATE_IP_PREFIXES = listOf(
-            "10.", "192.168.", "172.16.", "127.", "169.254."
-        )
+        private val PRIVATE_IP_PREFIXES =
+            listOf(
+                "10.",
+                "192.168.",
+                "172.16.",
+                "127.",
+                "169.254."
+            )
     }
 }

@@ -9,13 +9,13 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class NotificationMapperTest {
-
-    private val user = User(
-        id = 1L,
-        name = "Test User",
-        email = "test@example.com",
-        passwordHash = "secure123"
-    )
+    private val user =
+        User(
+            id = 1L,
+            name = "Test User",
+            email = "test@example.com",
+            passwordHash = "secure123"
+        )
 
     private val now = LocalDateTime.now()
 
@@ -74,13 +74,14 @@ class NotificationMapperTest {
 
     @Test
     fun `should convert NotificationRedisDTO to NotificationResponseDTO`() {
-        val redisDto = NotificationRedisDTO(
-            id = 42L,
-            recipientEmail = "test@example.com",
-            message = "Test notification",
-            createdAt = now,
-            type = NotificationType.TASK_UPDATE
-        )
+        val redisDto =
+            NotificationRedisDTO(
+                id = 42L,
+                recipientEmail = "test@example.com",
+                message = "Test notification",
+                createdAt = now,
+                type = NotificationType.TASK_UPDATE
+            )
 
         val responseDto = NotificationMapper.fromRedisDTO(redisDto)
 
@@ -95,11 +96,23 @@ class NotificationMapperTest {
 
     @Test
     fun `should throw when notification id is null`() {
-        val notification = buildNotification().copy(id = null)
+        val base = buildNotification()
+        val notification =
+            Notification(
+                id = null,
+                recipient = base.recipient,
+                message = base.message,
+                isRead = base.isRead,
+                createdAt = base.createdAt,
+                type = base.type,
+                groupId = base.groupId,
+                delivered = base.delivered
+            )
 
-        val exception = Assertions.assertThrows(IllegalArgumentException::class.java) {
-            NotificationMapper.toResponseDTO(notification)
-        }
+        val exception =
+            Assertions.assertThrows(IllegalArgumentException::class.java) {
+                NotificationMapper.toResponseDTO(notification)
+            }
 
         Assertions.assertEquals("Notification ID cannot be null", exception.message)
     }

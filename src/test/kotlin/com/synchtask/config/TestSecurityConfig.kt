@@ -6,7 +6,6 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 
 @TestConfiguration
 class TestSecurityConfig {
-
     @Bean
     fun testLogoutHandler(): SecurityContextLogoutHandler {
         return SecurityContextLogoutHandler() // or spyk(SecurityContextLogoutHandler()) if you want to check calls

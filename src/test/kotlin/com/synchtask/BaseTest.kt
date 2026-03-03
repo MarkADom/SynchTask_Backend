@@ -1,10 +1,9 @@
 package com.synchtask
 
-import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import com.synchtask.security.infrastructure.config.JwtTestKeyConfig
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit.jupiter.SpringExtension
 
 /**
  * Base class for integration tests.
@@ -15,4 +14,5 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@Import(JwtTestKeyConfig::class)
 abstract class BaseIntegrationTest

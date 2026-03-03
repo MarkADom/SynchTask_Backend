@@ -1,0 +1,38 @@
+meta {
+  name: 07 Create task negative board id 400
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/tasks
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{validationOwnerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const validationOwnerToken = bru.getVar("validationOwnerToken");
+  if (!validationOwnerToken) throw new Error("Missing required variable: validationOwnerToken");
+}
+
+body:json {
+  {
+    "title": "Negative board id task",
+    "description": "Should fail validation",
+    "boardId": -1
+  }
+}
+
+tests {
+  test("status 400", function () {
+    expect(res.getStatus()).to.equal(400);
+  });
+}

@@ -1,6 +1,7 @@
 package com.synchtask.security.application.manager
 
 import com.synchtask.security.application.context.AuthServiceContext
+import com.synchtask.security.application.dto.TokenPairDTO
 import com.synchtask.security.application.service.AuthService
 import com.synchtask.security.application.service.RefreshTokenService
 import com.synchtask.security.domain.entity.RefreshToken
@@ -22,7 +23,6 @@ import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
 class AuthManagerTest {
-
     private lateinit var userService: UserService
     private lateinit var authService: AuthService
     private lateinit var refreshTokenService: RefreshTokenService
@@ -40,14 +40,15 @@ class AuthManagerTest {
         userDetailsService = mockk()
         passwordEncoder = mockk()
 
-        val context = AuthServiceContext(
-            authService,
-            refreshTokenService,
-            userDetailsService,
-            jwtTokenProvider,
-            userService,
-            passwordEncoder
-        )
+        val context =
+            AuthServiceContext(
+                authService,
+                refreshTokenService,
+                userDetailsService,
+                jwtTokenProvider,
+                userService,
+                passwordEncoder
+            )
 
         manager = AuthManager(context)
     }
@@ -70,7 +71,7 @@ class AuthManagerTest {
 
     @Test
     fun `should authenticate user via AuthService`() {
-        val expectedTokens = mapOf("accessToken" to "abc", "refreshToken" to "xyz")
+        val expectedTokens = TokenPairDTO(accessToken = "abc", refreshToken = "xyz")
 
         every { authService.authenticate("bob@example.com", "secret") } returns expectedTokens
 
@@ -82,24 +83,27 @@ class AuthManagerTest {
 
     @Test
     fun `should refresh token via RefreshTokenService and return JWT`() {
-        val user = User(
-            id = 2L,
-            name = "Jane",
-            email = "jane@example.com",
-            passwordHash = "hashed"
-        )
+        val user =
+            User(
+                id = 2L,
+                name = "Jane",
+                email = "jane@example.com",
+                passwordHash = "hashed"
+            )
 
-        val refreshToken = RefreshToken(
-            id = 1L,
-            user = user,
-            token = "valid-refresh-token",
-            expiryDate = LocalDateTime.now().plusDays(7),
-            isRevoked = false
-        )
+        val refreshToken =
+            RefreshToken(
+                id = 1L,
+                user = user,
+                token = "valid-refresh-token",
+                expiryDate = LocalDateTime.now().plusDays(7),
+                isRevoked = false
+            )
 
-        val userDetails = mockk<UserDetails> {
-            every { username } returns "jane@example.com"
-        }
+        val userDetails =
+            mockk<UserDetails> {
+                every { username } returns "jane@example.com"
+            }
 
         every { refreshTokenService.validateRefreshToken("valid-refresh-token") } returns refreshToken
         every { userDetailsService.loadUserByUsername("jane@example.com") } returns userDetails

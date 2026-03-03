@@ -9,7 +9,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.messaging.support.MessageBuilder
 
 class MessageAcknowledgmentHandlerTest {
-
     private lateinit var messagingTemplate: SimpMessagingTemplate
     private lateinit var handler: MessageAcknowledgmentHandler
 

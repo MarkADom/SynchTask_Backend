@@ -1,228 +1,84 @@
 # SynchTask Backend
 
-Backend service for **SynchTask**, a collaborative task management platform
-designed with a strong focus on **clean architecture, security, and code quality**.
+![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-purple)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)
+![Gradle](https://img.shields.io/badge/Gradle-Build-blueviolet)
+![JWT](https://img.shields.io/badge/Auth-JWT%20RS256-blue)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-This repository contains **only the backend application**, exposed as a REST API
-and supporting real-time features via WebSockets.  
-The frontend is developed separately and will be integrated in a later phase.
+SynchTask Backend is a production-ready collaborative task management API built with Kotlin (JVM), Spring Boot 3 and Clean Architecture principles.
+It serves as the backend core of the SynchTask ecosystem and is developed as a portfolio-grade engineering project.
 
----
+## Scope (v1.0)
 
-## Overview
+- Monolithic backend (no microservices)
+- Stateless JWT security (RS256 + JWKS)
+- Hybrid authorization (global roles + membership-based access)
+- Validation-hardened HTTP contract
+- Backend-only repository (frontend under development)
 
-The **SynchTask Backend** is built with **Kotlin** and **Spring Boot**, following
-modern backend engineering practices and an **API-first** approach.
+## Trade-offs & Design Decisions
 
-It is responsible for:
+See: [Engineering Decisions (v1.0)](docs/engineering_decisions_v1.0.md)
 
-- authentication and authorization
-- core domain and business logic
-- real-time communication via WebSockets
-- exposing a stable, well-documented REST API
-- enforcing strict quality and security standards
+## Tech stack
 
-This project is intentionally structured as a **portfolio-grade backend**, aiming
-to demonstrate production-level practices rather than a minimal demo.
+- Kotlin + Spring Boot 3
+- MySQL + Redis
+- JWT/OAuth2 security
+- OpenAPI / Swagger UI
+- Bruno integration test suites
 
----
+## Run locally
 
-## Project Status
-
- **Backend stable and feature-complete**  
- **Quality Gate passed (SonarQube)**  
- **83% test coverage on overall codebase**
-
-The backend is currently frozen as a **quality baseline milestone**
-(`v0.1-backend-quality`) and considered ready for real-world integration.
-
-The frontend is under active development and will be integrated once finalized.
-
----
-
-## Data Model & Architecture
-
-SynchTask uses a relational database (MySQL/PostgreSQL) with a domain-driven design.
-
-The data model is structured around clear Aggregate Roots:
-- User
-- Board
-- Project
-- ChatRoom
-
-Each aggregate defines a strict consistency boundary and is primarily accessed via its own repository.
-
-Detailed ER diagram and aggregate documentation are available in the `/docs` directory.
-
-Cross-aggregate access is intentionally avoided at the repository level to preserve domain integrity.
-
----
-
-## Architecture & Principles
-
-- Clean Architecture (clear separation of concerns)
-- Application / Domain / Infrastructure layers
-- API-first design
-- Explicit boundaries between business logic and frameworks
-- Test-driven mindset focused on meaningful coverage
-
----
-
-## Tech Stack
-
-- **Language:** Kotlin
-- **Framework:** Spring Boot 3.x
-- **Database:** MySQL
-- **Cache / Messaging:** Redis
-- **Security:** JWT, OAuth2 (Google)
-- **Real-time:** WebSockets
-- **API Docs:** OpenAPI 3 / Swagger
-- **Build Tool:** Gradle
-- **Static Analysis:** Detekt
-- **Coverage:** JaCoCo
-- **Quality Gate:** SonarQube
-
----
-
-## API Documentation
-
-The API is fully documented using **OpenAPI 3**.
-
-- **Swagger UI**  
-  http://localhost:8081/swagger-ui/index.html
-
-- **OpenAPI JSON**  
-  http://localhost:8081/v3/api-docs
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- JDK 17+
-- Gradle 8+
-- MySQL
-- Redis
-- Docker (for SonarQube)
-- `direnv` (recommended)
-
----
-
-### Configuration & Secrets
-
-Sensitive configuration is **never committed**.
-
-All environment-specific values (database credentials, Redis, OAuth, JWT,
-SonarQube, etc.) are provided via **environment variables**.
-
-For local development, the project uses **direnv** with a `.envrc` file
-(ignored by Git), ensuring:
-
-- no secrets in the repository
-- consistent behavior across CLI, IDE, and CI
-- clean separation between code and configuration
-
-#### Install direnv (Linux)
+1. Configure environment variables:
 
 ```bash
-  sudo apt install direnv
+cp .envrc.example .envrc
+# edit values for your local environment
 ```
 
-Enable it in your shell and allow the project environment:
+If you use direnv:
 
 ```bash
-  direnv allow
+direnv allow
 ```
 
----
-
-### Run Locally
-
-Ensure the database schema is created automatically on startup via JPA/Hibernate.
+2. Run the application:
 
 ```bash
-  ./gradlew bootRun
+./gradlew bootRun
 ```
 
----
-
-## Testing & Quality
-
-This project enforces **strict quality standards**.
-
-- **83% overall test coverage**
-- Minimum **80% coverage on new code**
-- SonarQube Quality Gate enforced
-- Zero known bugs or vulnerabilities
-
-Tests focus primarily on:
-- application services
-- domain logic
-- critical integration paths
-
-The goal is **meaningful coverage**, not artificial metrics.
-
----
-
-### Code Quality (SonarQube)
-
-Start SonarQube locally:
+3. Run with dev profile:
 
 ```bash
-  docker compose -f docker/docker-compose.sonar.yml up -d
+SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 ```
 
-Run the full quality pipeline:
+4. Open API docs:
+
+- Swagger UI: `http://localhost:8081/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:8081/v3/api-docs`
+
+## Testing & quality
 
 ```bash
-  ./gradlew test                # Run tests
-  ./gradlew detekt              # Static analysis
-  ./gradlew jacocoTestReport    # Coverage report
-  ./gradlew sonar               # SonarQube analysis
+./gradlew test
+./gradlew detekt
+./gradlew jacocoTestReport
 ```
 
-- **SonarQube UI:**  
-  http://localhost:9001
+## Documentation map
 
-Stop SonarQube when finished:
+- [Architecture](docs/architecture.md)
+- [Configuration](docs/configuration.md)
+- [HTTP Error Semantics](docs/http-error-semantics.md)
+- [Database](docs/database/)
+- [Engineering Decisions (v1.0)](docs/engineering_decisions_v1.0.md)
+- [OpenAPI Export](docs/openapi/api-docs.json)
+- [Bruno Test Suites](bruno/README.md)
 
-```bash
-  docker compose -f docker/docker-compose.sonar.yml down
-```
+## License
 
----
-
-## Versioning & Milestones
-
-- **v0.1-backend-quality**
-    - Backend feature-complete
-    - Quality Gate passed
-    - Coverage baseline frozen
-    - Production-ready testing discipline
-
-Future versions will focus on:
-- frontend integration
-- performance tuning
-- deployment & CI/CD automation
-
----
-
-## Contributing
-
-Contributions are welcome.
-
-Please follow these guidelines:
-
-- write clean, readable, and secure code
-- respect architectural boundaries
-- keep public APIs documented
-- avoid deprecated APIs
-- preserve existing behavior unless explicitly changing it
-
----
-
-## Why This Project Exists
-
-SynchTask Backend exists to demonstrate **real-world backend engineering**:
-not just features, but **quality, structure, and long-term maintainability**.
+Licensed under the terms in [`LICENSE.md`](LICENSE.md).

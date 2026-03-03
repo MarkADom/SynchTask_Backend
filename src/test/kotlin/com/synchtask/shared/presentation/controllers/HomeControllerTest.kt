@@ -1,5 +1,6 @@
 package com.synchtask.shared.presentation.controllers
 
+import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.presentation.controller.HomeController
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -10,16 +11,12 @@ import kotlin.test.assertEquals
  * Verifies that the home endpoint returns the expected static response.
  */
 class HomeControllerTest {
-
     @Test
     fun `should return home page response`() {
-        // Arrange
         val controller = HomeController()
 
-        // Act
-        val result: String = controller.homePage()
+        val result: ApiMessageResponseDTO = controller.homePage()
 
-        // Assert
-        assertEquals("Home", result)
+        assertEquals(ApiMessageResponseDTO("Home"), result)
     }
 }

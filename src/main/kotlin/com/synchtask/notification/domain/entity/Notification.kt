@@ -34,35 +34,27 @@ import java.time.LocalDateTime
         )
     ]
 )
-data class Notification(
-
+class Notification(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_id", nullable = false)
     val recipient: User,
-
     @Column(nullable = false, length = 500)
     val message: String,
-
     @Column(name = "is_read", nullable = false)
     var isRead: Boolean = false,
-
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val type: NotificationType,
-
     /**
      * Optional grouping identifier (e.g. multiple notifications for the same event).
      */
     @Column(name = "group_id", nullable = true)
     val groupId: Long? = null,
-
     @Column(name = "delivered", nullable = false)
     var delivered: Boolean = false
 )

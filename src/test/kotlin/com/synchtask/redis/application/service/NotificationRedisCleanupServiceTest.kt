@@ -1,7 +1,10 @@
 package com.synchtask.redis.application.service
 
 import com.synchtask.notification.application.dto.NotificationRedisDTO
-import io.mockk.*
+import io.mockk.clearAllMocks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.redis.core.HashOperations
@@ -9,7 +12,6 @@ import org.springframework.data.redis.core.RedisTemplate
 import java.time.LocalDateTime
 
 class NotificationRedisCleanupServiceTest {
-
     private lateinit var redisTemplate: RedisTemplate<String, NotificationRedisDTO>
     private lateinit var hashOps: HashOperations<String, String, NotificationRedisDTO>
     private lateinit var service: NotificationRedisCleanupService
@@ -41,13 +43,14 @@ class NotificationRedisCleanupServiceTest {
     fun `should not delete anything when notifications are not expired`() {
         val key = "notifications:user@test.com:1"
 
-        val recentNotification = NotificationRedisDTO(
-            id = 1L,
-            recipientEmail = "user@test.com",
-            message = "Recent",
-            createdAt = LocalDateTime.now().minusHours(1),
-            type = com.synchtask.notification.domain.entity.NotificationType.SYSTEM
-        )
+        val recentNotification =
+            NotificationRedisDTO(
+                id = 1L,
+                recipientEmail = "user@test.com",
+                message = "Recent",
+                createdAt = LocalDateTime.now().minusHours(1),
+                type = com.synchtask.notification.domain.entity.NotificationType.SYSTEM
+            )
 
         every { redisTemplate.keys("notifications:*") } returns setOf(key)
         every { hashOps.entries(key) } returns mapOf("1" to recentNotification)
@@ -62,27 +65,30 @@ class NotificationRedisCleanupServiceTest {
     fun `should delete expired notifications`() {
         val key = "notifications:user@test.com:1"
 
-        val expiredNotification = NotificationRedisDTO(
-            id = 2L,
-            recipientEmail = "user@test.com",
-            message = "Old",
-            createdAt = LocalDateTime.now().minusDays(2),
-            type = com.synchtask.notification.domain.entity.NotificationType.SYSTEM
-        )
+        val expiredNotification =
+            NotificationRedisDTO(
+                id = 2L,
+                recipientEmail = "user@test.com",
+                message = "Old",
+                createdAt = LocalDateTime.now().minusDays(2),
+                type = com.synchtask.notification.domain.entity.NotificationType.SYSTEM
+            )
 
-        val validNotification = NotificationRedisDTO(
-            id = 3L,
-            recipientEmail = "user@test.com",
-            message = "Still valid",
-            createdAt = LocalDateTime.now().minusHours(2),
-            type = com.synchtask.notification.domain.entity.NotificationType.SYSTEM
-        )
+        val validNotification =
+            NotificationRedisDTO(
+                id = 3L,
+                recipientEmail = "user@test.com",
+                message = "Still valid",
+                createdAt = LocalDateTime.now().minusHours(2),
+                type = com.synchtask.notification.domain.entity.NotificationType.SYSTEM
+            )
 
         every { redisTemplate.keys("notifications:*") } returns setOf(key)
-        every { hashOps.entries(key) } returns mapOf(
-            "2" to expiredNotification,
-            "3" to validNotification
-        )
+        every { hashOps.entries(key) } returns
+            mapOf(
+                "2" to expiredNotification,
+                "3" to validNotification
+            )
 
         every {
             hashOps.delete(key, "2")

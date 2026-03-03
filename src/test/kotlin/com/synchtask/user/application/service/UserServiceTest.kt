@@ -1,12 +1,13 @@
 package com.synchtask.user.application.service
 
+import com.synchtask.shared.exception.InvalidInputException
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.application.dto.UserResponseDTO
-import com.synchtask.user.application.dto.UserStatusDTO
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.exception.UserAlreadyExistsException
-import com.synchtask.user.presentation.mapper.UserMapper
 import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.user.presentation.mapper.UserMapper
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -17,7 +18,6 @@ import kotlin.test.Test
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserServiceTest {
-
     private lateinit var userRepository: UserRepository
     private lateinit var passwordEncoder: BCryptPasswordEncoder
     private lateinit var userService: UserService
@@ -88,24 +88,51 @@ class UserServiceTest {
     }
 
     @Test
-    fun `should update user data and hash new password`() {
+    fun `should update user data without changing password hash`() {
         val existing = buildUser()
-        val updates = existing.copy(name = "New Name", passwordHash = "newpass")
+        val updates =
+            User(
+                id = existing.id,
+                name = "New Name",
+                email = existing.email,
+                passwordHash = existing.passwordHash,
+                profilePictureUrl = existing.profilePictureUrl,
+                role = existing.role,
+                createdAt = existing.createdAt,
+                lastLogin = existing.lastLogin,
+                lastActivity = existing.lastActivity,
+                isActive = existing.isActive,
+                isOnline = existing.isOnline,
+                onboardingNotified = existing.onboardingNotified
+            )
 
         every { userRepository.findById(existing.id!!) } returns Optional.of(existing)
-        every { passwordEncoder.encode("newpass") } returns "new-hash"
         every { userRepository.save(any()) } answers { firstArg() }
 
         val result = userService.updateUser(existing.id!!, updates)
 
         assertEquals("New Name", result?.name)
-        assertEquals("new-hash", result?.passwordHash)
+        assertEquals("hashed", result?.passwordHash)
     }
 
     @Test
     fun `should not hash password again on update if already hashed`() {
         val existing = buildUser(passwordHash = "old-value-will-be-kept")
-        val updates = existing.copy(passwordHash = "\$2a\$existinghash")
+        val updates =
+            User(
+                id = existing.id,
+                name = existing.name,
+                email = existing.email,
+                passwordHash = "\$2a\$existinghash",
+                profilePictureUrl = existing.profilePictureUrl,
+                role = existing.role,
+                createdAt = existing.createdAt,
+                lastLogin = existing.lastLogin,
+                lastActivity = existing.lastActivity,
+                isActive = existing.isActive,
+                isOnline = existing.isOnline,
+                onboardingNotified = existing.onboardingNotified
+            )
 
         every { userRepository.findById(existing.id!!) } returns Optional.of(existing)
         every { userRepository.save(any()) } answers { firstArg() }
@@ -116,6 +143,19 @@ class UserServiceTest {
         verify(exactly = 0) { passwordEncoder.encode(any()) }
     }
 
+    @Test
+    fun `should update password when current password matches`() {
+        val existing = buildUser(email = "test@email.com", passwordHash = "old-hash")
+        every { userRepository.findByEmail(existing.email) } returns Optional.of(existing)
+        every { passwordEncoder.matches("currentPass", "old-hash") } returns true
+        every { passwordEncoder.encode("newPass") } returns "new-hash"
+        every { userRepository.save(any()) } answers { firstArg() }
+
+        userService.updatePassword(existing.email, "currentPass", "newPass")
+
+        verify { passwordEncoder.encode("newPass") }
+        verify { userRepository.save(match { it.passwordHash == "new-hash" }) }
+    }
 
     @Test
     fun `should return user by ID or null`() {
@@ -208,16 +248,16 @@ class UserServiceTest {
         val result = userService.getOnlineUsers()
 
         assertEquals(1, result.size)
-        assertTrue(result[0] is UserStatusDTO)
     }
 
     @Test
     fun `should return assignable users`() {
-        val users = listOf(
-            buildUser(role = UserRole.ADMIN),
-            buildUser(id = 2L, role = UserRole.USER),
-            buildUser(id = 3L, role = UserRole.COLLABORATOR)
-        )
+        val users =
+            listOf(
+                buildUser(role = UserRole.ADMIN),
+                buildUser(id = 2L, role = UserRole.USER),
+                buildUser(id = 3L, role = UserRole.COLLABORATOR)
+            )
 
         every { userRepository.findAll() } returns users
 
@@ -294,7 +334,7 @@ class UserServiceTest {
     fun `should throw if setting online status for missing user`() {
         every { userRepository.findByEmail(any()) } returns Optional.empty()
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ResourceNotFoundException> {
             userService.setUserOnlineStatus("ghost@email.com", true)
         }
     }
@@ -303,7 +343,7 @@ class UserServiceTest {
     fun `should throw if updating activity for missing user`() {
         every { userRepository.findByEmail(any()) } returns Optional.empty()
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ResourceNotFoundException> {
             userService.updateLastActivity("ghost@email.com")
         }
     }
@@ -313,16 +353,41 @@ class UserServiceTest {
         val user = buildUser()
         every { userRepository.findAll() } returns listOf(user)
         mockkObject(UserMapper)
-        every { UserMapper.toResponseDTO(user) } returns UserResponseDTO(
-            id = user.id!!,
-            name = user.name,
-            email = user.email,
-            profilePictureUrl = "N/A"
-        )
+        every { UserMapper.toResponseDTO(user) } returns
+            UserResponseDTO(
+                id = user.id!!,
+                name = user.name,
+                email = user.email,
+                profilePictureUrl = "N/A"
+            )
 
         val result = userService.getAllUsers()
 
         assertEquals(1, result.size)
         verify { UserMapper.toResponseDTO(user) }
+    }
+
+    @Test
+    fun `should throw invalid input when current password is incorrect`() {
+        val existing = buildUser(email = "test@email.com", passwordHash = "old-hash")
+        every { userRepository.findByEmail(existing.email) } returns Optional.of(existing)
+        every { passwordEncoder.matches("wrong-pass", "old-hash") } returns false
+
+        val exception = assertFailsWith<InvalidInputException> {
+            userService.updatePassword(existing.email, "wrong-pass", "new-pass")
+        }
+
+        assertEquals("Current password is incorrect", exception.message)
+    }
+
+    @Test
+    fun `should throw not found when updating password for missing user`() {
+        every { userRepository.findByEmail("ghost@email.com") } returns Optional.empty()
+
+        val exception = assertFailsWith<ResourceNotFoundException> {
+            userService.updatePassword("ghost@email.com", "current", "new")
+        }
+
+        assertEquals("User not found", exception.message)
     }
 }

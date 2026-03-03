@@ -1,0 +1,36 @@
+meta {
+  name: 02 Create project empty name 400
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/projects
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{validationOwnerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const validationOwnerToken = bru.getVar("validationOwnerToken");
+  if (!validationOwnerToken) throw new Error("Missing required variable: validationOwnerToken");
+}
+
+body:json {
+  {
+    "name": ""
+  }
+}
+
+tests {
+  test("status 400", function () {
+      expect(res.getStatus()).to.equal(400);
+  });
+}

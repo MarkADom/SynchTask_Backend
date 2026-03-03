@@ -5,9 +5,9 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Lob
 import jakarta.persistence.Table
-import jakarta.persistence.Index
 import java.time.LocalDateTime
 
 /**
@@ -23,16 +23,13 @@ import java.time.LocalDateTime
         Index(name = "idx_jwt_keys_created_at", columnList = "created_at")
     ]
 )
-data class JwtKeyEntity(
-
+class JwtKeyEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Lob
     @Column(nullable = false, columnDefinition = "LONGTEXT")
     val privateKey: String,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

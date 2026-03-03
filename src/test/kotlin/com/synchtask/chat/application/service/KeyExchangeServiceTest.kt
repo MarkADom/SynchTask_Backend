@@ -12,18 +12,18 @@ import java.util.Optional
 import kotlin.test.*
 
 class KeyExchangeServiceTest {
-
     private lateinit var keysRepository: UserEncryptionKeysRepository
     private lateinit var userRepository: UserRepository
     private lateinit var service: KeyExchangeService
 
     private val userEmail = "user@test.com"
-    private val user = User(
-        id = 1L,
-        name = "Test User",
-        email = userEmail,
-        passwordHash = "pw"
-    )
+    private val user =
+        User(
+            id = 1L,
+            name = "Test User",
+            email = userEmail,
+            passwordHash = "pw"
+        )
 
     @BeforeEach
     fun setup() {

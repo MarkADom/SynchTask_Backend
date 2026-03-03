@@ -14,7 +14,6 @@ class RedisPublisher(
     private val redisTemplate: StringRedisTemplate,
     private val sleeper: (Long) -> Unit = { Thread.sleep(it) }
 ) {
-
     private val logger = LoggerFactory.getLogger(RedisPublisher::class.java)
 
     fun publish(channel: String, message: String) {
@@ -43,7 +42,8 @@ class RedisPublisher(
 
         return when (ex) {
             is RedisConnectionException -> {
-                logger.warn("Redis connection failed. Attempt {}/{}. Retrying in {}ms...",
+                logger.warn(
+                    "Redis connection failed. Attempt {}/{}. Retrying in {}ms...",
                     attempts,
                     MAX_RETRIES,
                     delay,

@@ -4,6 +4,8 @@ import com.synchtask.board.domain.entity.Board
 import com.synchtask.project.domain.entity.Project
 import com.synchtask.task.domain.entity.Task
 import com.synchtask.task.domain.entity.TaskComment
+import com.synchtask.shared.domain.membership.MembershipRole
+import com.synchtask.task.domain.entity.TaskMember
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.user.domain.entity.User
@@ -13,55 +15,84 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class TaskMapperTest {
-
     private val now = LocalDateTime.now()
 
-    private val owner = User(
-        id = 1L,
-        name = "Owner User",
-        email = "owner@example.com",
-        passwordHash = "hash"
-    )
+    private val owner =
+        User(
+            id = 1L,
+            name = "Owner User",
+            email = "owner@example.com",
+            passwordHash = "hash"
+        )
 
-    private val collaborator = User(
-        id = 2L,
-        name = "Collaborator",
-        email = "collab@example.com",
-        passwordHash = "hash"
-    )
+    private val collaborator =
+        User(
+            id = 2L,
+            name = "Collaborator",
+            email = "collab@example.com",
+            passwordHash = "hash"
+        )
 
-    private val project = Project(
-        id = 10L,
-        name = "Test Project",
-        description = "Project description",
-        owner = owner,
-        dueDate = LocalDate.now().plusDays(30)
-    )
+    private val project =
+        Project(
+            id = 10L,
+            name = "Test Project",
+            description = "Project description",
+            owner = owner,
+            dueDate = LocalDate.now().plusDays(30)
+        )
 
-    private val board = Board(
-        id = 20L,
-        name = "Main Board",
-        owner = owner,
-        project = project
-    )
+    private val board =
+        Board(
+            id = 20L,
+            name = "Main Board",
+            owner = owner,
+            project = project
+        )
 
-    private val task = Task(
-        id = 100L,
-        title = "Test Task",
-        description = "This is a test task",
-        owner = owner,
-        collaborators = mutableSetOf(collaborator),
-        status = TaskStatus.TODO,
-        priority = TaskPriority.MID,
-        labels = mutableSetOf("urgent", "backend"),
-        createdAt = now,
-        updatedAt = now,
-        board = board
-    )
+    private val task =
+        Task(
+            id = 100L,
+            title = "Test Task",
+            description = "This is a test task",
+            owner = owner,
+            status = TaskStatus.TODO,
+            priority = TaskPriority.MID,
+            labels = mutableSetOf("urgent", "backend"),
+            createdAt = now,
+            updatedAt = now,
+            board = board
+        )
+
+    init {
+        task.members.add(
+            TaskMember(
+                task = task,
+                user = collaborator,
+                role = MembershipRole.COLLABORATOR
+            )
+        )
+    }
+
+    @Test
+    fun `should map Task to TaskListItemDTO correctly`() {
+        val dto = TaskMapper.toListItem(task)
+
+        Assertions.assertEquals(100L, dto.id)
+        Assertions.assertEquals("Test Task", dto.title)
+        Assertions.assertEquals(1L, dto.creatorId)
+        Assertions.assertEquals("Owner User", dto.creatorName)
+        Assertions.assertEquals(TaskStatus.TODO, dto.status)
+        Assertions.assertEquals(TaskPriority.MID, dto.priority)
+        Assertions.assertEquals(now, dto.createdAt)
+        Assertions.assertEquals(now, dto.updatedAt)
+        Assertions.assertEquals(20L, dto.boardId)
+        Assertions.assertEquals("Main Board", dto.boardName)
+    }
 
     @Test
     fun `should map Task to TaskResponseDTO correctly`() {
-        val dto = TaskMapper.toTaskResponseDTO(task)
+        val dto = TaskMapper.toResponse(task)
 
         Assertions.assertEquals(100L, dto.id)
         Assertions.assertEquals("Test Task", dto.title)
@@ -87,15 +118,16 @@ class TaskMapperTest {
 
     @Test
     fun `should map TaskComment to TaskCommentResponseDTO correctly`() {
-        val comment = TaskComment(
-            id = 500L,
-            task = task,
-            user = collaborator,
-            content = "Looks good!",
-            createdAt = now
-        )
+        val comment =
+            TaskComment(
+                id = 500L,
+                task = task,
+                user = collaborator,
+                content = "Looks good!",
+                createdAt = now
+            )
 
-        val dto = TaskMapper.toTaskCommentResponseDTO(comment)
+        val dto = TaskMapper.toCommentResponse(comment)
 
         Assertions.assertEquals(500L, dto.id)
         Assertions.assertEquals(100L, dto.taskId)
@@ -105,28 +137,27 @@ class TaskMapperTest {
     }
 
     @Test
-    fun `should throw when Task id is null`() {
-        val invalidTask = task.copy(id = null)
+    fun `should throw when Task id is null on list mapping`() {
+        val invalidTask =
+            Task(
+                id = null,
+                title = task.title,
+                description = task.description,
+                owner = task.owner,
+                labels = task.labels,
+                status = task.status,
+                priority = task.priority,
+                comments = task.comments,
+                createdAt = task.createdAt,
+                updatedAt = task.updatedAt,
+                board = task.board
+            )
 
-        val ex = Assertions.assertThrows(IllegalArgumentException::class.java) {
-            TaskMapper.toTaskResponseDTO(invalidTask)
-        }
+        val ex =
+            Assertions.assertThrows(IllegalArgumentException::class.java) {
+                TaskMapper.toListItem(invalidTask)
+            }
 
         Assertions.assertEquals("Task ID cannot be null", ex.message)
-    }
-
-    @Test
-    fun `should throw when TaskComment ids are null`() {
-        val comment = TaskComment(
-            id = null,
-            task = task.copy(id = null),
-            user = collaborator.copy(id = null),
-            content = "Missing IDs",
-            createdAt = now
-        )
-
-        Assertions.assertThrows(NullPointerException::class.java) {
-            TaskMapper.toTaskCommentResponseDTO(comment)
-        }
     }
 }

@@ -1,20 +1,16 @@
 package com.synchtask.security.presentation.controller
 
 import com.synchtask.security.infrastructure.jwt.JwtKeyManager
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
-/**
- * **AuthAdminControllerTest**
- *
- * - Unit test for JWT key rotation endpoint.
- * - Uses pure MockK with manual injection.
- */
+
 class AuthAdminControllerTest {
-
     private lateinit var jwtKeyManager: JwtKeyManager
     private lateinit var authAdminController: AuthAdminController
 
@@ -26,11 +22,23 @@ class AuthAdminControllerTest {
 
     @Test
     fun `should rotate JWT keys and return success message`() {
-        // Act
+
         val response = authAdminController.rotateKeys()
 
-        // Assert
-        assertEquals(mapOf("message" to "JWT keys rotated successfully"), response)
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("JWT keys rotated successfully", response.body?.message)
+        verify(exactly = 1) { jwtKeyManager.rotateKeys() }
+    }
+
+    @Test
+    fun `should return not implemented when key rotation is unsupported`() {
+        every { jwtKeyManager.rotateKeys() } throws UnsupportedOperationException("not supported")
+
+        val response = authAdminController.rotateKeys()
+
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, response.statusCode)
+        assertEquals("Manual rotation is not available for file-based keys.", response.body?.message)
+
         verify(exactly = 1) { jwtKeyManager.rotateKeys() }
     }
 }

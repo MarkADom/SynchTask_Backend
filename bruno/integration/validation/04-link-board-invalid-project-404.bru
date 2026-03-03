@@ -1,0 +1,61 @@
+meta {
+  name: 04 Link board invalid project 404
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/projects/999999999
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{validationOwnerToken}}
+}Q
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const validationOwnerToken = bru.getVar("validationOwnerToken");
+  const validationRunId = bru.getVar("validationRunId") || String(Date.now());
+  const baseUrl = bru.getVar("baseUrl");
+  if (!validationOwnerToken) throw new Error("Missing required variable: validationOwnerToken");
+  if (!baseUrl) throw new Error("Missing required variable: baseUrl");
+
+  bru.setVar("validationRunId", validationRunId);
+
+  const createBoardRes = await bru.sendRequest({
+    method: 'POST',
+    url: `${baseUrl}/boards`,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${validationOwnerToken}`
+    },
+    body: {
+      mode: 'json',
+      json: {
+        name: `Validation Board ${validationRunId}`,
+        color: '#F59E0B',
+        description: 'Validation board for invalid project link'
+      }
+    }
+  });
+
+  if (createBoardRes.status !== 200) throw new Error(`Board creation failed: ${createBoardRes.status}`);
+  bru.setVar("validationBoardId", String(createBoardRes.body.id));
+}
+
+body:json {
+  {
+    "boardIds": [{{validationBoardId}}]
+  }
+}
+
+tests {
+  test("status 404", function () {
+    expect(res.getStatus()).to.equal(404);
+  });
+}

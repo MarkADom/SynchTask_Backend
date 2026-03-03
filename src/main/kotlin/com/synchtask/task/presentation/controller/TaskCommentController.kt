@@ -3,12 +3,18 @@ package com.synchtask.task.presentation.controller
 import com.synchtask.task.application.dto.TaskCommentCreateDTO
 import com.synchtask.task.application.dto.TaskCommentResponseDTO
 import com.synchtask.task.application.service.TaskCommentService
+import com.synchtask.user.application.service.AuthenticatedUserService
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
 /**
  * Task comment endpoints.
@@ -18,9 +24,9 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/tasks/{taskId}/comments")
 class TaskCommentController(
-    private val taskCommentService: TaskCommentService
+    private val taskCommentService: TaskCommentService,
+    private val authenticatedUserService: AuthenticatedUserService
 ) {
-
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     fun addComment(
@@ -28,8 +34,13 @@ class TaskCommentController(
         @Valid @RequestBody request: TaskCommentCreateDTO,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<TaskCommentResponseDTO> {
-        val userEmail = user.username
-        val comment = taskCommentService.addComment(taskId, userEmail, request)
+        val actor = authenticatedUserService.requireUser(user)
+        val comment =
+            taskCommentService.addComment(
+                taskId = taskId,
+                user = actor,
+                request = request
+            )
         return ResponseEntity.ok(comment)
     }
 

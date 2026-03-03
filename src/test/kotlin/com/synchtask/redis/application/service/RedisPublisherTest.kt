@@ -9,7 +9,6 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException
 import org.springframework.data.redis.core.StringRedisTemplate
 
 class RedisPublisherTest {
-
     private lateinit var redisTemplate: StringRedisTemplate
     private lateinit var redisPublisher: RedisPublisher
     private val sleeper: (Long) -> Unit = mockk(relaxed = true)
@@ -32,7 +31,9 @@ class RedisPublisherTest {
 
     @Test
     fun `should retry on RedisConnectionException then succeed`() {
-        every { redisTemplate.convertAndSend("channel", "message") } throws RedisConnectionException("Connection lost") andThen 1L
+        every {
+            redisTemplate.convertAndSend("channel", "message")
+        } throws RedisConnectionException("Connection lost") andThen 1L
         every { sleeper(any()) } just Runs
 
         redisPublisher.publish("channel", "message")

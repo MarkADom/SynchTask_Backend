@@ -1,7 +1,7 @@
 package com.synchtask.chat.application.service
 
-import com.synchtask.user.domain.entity.UserEncryptionKeys
 import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.user.domain.entity.UserEncryptionKeys
 import com.synchtask.user.domain.repository.UserEncryptionKeysRepository
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
@@ -13,29 +13,31 @@ class KeyExchangeService(
     private val userEncryptionKeysRepository: UserEncryptionKeysRepository,
     private val userRepository: UserRepository,
 ) {
-
     private val logger = LoggerFactory.getLogger(KeyExchangeService::class.java)
 
     @Transactional
     fun saveUserPublicKey(userEmail: String, publicKey: String) {
-        val user = userRepository.findByEmail(userEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
+        val user =
+            userRepository.findByEmail(userEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
 
         userEncryptionKeysRepository.findByUser(user)
             .ifPresent { userEncryptionKeysRepository.delete(it) }
 
-        val newKeyEntry = UserEncryptionKeys(
-            user = user,
-            publicKey = publicKey
-        )
+        val newKeyEntry =
+            UserEncryptionKeys(
+                user = user,
+                publicKey = publicKey
+            )
 
         userEncryptionKeysRepository.save(newKeyEntry)
         logger.info("Saved public key for user: $userEmail")
     }
 
     fun getUserPublicKey(userEmail: String): String? {
-        val user = userRepository.findByEmail(userEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
+        val user =
+            userRepository.findByEmail(userEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
 
         return userEncryptionKeysRepository.findByUser(user)
             .map { it.publicKey }
@@ -44,12 +46,14 @@ class KeyExchangeService(
 
     @Transactional
     fun revokeUserPublicKey(userEmail: String): Boolean {
-        val user = userRepository.findByEmail(userEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
+        val user =
+            userRepository.findByEmail(userEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
 
         val keyEntry = userEncryptionKeysRepository.findByUser(user)
         return if (keyEntry.isPresent) {
-            userEncryptionKeysRepository.delete(keyEntry.get())
+            val existingKeyEntry = keyEntry.get()
+            userEncryptionKeysRepository.delete(existingKeyEntry)
             logger.info("Revoked public key for user: $userEmail")
             true
         } else {
@@ -60,16 +64,18 @@ class KeyExchangeService(
 
     @Transactional
     fun rotateUserPublicKey(userEmail: String, newPublicKey: String) {
-        val user = userRepository.findByEmail(userEmail)
-            .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
+        val user =
+            userRepository.findByEmail(userEmail)
+                .orElseThrow { ResourceNotFoundException("User not found: $userEmail") }
 
         userEncryptionKeysRepository.findByUser(user)
             .ifPresent { userEncryptionKeysRepository.delete(it) }
 
-        val newEntry = UserEncryptionKeys(
-            user = user,
-            publicKey = newPublicKey
-        )
+        val newEntry =
+            UserEncryptionKeys(
+                user = user,
+                publicKey = newPublicKey
+            )
 
         userEncryptionKeysRepository.save(newEntry)
         logger.info("Rotated public key for user: $userEmail")

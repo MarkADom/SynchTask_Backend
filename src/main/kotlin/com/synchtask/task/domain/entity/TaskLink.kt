@@ -24,22 +24,17 @@ import java.time.LocalDateTime
         Index(name = "idx_task_link_task", columnList = "task_id")
     ]
 )
-data class TaskLink(
-
+class TaskLink(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", nullable = false)
     val task: Task,
-
     @Column(nullable = false, length = 255)
     val title: String,
-
     @Column(nullable = false, length = 2048)
     val url: String,
-
     @Column(name = "created_at", nullable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 )

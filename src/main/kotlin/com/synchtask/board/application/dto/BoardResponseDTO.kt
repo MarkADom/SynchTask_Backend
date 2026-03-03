@@ -7,7 +7,7 @@ data class BoardResponseDTO(
     val name: String,
     val color: String?,
     val description: String?,
-    val createdAt : LocalDateTime?,
+    val createdAt: LocalDateTime?,
     val updatedAt: LocalDateTime?,
     val ownerName: String,
 )

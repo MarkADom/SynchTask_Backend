@@ -1,7 +1,9 @@
 package com.synchtask.project.domain.entity
 
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.shared.domain.membership.MembershipRole
 import com.synchtask.user.domain.entity.User
+import com.synchtask.user.domain.entity.UserRole
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -11,12 +13,9 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
-import jakarta.persistence.ManyToMany
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -35,53 +34,34 @@ import java.time.LocalDateTime
     ]
 )
 class Project(
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @Column(nullable = false)
     var name: String,
-
     @Column(nullable = false, columnDefinition = "TEXT")
     var description: String = "",
-
     @Column(nullable = false)
     var tag: String = "",
-
     @Column(nullable = false)
     var color: String = "#60A5FA",
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     val owner: User,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(name = "updated_at", nullable = true)
     var updatedAt: LocalDateTime? = null,
-
     @Column(name = "due_date", nullable = false)
     var dueDate: LocalDate,
 
-    /**
-     * Users that are members of this project.
-     * A unique constraint prevents duplicated (project_id, user_id) pairs.
-     */
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "project_members",
-        joinColumns = [JoinColumn(name = "project_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")],
-        uniqueConstraints = [
-            UniqueConstraint(
-                name = "uk_project_members_project_user",
-                columnNames = ["project_id", "user_id"]
-            )
-        ]
+    @OneToMany(
+        mappedBy = "project",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
     )
-    val members: MutableSet<User> = mutableSetOf(),
+    val projectMembers: MutableSet<ProjectMember> = mutableSetOf(),
 
     /**
      * Boards that belong to this project.
@@ -93,8 +73,19 @@ class Project(
         orphanRemoval = true,
         fetch = FetchType.LAZY
     )
-    val boards: MutableSet<Board> = mutableSetOf()
+    val boards: MutableSet<Board> = mutableSetOf(),
 ) {
+
+    fun hasAccess(user: User): Boolean {
+        if (user.role == UserRole.ADMIN) return true
+        return projectMembers.any { it.user.id == user.id }
+    }
+
+    fun isOwnedBy(user: User): Boolean {
+        if (user.role == UserRole.ADMIN) return true
+        val role = projectMembers.firstOrNull { it.user.id == user.id }?.role
+        return role == MembershipRole.OWNER
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -102,6 +93,5 @@ class Project(
         return id == other.id
     }
 
-    override fun hashCode(): Int =
-        id?.hashCode() ?: 0
+    override fun hashCode(): Int = id?.hashCode() ?: 0
 }

@@ -17,18 +17,17 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class CorsConfig(
     private val environment: Environment,
 ) : WebMvcConfigurer {
-
     var origins: List<String> = listOf()
 
     override fun addCorsMappings(registry: CorsRegistry) {
         val isDev = environment.activeProfiles.any { it == "dev" || it == "local" }
 
-
-        val mapping = registry.addMapping("/**")
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            .allowedHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin")
-            .exposedHeaders("Authorization", "X-Frame-Options", "Access-Control-Allow-Origin")
-            .allowCredentials(true)
+        val mapping =
+            registry.addMapping("/**")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin")
+                .exposedHeaders("Authorization", "X-Frame-Options", "Access-Control-Allow-Origin")
+                .allowCredentials(true)
 
         if (isDev) {
             logger.warn("CORS running in dev/local mode — allowing all origins.")

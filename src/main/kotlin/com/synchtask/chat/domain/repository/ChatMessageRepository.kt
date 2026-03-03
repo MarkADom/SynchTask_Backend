@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface ChatMessageRepository : JpaRepository<ChatMessage, Long> {
-
     @EntityGraph(attributePaths = ["sender"])
     fun findByChatRoomOrderByTimestampAsc(chatRoom: ChatRoom): List<ChatMessage>
 }

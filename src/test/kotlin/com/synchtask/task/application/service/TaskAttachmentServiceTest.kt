@@ -1,6 +1,8 @@
 package com.synchtask.task.application.service
 
+import com.synchtask.activity.application.service.ActivityService
 import com.synchtask.board.domain.entity.Board
+import com.synchtask.board.domain.repository.BoardMemberRepository
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.task.domain.entity.Task
@@ -8,6 +10,7 @@ import com.synchtask.task.domain.entity.TaskAttachment
 import com.synchtask.task.domain.entity.TaskPriority
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.domain.repository.TaskAttachmentRepository
+import com.synchtask.task.domain.repository.TaskMemberRepository
 import com.synchtask.task.domain.repository.TaskRepository
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
@@ -18,45 +21,69 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 class TaskAttachmentServiceTest {
-
     private lateinit var taskRepository: TaskRepository
     private lateinit var taskAttachmentRepository: TaskAttachmentRepository
+    private lateinit var taskMemberRepository: TaskMemberRepository
+    private lateinit var boardMemberRepository: BoardMemberRepository
+    private lateinit var activityService: ActivityService
     private lateinit var service: TaskAttachmentService
 
-    private val owner = User(
-        id = 1L,
-        name = "Owner",
-        email = "owner@test.com",
-        passwordHash = "hash",
-        role = UserRole.USER
-    )
+    private val owner =
+        User(
+            id = 1L,
+            name = "Owner",
+            email = "owner@test.com",
+            passwordHash = "hash",
+            role = UserRole.USER
+        )
 
-    private val board = Board(
-        id = 1L,
-        name = "Board",
-        owner = owner
-    )
+    private val other =
+        User(
+            id = 2L,
+            name = "Other",
+            email = "other@test.com",
+            passwordHash = "hash",
+            role = UserRole.USER
+        )
 
-    private val task = Task(
-        id = 10L,
-        title = "Task",
-        description = "Desc",
-        owner = owner,
-        board = board,
-        status = TaskStatus.TODO,
-        priority = TaskPriority.MID
-    )
+    private val board =
+        Board(
+            id = 1L,
+            name = "Board",
+            owner = owner
+        )
+
+    private val task =
+        Task(
+            id = 10L,
+            title = "Task",
+            description = "Desc",
+            owner = owner,
+            board = board,
+            status = TaskStatus.TODO,
+            priority = TaskPriority.MID
+        )
 
     @BeforeEach
     fun setup() {
-        clearAllMocks()
-
         taskRepository = mockk()
         taskAttachmentRepository = mockk()
-        service = TaskAttachmentService(taskRepository, taskAttachmentRepository)
+        taskMemberRepository = mockk(relaxed = true)
+        boardMemberRepository = mockk(relaxed = true)
+        activityService = mockk(relaxed = true)
+
+        every { taskMemberRepository.existsByTaskIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
+        every { boardMemberRepository.existsByBoardIdAndUserId(any(), any()) } answers { secondArg<Long>() == owner.id }
+
+        service = TaskAttachmentService(
+            taskRepository,
+            taskMemberRepository,
+            boardMemberRepository,
+            taskAttachmentRepository,
+            activityService
+        )
     }
 
     @Test
@@ -67,12 +94,9 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskAttachmentRepository.save(any()) } answers { firstArg() }
 
-        val result = service.uploadFile(task.id!!, file, owner.email)
+        val result = service.uploadFile(task.id!!, file, owner)
 
         assertEquals("file.txt", result.fileName)
-        assertTrue(result.fileUrl.contains("cdn.synchtask.app"))
-
-        verify(exactly = 1) { taskAttachmentRepository.save(any()) }
     }
 
     @Test
@@ -81,7 +105,7 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(999L) } returns Optional.empty()
 
         assertFailsWith<ResourceNotFoundException> {
-            service.uploadFile(999L, file, owner.email)
+            service.uploadFile(999L, file, owner)
         }
     }
 
@@ -91,25 +115,39 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.uploadFile(task.id!!, file, "other@test.com")
+            service.uploadFile(task.id!!, file, other)
         }
 
         verify(exactly = 0) { taskAttachmentRepository.save(any()) }
     }
 
     @Test
+    fun `should upload file when user has board membership`() {
+        val file = mockk<MultipartFile>()
+        every { file.originalFilename } returns "member.txt"
+        every { taskRepository.findById(task.id!!) } returns Optional.of(task)
+        every { boardMemberRepository.existsByBoardIdAndUserId(board.id!!, other.id!!) } returns true
+        every { taskAttachmentRepository.save(any()) } answers { firstArg() }
+
+        val result = service.uploadFile(task.id!!, file, other)
+
+        assertEquals("member.txt", result.fileName)
+    }
+
+    @Test
     fun `should list attachments when user is owner`() {
-        val attachment = TaskAttachment(
-            id = 1L,
-            task = task,
-            fileName = "doc.pdf",
-            fileUrl = "url"
-        )
+        val attachment =
+            TaskAttachment(
+                id = 1L,
+                task = task,
+                fileName = "doc.pdf",
+                fileUrl = "url"
+            )
 
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskAttachmentRepository.findAllByTask(task) } returns listOf(attachment)
 
-        val result = service.listAttachments(task.id!!, owner.email)
+        val result = service.listAttachments(task.id!!, owner)
 
         assertEquals(1, result.size)
         assertEquals("doc.pdf", result.first().fileName)
@@ -120,7 +158,7 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.listAttachments(task.id!!, "other@test.com")
+            service.listAttachments(task.id!!, other)
         }
     }
 
@@ -129,20 +167,19 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskAttachmentRepository.deleteByTaskAndId(task, 5L) } returns 1
 
-        val result = service.deleteAttachment(task.id!!, 5L, owner.email)
+        service.deleteAttachment(task.id!!, 5L, owner)
 
-        assertTrue(result)
         verify { taskAttachmentRepository.deleteByTaskAndId(task, 5L) }
     }
 
     @Test
-    fun `should return false when attachment not found`() {
+    fun `should throw when attachment not found`() {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
         every { taskAttachmentRepository.deleteByTaskAndId(task, 5L) } returns 0
 
-        val result = service.deleteAttachment(task.id!!, 5L, owner.email)
-
-        assertTrue(!result)
+        assertFailsWith<ResourceNotFoundException> {
+            service.deleteAttachment(task.id!!, 5L, owner)
+        }
     }
 
     @Test
@@ -150,9 +187,23 @@ class TaskAttachmentServiceTest {
         every { taskRepository.findById(task.id!!) } returns Optional.of(task)
 
         assertFailsWith<UnauthorizedAccessException> {
-            service.deleteAttachment(task.id!!, 5L, "other@test.com")
+            service.deleteAttachment(task.id!!, 5L, other)
         }
 
         verify(exactly = 0) { taskAttachmentRepository.deleteByTaskAndId(any(), any()) }
+    }
+
+    @Test
+    fun `should list attachments when user is admin`() {
+        val admin =
+            User(id = 99L, name = "Admin", email = "admin@test.com", passwordHash = "hash", role = UserRole.ADMIN)
+        val attachment = TaskAttachment(id = 2L, task = task, fileName = "admin.pdf", fileUrl = "url")
+
+        every { taskRepository.findById(task.id!!) } returns Optional.of(task)
+        every { taskAttachmentRepository.findAllByTask(task) } returns listOf(attachment)
+
+        val result = service.listAttachments(task.id!!, admin)
+
+        assertEquals(1, result.size)
     }
 }

@@ -1,0 +1,28 @@
+meta {
+  name: 15 Outsider denied task access
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/tasks/{{taskId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{outsiderToken}}
+}
+
+script:pre-request {
+  const outsiderToken = bru.getVar("outsiderToken");
+  const taskId = bru.getVar("taskId");
+  if (!outsiderToken) throw new Error("Missing required variable: outsiderToken");
+  if (!taskId) throw new Error("Missing required variable: taskId");
+}
+
+tests {
+  test("status 403 for outsider", function () {
+    expect(res.getStatus()).to.equal(403);
+  });
+}

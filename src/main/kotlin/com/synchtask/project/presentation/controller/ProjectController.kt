@@ -4,7 +4,7 @@ import com.synchtask.project.application.dto.ProjectCreateDTO
 import com.synchtask.project.application.dto.ProjectResponseDTO
 import com.synchtask.project.application.dto.ProjectUpdateDTO
 import com.synchtask.project.application.service.ProjectService
-import com.synchtask.user.application.service.UserService
+import com.synchtask.user.application.service.AuthenticatedUserService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -29,9 +29,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/projects")
 class ProjectController(
     private val projectService: ProjectService,
-    private val userService: UserService
+    private val authenticatedUserService: AuthenticatedUserService
 ) {
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("isAuthenticated()")
@@ -39,26 +38,21 @@ class ProjectController(
         @RequestBody @Valid dto: ProjectCreateDTO,
         @AuthenticationPrincipal user: UserDetails
     ): ProjectResponseDTO {
-        val owner = getUserOrThrow(user)
+        val owner = authenticatedUserService.requireUser(user)
         return projectService.create(dto, owner)
     }
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    fun listProjects(
-        @AuthenticationPrincipal user: UserDetails
-    ): List<ProjectResponseDTO> {
-        val owner = getUserOrThrow(user)
+    fun listProjects(@AuthenticationPrincipal user: UserDetails): List<ProjectResponseDTO> {
+        val owner = authenticatedUserService.requireUser(user)
         return projectService.listAll(owner)
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    fun getProject(
-        @PathVariable id: Long,
-        @AuthenticationPrincipal user: UserDetails
-    ): ProjectResponseDTO {
-        val owner = getUserOrThrow(user)
+    fun getProject(@PathVariable id: Long, @AuthenticationPrincipal user: UserDetails): ProjectResponseDTO {
+        val owner = authenticatedUserService.requireUser(user)
         return projectService.getById(id, owner)
     }
 
@@ -69,22 +63,15 @@ class ProjectController(
         @RequestBody @Valid dto: ProjectUpdateDTO,
         @AuthenticationPrincipal user: UserDetails
     ): ProjectResponseDTO {
-        val owner = getUserOrThrow(user)
+        val owner = authenticatedUserService.requireUser(user)
         return projectService.update(id, dto, owner)
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("isAuthenticated()")
-    fun deleteProject(
-        @PathVariable id: Long,
-        @AuthenticationPrincipal user: UserDetails
-    ) {
-        val owner = getUserOrThrow(user)
+    fun deleteProject(@PathVariable id: Long, @AuthenticationPrincipal user: UserDetails) {
+        val owner = authenticatedUserService.requireUser(user)
         projectService.delete(id, owner)
     }
-
-    private fun getUserOrThrow(user: UserDetails) =
-        userService.getUserByEmail(user.username)
-            ?: throw IllegalArgumentException("User not found: ${user.username}")
 }

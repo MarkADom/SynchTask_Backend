@@ -16,7 +16,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class CustomHandshakeInterceptorTest {
-
     private lateinit var jwtTokenProvider: JwtTokenProvider
     private lateinit var interceptor: CustomHandshakeInterceptor
     private lateinit var request: ServerHttpRequest
@@ -38,16 +37,19 @@ class CustomHandshakeInterceptorTest {
         val headerToken = "header.jwt.token"
         val queryToken = "query.jwt.token"
 
-        val userDetails = mockk<UserDetails> {
-            every { username } returns "headeruser@example.com"
-        }
-
-        request = mockk {
-            every { headers } returns HttpHeaders().apply {
-                set("Authorization", "Bearer $headerToken")
+        val userDetails =
+            mockk<UserDetails> {
+                every { username } returns "headeruser@example.com"
             }
-            every { uri } returns URI("ws://localhost:8080/ws?token=$queryToken")
-        }
+
+        request =
+            mockk {
+                every { headers } returns
+                    HttpHeaders().apply {
+                        set("Authorization", "Bearer $headerToken")
+                    }
+                every { uri } returns URI("ws://localhost:8080/ws?token=$queryToken")
+            }
 
         every { jwtTokenProvider.validateAndExtractUser(headerToken) } returns userDetails
         every { jwtTokenProvider.validateAndExtractUser(queryToken) } returns null
@@ -65,18 +67,19 @@ class CustomHandshakeInterceptorTest {
         }
     }
 
-
     @Test
     fun `should accept connection with valid Authorization header token`() {
         val token = "valid.jwt.token"
-        val userDetails = mockk<UserDetails> {
-            every { username } returns "user@example.com"
-        }
+        val userDetails =
+            mockk<UserDetails> {
+                every { username } returns "user@example.com"
+            }
 
-        request = mockk {
-            every { headers } returns HttpHeaders().apply { set("Authorization", "Bearer $token") }
-            every { uri } returns URI("ws://localhost:8080/ws")
-        }
+        request =
+            mockk {
+                every { headers } returns HttpHeaders().apply { set("Authorization", "Bearer $token") }
+                every { uri } returns URI("ws://localhost:8080/ws")
+            }
 
         every { jwtTokenProvider.validateAndExtractUser(token) } returns userDetails
 
@@ -87,31 +90,27 @@ class CustomHandshakeInterceptorTest {
     }
 
     @Test
-    fun `should accept connection with valid token in query parameter`() {
+    fun `should reject connection when token is provided only via query parameter`() {
         val token = "query.jwt.token"
-        val userDetails = mockk<UserDetails> {
-            every { username } returns "queryuser@example.com"
-        }
 
-        request = mockk {
-            every { headers } returns HttpHeaders()
-            every { uri } returns URI("ws://localhost:8080/ws?token=$token")
-        }
-
-        every { jwtTokenProvider.validateAndExtractUser(token) } returns userDetails
+        request =
+            mockk {
+                every { headers } returns HttpHeaders()
+                every { uri } returns URI("ws://localhost:8080/ws?token=$token")
+            }
 
         val result = interceptor.beforeHandshake(request, response, wsHandler, attributes)
 
-        assertTrue(result)
-        assert(attributes["username"] == "queryuser@example.com")
+        assertFalse(result)
     }
 
     @Test
     fun `should reject connection when no token is provided`() {
-        request = mockk {
-            every { headers } returns HttpHeaders()
-            every { uri } returns URI("ws://localhost:8080/ws")
-        }
+        request =
+            mockk {
+                every { headers } returns HttpHeaders()
+                every { uri } returns URI("ws://localhost:8080/ws")
+            }
 
         val result = interceptor.beforeHandshake(request, response, wsHandler, attributes)
 
@@ -122,10 +121,11 @@ class CustomHandshakeInterceptorTest {
     fun `should reject connection when token is invalid`() {
         val token = "invalid.token"
 
-        request = mockk {
-            every { headers } returns HttpHeaders().apply { set("Authorization", "Bearer $token") }
-            every { uri } returns URI("ws://localhost:8080/ws")
-        }
+        request =
+            mockk {
+                every { headers } returns HttpHeaders().apply { set("Authorization", "Bearer $token") }
+                every { uri } returns URI("ws://localhost:8080/ws")
+            }
 
         every { jwtTokenProvider.validateAndExtractUser(token) } returns null
 

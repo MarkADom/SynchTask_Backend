@@ -1,0 +1,37 @@
+meta {
+  name: 04 Tampered token returns 401
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/projects
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{securityTamperedOwnerToken}}
+}
+
+script:pre-request {
+  const securityOwnerToken = bru.getVar("securityOwnerToken");
+  if (!securityOwnerToken) throw new Error("Missing required variable: securityOwnerToken");
+
+  const tokenParts = securityOwnerToken.split('.');
+  if (tokenParts.length !== 3) throw new Error("Invalid JWT format");
+
+  const signature = tokenParts[2];
+  const lastChar = signature.slice(-1);
+  const replacementChar = lastChar === 'a' ? 'b' : 'a';
+  const tamperedSignature = signature.slice(0, -1) + replacementChar;
+  const tamperedToken = `${tokenParts[0]}.${tokenParts[1]}.${tamperedSignature}`;
+
+  bru.setVar("securityTamperedOwnerToken", tamperedToken);
+}
+
+tests {
+  test("status 401", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

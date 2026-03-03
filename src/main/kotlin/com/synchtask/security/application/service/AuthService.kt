@@ -1,20 +1,21 @@
 package com.synchtask.security.application.service
 
-import com.synchtask.user.domain.entity.UserRole
-import com.synchtask.security.domain.exception.InvalidCredentialsException
-import com.synchtask.notification.application.manager.NotificationManager
 import com.synchtask.notification.application.handler.WelcomeNotificationHandler
-import com.synchtask.user.domain.repository.UserRepository
+import com.synchtask.notification.application.manager.NotificationManager
+import com.synchtask.security.application.dto.TokenPairDTO
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
+import com.synchtask.user.domain.entity.UserRole
+import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
+import com.synchtask.shared.exception.AccessDeniedException
+import com.synchtask.shared.exception.ResourceNotFoundException
 
 @Service
 class AuthService(
@@ -26,14 +27,14 @@ class AuthService(
     private val passwordEncoder: PasswordEncoder,
     private val notificationManager: NotificationManager,
 ) {
-
     private val logger = LoggerFactory.getLogger(AuthService::class.java)
 
-    fun authenticate(email: String, rawPassword: String): Map<String, String> {
+    fun authenticate(email: String, rawPassword: String): TokenPairDTO {
         logger.info("Attempting authentication for: $email")
 
-        val userDetails: UserDetails = userDetailsService.loadUserByUsername(email)
-            ?: throw InvalidCredentialsException("Invalid email or password")
+        val userDetails: UserDetails =
+            userDetailsService.loadUserByUsername(email)
+                ?: throw InvalidCredentialsException("Invalid email or password")
 
         if (!passwordEncoder.matches(rawPassword, userDetails.password)) {
             logger.warn("Invalid credentials for user: $email")
@@ -43,8 +44,9 @@ class AuthService(
         val authentication = UsernamePasswordAuthenticationToken(userDetails, rawPassword, userDetails.authorities)
         authenticationManager.authenticate(authentication)
 
-        val user = userRepository.findByEmail(email)
-            .orElseThrow { InvalidCredentialsException("User not found") }
+        val user =
+            userRepository.findByEmail(email)
+                .orElseThrow { InvalidCredentialsException("User not found") }
 
         val accessToken = jwtTokenProvider.generateToken(userDetails)
         val refreshToken = refreshTokenService.createRefreshToken(user)
@@ -57,27 +59,29 @@ class AuthService(
 
         logger.info("JWT and refresh token issued for $email")
 
-        return mapOf(
-            "accessToken" to accessToken,
-            "refreshToken" to refreshToken.token
+        return TokenPairDTO(
+            accessToken = accessToken,
+            refreshToken = refreshToken.token
         )
     }
-    
+
     fun updateUserRole(adminEmail: String, targetUserId: Long, newRole: UserRole) {
-        val adminUser = userRepository.findByEmail(adminEmail)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found") }
+        val adminUser =
+            userRepository.findByEmail(adminEmail)
+                .orElseThrow { ResourceNotFoundException("Admin not found") }
 
         if (adminUser.role != UserRole.ADMIN) {
             logger.warn("Unauthorized role update attempt by $adminEmail")
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can update roles")
+            throw AccessDeniedException("Only ADMIN can update roles")
         }
 
-        val targetUser = userRepository.findById(targetUserId)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Target user not found") }
+        val targetUser =
+            userRepository.findById(targetUserId)
+                .orElseThrow { ResourceNotFoundException("Target user not found") }
 
         if (newRole == UserRole.ADMIN) {
             logger.warn("Blocked ADMIN role assignment via API")
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot assign ADMIN role via API")
+            throw AccessDeniedException("Cannot assign ADMIN role via API")
         }
 
         targetUser.role = newRole

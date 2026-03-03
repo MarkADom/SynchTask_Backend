@@ -3,11 +3,9 @@ package com.synchtask.config
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.Refill
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.core.context.SecurityContextHolder
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
@@ -23,16 +21,16 @@ class RateLimitConfig(
     @Value("\${ratelimiter.public.limit}") private val publicRequestLimit: Long,
     @Value("\${ratelimiter.public.window}") private val publicTimeWindow: Long,
 ) {
-
     private val buckets = ConcurrentHashMap<String, Bucket>()
 
     fun resolveBucket(identifier: String): Bucket {
         return buckets.computeIfAbsent(identifier) {
-            val (limit, window) = if (identifier.startsWith("anon-")) {
-                anonRequestLimit to anonTimeWindow
-            } else {
-                userRequestLimit to userTimeWindow
-            }
+            val (limit, window) =
+                if (identifier.startsWith("anon-")) {
+                    anonRequestLimit to anonTimeWindow
+                } else {
+                    userRequestLimit to userTimeWindow
+                }
 
             Bucket.builder()
                 .addLimit(
@@ -46,25 +44,15 @@ class RateLimitConfig(
     }
 
     @Bean
-    fun publicBucket(): Bucket =
-        Bucket.builder()
-            .addLimit(
-                Bandwidth.classic(
+    fun publicBucket(): Bucket = Bucket.builder()
+        .addLimit(
+            Bandwidth.classic(
+                publicRequestLimit,
+                Refill.greedy(
                     publicRequestLimit,
-                    Refill.greedy(
-                        publicRequestLimit,
-                        Duration.ofMinutes(publicTimeWindow)
-                    )
+                    Duration.ofMinutes(publicTimeWindow)
                 )
             )
-            .build()
-
-    private fun getUserIdentifier(request: HttpServletRequest): String {
-        val authentication = SecurityContextHolder.getContext().authentication
-        return if (authentication?.isAuthenticated == true) {
-            authentication.name
-        } else {
-            "anon-${request.remoteAddr}"
-        }
-    }
+        )
+        .build()
 }

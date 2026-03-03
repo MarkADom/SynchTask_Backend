@@ -3,6 +3,8 @@ package com.synchtask.task.presentation.controller
 import com.synchtask.task.application.dto.TaskCommentCreateDTO
 import com.synchtask.task.application.dto.TaskCommentResponseDTO
 import com.synchtask.task.application.service.TaskCommentService
+import com.synchtask.user.application.service.AuthenticatedUserService
+import com.synchtask.user.domain.entity.User
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -14,48 +16,47 @@ import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
 class TaskCommentControllerTest {
-
     private lateinit var taskCommentService: TaskCommentService
+    private lateinit var authenticatedUserService: AuthenticatedUserService
     private lateinit var controller: TaskCommentController
     private lateinit var userDetails: UserDetails
 
     @BeforeEach
     fun setup() {
         taskCommentService = mockk()
-        controller = TaskCommentController(taskCommentService)
+        authenticatedUserService = mockk()
+        controller = TaskCommentController(taskCommentService, authenticatedUserService)
         userDetails = mockk()
     }
 
     @Test
     fun `should add comment to task`() {
-        // Arrange
         val taskId = 42L
         val request = TaskCommentCreateDTO("Looks good!")
-        val expectedResponse = TaskCommentResponseDTO(
-            id = 1L,
-            taskId = taskId,
-            userId = 101L,
-            content = "Looks good!",
-            createdAt = LocalDateTime.now()
-        )
+        val expectedResponse =
+            TaskCommentResponseDTO(
+                id = 1L,
+                taskId = taskId,
+                userId = 101L,
+                content = "Looks good!",
+                createdAt = LocalDateTime.now()
+            )
+        val actor = User(id = 101L, name = "User", email = "user@email.com", passwordHash = "hash")
 
-        every { userDetails.username } returns "user@email.com"
-        every { taskCommentService.addComment(taskId, "user@email.com", request) } returns expectedResponse
+        every { authenticatedUserService.requireUser(userDetails) } returns actor
+        every { taskCommentService.addComment(taskId, actor, request) } returns expectedResponse
 
-        // Act
         val response = controller.addComment(taskId, request, userDetails)
 
-        // Assert
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals(expectedResponse, response.body)
         verify(exactly = 1) {
-            taskCommentService.addComment(taskId, "user@email.com", request)
+            taskCommentService.addComment(taskId, actor, request)
         }
     }
 
     @Test
     fun `should return all comments for a task`() {
-        // Arrange
         val taskId = 99L
         val comment1 = TaskCommentResponseDTO(1, taskId, 201, "First comment", LocalDateTime.now())
         val comment2 = TaskCommentResponseDTO(2, taskId, 202, "Second comment", LocalDateTime.now())
@@ -63,10 +64,8 @@ class TaskCommentControllerTest {
 
         every { taskCommentService.getCommentsForTask(taskId) } returns comments
 
-        // Act
         val response = controller.getComments(taskId)
 
-        // Assert
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals(2, response.body?.size)
         assertEquals(comment1, response.body?.get(0))

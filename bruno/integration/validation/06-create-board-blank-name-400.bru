@@ -1,0 +1,37 @@
+meta {
+  name: 06 Create board blank name 400
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/boards
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{validationOwnerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const validationOwnerToken = bru.getVar("validationOwnerToken");
+  if (!validationOwnerToken) throw new Error("Missing required variable: validationOwnerToken");
+}
+
+body:json {
+  {
+    "name": "   ",
+    "color": "#123456"
+  }
+}
+
+tests {
+  test("status 400", function () {
+    expect(res.getStatus()).to.equal(400);
+  });
+}

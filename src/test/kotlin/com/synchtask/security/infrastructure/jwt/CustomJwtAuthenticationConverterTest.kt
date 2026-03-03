@@ -1,5 +1,6 @@
 package com.synchtask.security.infrastructure.jwt
 
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*
@@ -11,7 +12,6 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.oauth2.jwt.Jwt
 
 class CustomJwtAuthenticationConverterTest {
-
     private val userDetailsService: UserDetailsService = mockk()
     private val converter = CustomJwtAuthenticationConverter(userDetailsService)
 
@@ -62,9 +62,10 @@ class CustomJwtAuthenticationConverterTest {
         val jwt = mockk<Jwt>()
         every { jwt.claims } returns claims
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            converter.convert(jwt)
-        }
+        val exception =
+            assertThrows(InvalidCredentialsException::class.java) {
+                converter.convert(jwt)
+            }
 
         assertEquals("JWT does not contain 'sub' claim", exception.message)
     }
@@ -81,7 +82,6 @@ class CustomJwtAuthenticationConverterTest {
         every { jwt.tokenValue } returns "fake-token"
         return jwt
     }
-
 
     private fun buildUser(username: String): UserDetails {
         return User(username, "password", emptyList())

@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class NotificationRetryServiceTest {
-
     private lateinit var notificationRepository: NotificationRepository
     private lateinit var webSocketService: NotificationWebSocketService
     private lateinit var service: NotificationRetryService
@@ -24,17 +23,19 @@ class NotificationRetryServiceTest {
         notificationRepository = mockk()
         webSocketService = mockk()
 
-        service = NotificationRetryService(
-            notificationRepository,
-            webSocketService
-        )
+        service =
+            NotificationRetryService(
+                notificationRepository,
+                webSocketService
+            )
 
-        user = User(
-            id = 1L,
-            name = "Test",
-            email = "test@example.com",
-            passwordHash = "pw"
-        )
+        user =
+            User(
+                id = 1L,
+                name = "Test",
+                email = "test@example.com",
+                passwordHash = "pw"
+            )
     }
 
     @Test
@@ -54,13 +55,14 @@ class NotificationRetryServiceTest {
 
     @Test
     fun `should retry and mark notification as delivered`() {
-        val notification = Notification(
-            id = 10L,
-            recipient = user,
-            message = "Test message",
-            type = NotificationType.SYSTEM,
-            delivered = false
-        )
+        val notification =
+            Notification(
+                id = 10L,
+                recipient = user,
+                message = "Test message",
+                type = NotificationType.SYSTEM,
+                delivered = false
+            )
 
         every {
             notificationRepository.findAllByDeliveredFalse()
@@ -89,13 +91,14 @@ class NotificationRetryServiceTest {
 
     @Test
     fun `should not crash when resend fails`() {
-        val notification = Notification(
-            id = 99L,
-            recipient = user,
-            message = "Failing message",
-            type = NotificationType.SYSTEM,
-            delivered = false
-        )
+        val notification =
+            Notification(
+                id = 99L,
+                recipient = user,
+                message = "Failing message",
+                type = NotificationType.SYSTEM,
+                delivered = false
+            )
 
         every {
             notificationRepository.findAllByDeliveredFalse()

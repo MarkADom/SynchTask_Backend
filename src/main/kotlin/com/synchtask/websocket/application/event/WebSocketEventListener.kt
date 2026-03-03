@@ -15,7 +15,6 @@ class WebSocketEventListener(
     private val userService: UserService,
     private val webSocketReconnectionHandler: WebSocketReconnectionHandler
 ) {
-
     private val logger = LoggerFactory.getLogger(WebSocketEventListener::class.java)
 
     @EventListener

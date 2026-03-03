@@ -13,14 +13,9 @@ import org.springframework.stereotype.Service
 class LogoutService(
     private val refreshTokenRepository: RefreshTokenRepository
 ) : LogoutHandler {
-
     private val logger = LoggerFactory.getLogger(LogoutService::class.java)
 
-    override fun logout(
-        request: HttpServletRequest,
-        response: HttpServletResponse,
-        authentication: Authentication?
-    ) {
+    override fun logout(request: HttpServletRequest, response: HttpServletResponse, authentication: Authentication?) {
         val token = request.getHeader("Authorization")?.removePrefix("Bearer ")
 
         if (token.isNullOrBlank()) {
@@ -32,9 +27,10 @@ class LogoutService(
 
         val refreshToken = refreshTokenRepository.findByToken(token)
         if (refreshToken.isPresent) {
-            refreshToken.get().isRevoked = true
-            refreshTokenRepository.save(refreshToken.get())
-            logger.info("Revoked refresh token for user: ${refreshToken.get().user.email}")
+            val existingToken = refreshToken.get()
+            existingToken.isRevoked = true
+            refreshTokenRepository.save(existingToken)
+            logger.info("Revoked refresh token for user: ${existingToken.user.email}")
         } else {
             logger.warn("No refresh token found for the provided token")
         }

@@ -3,6 +3,8 @@ package com.synchtask.friend.presentation.controller
 import com.synchtask.friend.application.dto.FriendRequestDTO
 import com.synchtask.friend.application.dto.FriendResponseDTO
 import com.synchtask.friend.application.service.FriendService
+import com.synchtask.shared.dto.ApiMessageResponseDTO
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -25,44 +27,41 @@ import org.springframework.web.bind.annotation.RestController
 class FriendController(
     private val friendService: FriendService,
 ) {
-
-    @PostMapping("/request")
+    @PostMapping("/request", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun sendFriendRequest(
-        @RequestBody request: FriendRequestDTO,
+        @Valid @RequestBody request: FriendRequestDTO,
         @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ApiMessageResponseDTO> {
         friendService.sendFriendRequest(user.username, request.friendEmail)
-        return ResponseEntity.ok("Friend request sent successfully!")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Friend request sent successfully!"))
     }
 
-    @PostMapping("/accept/{requestId}")
+    @PostMapping("/accept/{requestId}", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun acceptFriendRequest(
         @PathVariable requestId: Long,
         @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ApiMessageResponseDTO> {
         friendService.acceptFriendRequest(requestId, user.username)
-        return ResponseEntity.ok("Friend request accepted!")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Friend request accepted!"))
     }
 
-    @DeleteMapping("/{friendId}")
+    @DeleteMapping("/{friendId}", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun removeFriend(
         @PathVariable friendId: Long,
         @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<String> {
+    ): ResponseEntity<ApiMessageResponseDTO> {
         friendService.removeFriend(friendId, user.username)
-        return ResponseEntity.ok("Friend removed!")
+        return ResponseEntity.ok(ApiMessageResponseDTO("Friend removed!"))
     }
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    fun listFriends(
-        @AuthenticationPrincipal user: UserDetails,
-    ): ResponseEntity<List<FriendResponseDTO>> {
+    fun listFriends(@AuthenticationPrincipal user: UserDetails):
+        ResponseEntity<List<FriendResponseDTO>> {
         val friends = friendService.listFriends(user.username)
-            .map { FriendResponseDTO.Companion.fromEntityForUser(it, user.username) }
         return ResponseEntity.ok(friends)
     }
 }

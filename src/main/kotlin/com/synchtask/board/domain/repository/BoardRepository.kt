@@ -1,19 +1,16 @@
 package com.synchtask.board.domain.repository
 
 import com.synchtask.board.domain.entity.Board
-import com.synchtask.user.domain.entity.User
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
 interface BoardRepository : JpaRepository<Board, Long> {
+    // Performance rationale: list endpoints frequently access owner data during DTO mapping.
+    @EntityGraph(attributePaths = ["owner"])
+    override fun findAll(): List<Board>
 
-    fun findByOwner(user: User): List<Board>
-
-    fun findByCollaboratorsContaining(user: User): List<Board>
-
-    @Query("SELECT b FROM Board b LEFT JOIN FETCH b.collaborators WHERE b.id IN :ids")
-    fun findAllWithCollaboratorsById(@Param("ids") ids: List<Long>): List<Board>
+    @EntityGraph(attributePaths = ["owner"])
+    override fun findAllById(ids: Iterable<Long>): List<Board>
 }

@@ -13,7 +13,6 @@ import org.springframework.security.core.userdetails.UserDetailsService
 import java.util.*
 
 class JwtTokenProviderTest {
-
     private lateinit var jwtKeyManager: JwtKeyManager
     private lateinit var userRepository: UserRepository
     private lateinit var userDetailsService: UserDetailsService
@@ -25,29 +24,31 @@ class JwtTokenProviderTest {
 
     @BeforeEach
     fun setup() {
-        jwtKeyManager = JwtKeyManager()
+        jwtKeyManager = JwtKeyManager(TestKeyPairs.generateRsa())
         userRepository = mockk()
         userDetailsService = mockk()
 
-        tokenProvider = JwtTokenProvider(
-            jwtKeyManager = jwtKeyManager,
-            userDetailsService = userDetailsService,
-            userRepository = userRepository,
-            expiration = expiration,
-            issuer = issuer,
-            audience = audience
-        )
+        tokenProvider =
+            JwtTokenProvider(
+                jwtKeyManager = jwtKeyManager,
+                userDetailsService = userDetailsService,
+                userRepository = userRepository,
+                expiration = expiration,
+                issuer = issuer,
+                audience = audience
+            )
     }
 
     @Test
     fun `should generate valid JWT token`() {
-        val user = User(
-            id = 1L,
-            name = "Admin",
-            email = "admin@synchtask.com",
-            passwordHash = "hash",
-            role = UserRole.ADMIN
-        )
+        val user =
+            User(
+                id = 1L,
+                name = "Admin",
+                email = "admin@synchtask.com",
+                passwordHash = "hash",
+                role = UserRole.ADMIN
+            )
 
         val userDetails: UserDetails =
             org.springframework.security.core.userdetails.User(
@@ -66,13 +67,14 @@ class JwtTokenProviderTest {
 
     @Test
     fun `should validate token and extract user`() {
-        val user = User(
-            id = 1L,
-            name = "Admin",
-            email = "admin@synchtask.com",
-            passwordHash = "hash",
-            role = UserRole.ADMIN
-        )
+        val user =
+            User(
+                id = 1L,
+                name = "Admin",
+                email = "admin@synchtask.com",
+                passwordHash = "hash",
+                role = UserRole.ADMIN
+            )
 
         val userDetails =
             org.springframework.security.core.userdetails.User(
@@ -104,13 +106,14 @@ class JwtTokenProviderTest {
 
     @Test
     fun `should return null if user not found during validation`() {
-        val user = User(
-            id = 1L,
-            name = "User",
-            email = "ghost@synchtask.com",
-            passwordHash = "hash",
-            role = UserRole.USER
-        )
+        val user =
+            User(
+                id = 1L,
+                name = "User",
+                email = "ghost@synchtask.com",
+                passwordHash = "hash",
+                role = UserRole.USER
+            )
 
         val userDetails =
             org.springframework.security.core.userdetails.User(
@@ -131,13 +134,14 @@ class JwtTokenProviderTest {
 
     @Test
     fun `should return null if user has no roles`() {
-        val user = User(
-            id = 1L,
-            name = "User",
-            email = "norole@synchtask.com",
-            passwordHash = "hash",
-            role = UserRole.USER
-        )
+        val user =
+            User(
+                id = 1L,
+                name = "User",
+                email = "norole@synchtask.com",
+                passwordHash = "hash",
+                role = UserRole.USER
+            )
 
         val userDetails =
             org.springframework.security.core.userdetails.User(
@@ -154,5 +158,26 @@ class JwtTokenProviderTest {
         val extracted = tokenProvider.validateAndExtractUser(token)
 
         assertNull(extracted)
+    }
+
+    @Test
+    fun `should extract token from valid bearer header`() {
+        val result = tokenProvider.extractTokenFromHeader("Bearer abc.def.ghi")
+
+        assertEquals("abc.def.ghi", result)
+    }
+
+    @Test
+    fun `should return null for invalid auth scheme`() {
+        val result = tokenProvider.extractTokenFromHeader("Basic abc123")
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `should return null for blank bearer token`() {
+        val result = tokenProvider.extractTokenFromHeader("Bearer   ")
+
+        assertNull(result)
     }
 }

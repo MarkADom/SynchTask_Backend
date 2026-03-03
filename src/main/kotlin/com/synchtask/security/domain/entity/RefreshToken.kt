@@ -28,25 +28,19 @@ import java.time.LocalDateTime
         Index(name = "idx_refresh_user_revoked", columnList = "user_id, is_revoked")
     ]
 )
-data class RefreshToken(
-
+class RefreshToken(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     val user: User,
-
     @Column(nullable = false, unique = true, length = 512)
     val token: String,
-
     @Column(name = "expiry_date", nullable = false)
     val expiryDate: LocalDateTime,
-
     @Column(name = "is_revoked", nullable = false)
     var isRevoked: Boolean = false,
-
     @Column(name = "created_at", nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now()
 ) {
@@ -58,6 +52,5 @@ data class RefreshToken(
         this.isRevoked = true
     }
 
-    fun isExpired(now: LocalDateTime = LocalDateTime.now()): Boolean =
-        expiryDate.isBefore(now)
+    fun isExpired(now: LocalDateTime = LocalDateTime.now()): Boolean = expiryDate.isBefore(now)
 }

@@ -1,0 +1,40 @@
+meta {
+  name: 01 Login security owner
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+script:pre-request {
+  const securityOwnerEmail = bru.getVar("securityOwnerEmail");
+  if (!securityOwnerEmail) throw new Error("Missing required variable: securityOwnerEmail");
+}
+
+body:json {
+  {
+    "email": "{{securityOwnerEmail}}",
+    "password": "{{ownerPassword}}"
+  }
+}
+
+tests {
+  test("status 200", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("capture owner access token", function () {
+    const body = res.getBody({ parse: true });
+    expect(body.accessToken).to.be.a('string');
+    bru.setVar("securityOwnerToken", body.accessToken);
+    bru.setVar("securityOwnerId", String(body.user.id));
+  });
+}

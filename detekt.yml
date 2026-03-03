@@ -10,6 +10,11 @@ style:
     active: true
     maxLineLength: 140
 
+  ReturnCount:
+      active: true
+      max: 4
+      excludeGuardClauses: true
+
 naming:
   ClassNaming:
     active: true
@@ -18,3 +23,12 @@ naming:
 comments:
   UndocumentedPublicClass:
     active: false
+
+complexity:
+  LongParameterList:
+    active: true
+    functionThreshold: 7
+    constructorThreshold: 12
+    ignoreDefaultParameters: true
+    excludes: ['**/domain/entity/**']
+
