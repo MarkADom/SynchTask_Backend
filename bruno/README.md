@@ -1,3 +1,5 @@
+![API Tests](https://img.shields.io/badge/API%20Tests-Bruno-blue)
+
 # Bruno API Test Suites
 
 This folder contains integration suites for SynchTask backend.

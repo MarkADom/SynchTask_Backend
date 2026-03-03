@@ -1,10 +1,10 @@
 # Configuration Guide
 
-# Profiles
+## Profiles
 
 - **Default (`application.yml`)**: release posture (`ddl-auto=validate`, reduced actuator exposure, quieter logs).
 - **Dev (`application-dev.yml`)**: local convenience (`ddl-auto=update`, verbose logs, broader actuator exposure).
-- **Test (`application-test.yml`)**: H2 in-memory, `create-drop`, websocket disabled.
+- **Test (`application-test.yml`)**: H2 in-memory, `create-drop`, WebSocket disabled.
 
 Run locally with dev profile:
 
@@ -15,8 +15,6 @@ SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 ## Required environment variables
 
 Start from template:
-
-The API supports normalized mutation contracts with request bodies and more resource-oriented paths. New preferred patterns include:
 
 ```bash
 cp .envrc.example .envrc
@@ -35,5 +33,4 @@ Main variables used by runtime config:
 ## Notes
 
 - Never commit `.envrc` or real credentials.
-
 - Release environments should keep schema migrations external (Flyway/Liquibase) and avoid auto-DDL updates.

@@ -1,3 +1,5 @@
+![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-brightgreen)
+
 # OpenAPI
 
 - Source export in repo: [`api-docs.json`](api-docs.json)

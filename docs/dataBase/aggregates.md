@@ -44,14 +44,15 @@ and describes aggregate boundaries used in SynchTask.
 - `task_attachments`
 - `task_links`
 - `task_labels`
-- `board_collaborators`
-- `task_collaborators`
+- `board_membership`
+- `task_membership`
 
 **Responsibilities:**
 - Board ownership and collaboration management
 - Task lifecycle and status transitions within board scope
 - Task metadata (labels, links, attachments, comments)
-- Membership visibility through board/task collaborator join tables
+- Membership visibility through board/task membership join tables
+
 
 **Rules:**
 - Tasks are modeled as board-contained entities, not standalone aggregate roots.
@@ -66,7 +67,7 @@ and describes aggregate boundaries used in SynchTask.
 - `projects`
 
 **Owned entities / tables:**
-- `project_members`
+- `project_membership`
 
 **References:**
 - `boards.project_id` links boards to projects

@@ -1,11 +1,10 @@
 # Public vs Protected Endpoints
 
-Source of truth:
+Source of truth: `SecurityConfig.securityFilterChain()`.
 
-- URL rules in `SecurityConfig.securityFilterChain()`
-- Method guards via `@PreAuthorize`
+## Public endpoints (`permitAll`)
 
-## Public endpoints (no token required)
+### Authentication and discovery
 
 - `POST /auth/register`
 - `POST /auth/login`
@@ -14,22 +13,44 @@ Source of truth:
 - `GET /jwks`
 - `GET /auth/.well-known/openid-configuration`
 - `GET /auth/.well-known/oauth-authorization-server`
-- `GET /swagger-ui/**`, `GET /v3/api-docs/**`
-- `GET /actuator/health`, `GET /actuator/info`
-- `/oauth2/**` entry endpoints
+- `/oauth2/**`
 
-## Protected by authentication
+### API documentation and static helpers
 
-Default is `anyRequest().authenticated()`.
-Examples: `/projects/**`, `/boards/**`, `/tasks/**`, `/users/**`, `/friends/**`, `/chat/**`, `/notifications/**`.
+- `/swagger-ui/**`
+- `/swagger-ui.html`
+- `/v3/api-docs`
+- `/v3/api-docs/**`
+- `/swagger-resources/**`
+- `/webjars/**`
+- `/favicon.ico`
 
-Expected behavior in tests:
+### WebSocket handshake endpoints
 
-- Missing/invalid token on protected endpoints => `401 Unauthorized`
-- Authenticated but forbidden by domain ownership/membership rules => `403 Forbidden`
+- `/ws`
+- `/ws/**`
+- `/ws-notifications`
+- `/ws-notifications/**`
 
-## Extra protection notes
+Notes:
+- These are HTTP handshake paths allowed at URL filter level.
+- Message-level authorization still applies in WebSocket security configuration.
 
-- Non-health/info actuator endpoints require `ROLE_ADMIN`.
-- `permitAll` at URL level does not bypass stricter method-level `@PreAuthorize` checks.
+### Other public routes
 
+- `OPTIONS /**` (CORS preflight)
+- `GET /actuator/health`
+- `GET /actuator/info`
+- `/error`
+
+## Protected endpoints
+
+- Default rule: `anyRequest().authenticated()`.
+- Non-health/info actuator endpoints: `ROLE_ADMIN` required.
+- Domain endpoints (`/projects/**`, `/boards/**`, `/tasks/**`, `/users/**`, `/friends/**`, `/chat/**`, `/notifications/**`) require authenticated access, with additional service-level ownership/membership checks where applicable.
+
+## Expected security semantics
+
+- Missing/invalid token on protected endpoint: `401 Unauthorized`
+- Authenticated but denied by role/ownership/membership rules: `403 Forbidden`
+- Resource cannot be resolved for caller scope in some service flows: `404 Not Found`
