@@ -8,7 +8,7 @@ currently generated via JPA/Hibernate mappings.
 The current MySQL dump includes **20 tables**:
 
 - `activities`
-- `board_collaborators`
+- `board_membership`
 - `boards`
 - `chat_messages`
 - `chat_room_participants`
@@ -16,11 +16,11 @@ The current MySQL dump includes **20 tables**:
 - `friends`
 - `jwt_keys`
 - `notifications`
-- `project_members`
+- `project_membership`
 - `projects`
 - `refresh_tokens`
 - `task_attachments`
-- `task_collaborators`
+- `task_membership`
 - `task_comments`
 - `task_labels`
 - `task_links`
@@ -43,10 +43,10 @@ Foreign keys enforce the most important consistency rules, including:
 
 Join tables with composite primary keys guarantee uniqueness of memberships:
 
-- `board_collaborators (board_id, user_id)`
-- `project_members (project_id, user_id)`
+- `board_membership (board_id, user_id)`
+- `project_membership (project_id, user_id)`
 - `chat_room_participants (chat_room_id, user_id)`
-- `task_collaborators (task_id, user_id)`
+- `task_membership (task_id, user_id)`
 - `task_labels (task_id, label)`
 
 ## Key uniqueness constraints
@@ -86,4 +86,4 @@ Indexes are present for common query patterns, for example:
 
 ## ER Diagram
 
-See `docs/dataBase/er-diagram.md`.
+See `docs/database/er-diagram.md`.

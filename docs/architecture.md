@@ -31,5 +31,4 @@ This is a concise view of how the backend is organized.
 
 - Configuration and profiles: [`configuration.md`](configuration.md)
 - Public endpoint posture: [`security-open-endpoints.md`](security-open-endpoints.md)
-- Aggregate boundaries: [`dataBase/aggregates.md`](dataBase/aggregates.md)
-.md`
+- Aggregate boundaries: [`database/aggregates.md`](database/aggregates.md)

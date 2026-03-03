@@ -1,10 +1,25 @@
 # SynchTask Backend
 
-![CI workflow](docs/assets/badge-ci.svg)
-![OpenAPI](docs/assets/badge-openapi.svg)
-![Bruno API tests](docs/assets/badge-bruno.svg)
+![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-purple)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)
+![Gradle](https://img.shields.io/badge/Gradle-Build-blueviolet)
+![JWT](https://img.shields.io/badge/Auth-JWT%20RS256-blue)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-Spring Boot 3 + Kotlin backend for SynchTask.
+SynchTask Backend is a production-ready collaborative task management API built with Kotlin (JVM), Spring Boot 3 and Clean Architecture principles.
+It serves as the backend core of the SynchTask ecosystem and is developed as a portfolio-grade engineering project.
+
+## Scope (v1.0)
+
+- Monolithic backend (no microservices)
+- Stateless JWT security (RS256 + JWKS)
+- Hybrid authorization (global roles + membership-based access)
+- Validation-hardened HTTP contract
+- Backend-only repository (frontend under development)
+
+## Trade-offs & Design Decisions
+
+See: [Engineering Decisions (v1.0)](docs/engineering_decisions_v1.0.md)
 
 ## Tech stack
 
@@ -18,7 +33,6 @@ Spring Boot 3 + Kotlin backend for SynchTask.
 
 1. Configure environment variables:
 
-
 ```bash
 cp .envrc.example .envrc
 # edit values for your local environment
@@ -30,8 +44,7 @@ If you use direnv:
 direnv allow
 ```
 
-
-2. Run the application
+2. Run the application:
 
 ```bash
 ./gradlew bootRun
@@ -40,7 +53,7 @@ direnv allow
 3. Run with dev profile:
 
 ```bash
-SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun`
+SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 ```
 
 4. Open API docs:
@@ -48,82 +61,23 @@ SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun`
 - Swagger UI: `http://localhost:8081/swagger-ui/index.html`
 - OpenAPI JSON: `http://localhost:8081/v3/api-docs`
 
----
-
-## Testing & Quality
-
-Run the main local checks:
+## Testing & quality
 
 ```bash
 ./gradlew test
 ./gradlew detekt
 ./gradlew jacocoTestReport
 ```
----
 
-### SonarQube local (optional)
+## Documentation map
 
-Start SonarQube:
-
-```bash
-docker compose -f docker/docker-compose.sonar.yml up -d
-```
-
-Run analysis:
-
-```bash
-./gradlew sonar
-```
-
-Stop SonarQube:
-
-```bash
-docker compose -f docker/docker-compose.sonar.yml down
-```
-
-- SonarQube UI: http://localhost:9001/projects
----
-
-## API Testing (Bruno)
-
-For full configuration and profile notes, see [`docs/configuration.md`](docs/configuration.md).
-Bruno collections live in [`bruno/`](bruno).
-Run instructions and suite details are in [`bruno/README.md`](bruno/README.md).
-
----
-
-## Architecture & Data Model
-
-Main aggregate roots:
-
-- User
-- Board
-- Project
-- ChatRoom
-
-Detailed docs live in [`docs/README.md`](docs/README.md).
-
----
-
-## Docs map
-
-- Documentation index: [`docs/README.md`](docs/README.md)
-- Architecture overview: [`docs/architecture.md`](docs/architecture.md)
-- Database notes and ER diagram: [`docs/dataBase/`](docs/dataBase)
-- OpenAPI export and usage: [`docs/openapi/`](docs/openapi)
-- Documentation audit for v1.0: [`docs/documentation-audit.md`](docs/documentation-audit.md)
-
----
-
-## Contributing
-
-Contributions are welcome. Keep changes:
-
-- clean and readable
-- aligned with architectural boundaries
-- documented when public API behavior changes
-
----
+- [Architecture](docs/architecture.md)
+- [Configuration](docs/configuration.md)
+- [HTTP Error Semantics](docs/http-error-semantics.md)
+- [Database](docs/database/)
+- [Engineering Decisions (v1.0)](docs/engineering_decisions_v1.0.md)
+- [OpenAPI Export](docs/openapi/api-docs.json)
+- [Bruno Test Suites](bruno/README.md)
 
 ## License
 

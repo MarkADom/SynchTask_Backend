@@ -19,9 +19,9 @@ erDiagram
     tasks ||--o{ task_links : has
     tasks ||--o{ task_labels : tagged
 
-    boards ||--o{ board_collaborators : membership
-    tasks ||--o{ task_collaborators : membership
-    projects ||--o{ project_members : membership
+    boards ||--o{ board_membership : membership
+    tasks ||--o{ task_membership : membership
+    projects ||--o{ project_membership : membership
 
     users ||--o{ friends : requester
     users ||--o{ activities : actor
@@ -34,4 +34,4 @@ erDiagram
 ## Notes
 
 - `jwt_keys` is infrastructure persistence and intentionally isolated from business aggregates.
-- Join tables (`*_members`, `*_collaborators`, `chat_room_participants`) use composite keys for uniqueness.
+- Join tables (`board_membership`, `project_membership`, `task_membership`, `chat_room_participants`) use composite keys for uniqueness.
