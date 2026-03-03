@@ -5,6 +5,7 @@ import com.synchtask.security.application.dto.JwksResponseDTO
 import com.synchtask.security.application.dto.TokenPairDTO
 import com.synchtask.security.application.manager.AuthManager
 import com.synchtask.security.application.service.AuthService
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.security.infrastructure.jwt.JwtKeyManager
 import com.synchtask.user.application.dto.UserLoginDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
@@ -26,7 +27,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.core.user.OAuth2User
-import org.springframework.web.server.ResponseStatusException
 
 class AuthControllerTest {
     private lateinit var authManager: AuthManager
@@ -115,10 +115,9 @@ class AuthControllerTest {
         val loginDto = UserLoginDTO(email = "fake@email.com", password = "wrong")
         every { authManager.authenticateUser(any(), any()) } throws SecurityException("Invalid credentials")
 
-        val exception = assertThrows(ResponseStatusException::class.java) { authController.login(loginDto) }
+        val exception = assertThrows(InvalidCredentialsException::class.java) { authController.login(loginDto) }
 
-        assertEquals(HttpStatus.UNAUTHORIZED, exception.statusCode)
-        assertEquals("Invalid credentials", exception.reason)
+        assertEquals("Invalid credentials", exception.message)
         verify { authManager.authenticateUser(loginDto.email, loginDto.password) }
     }
 

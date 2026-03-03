@@ -1,5 +1,6 @@
 package com.synchtask.security.infrastructure.jwt
 
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*
@@ -62,7 +63,7 @@ class CustomJwtAuthenticationConverterTest {
         every { jwt.claims } returns claims
 
         val exception =
-            assertThrows(IllegalArgumentException::class.java) {
+            assertThrows(InvalidCredentialsException::class.java) {
                 converter.convert(jwt)
             }
 

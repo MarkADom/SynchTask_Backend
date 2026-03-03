@@ -1,7 +1,7 @@
 package com.synchtask.user.application.service
 
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.application.dto.UserResponseDTO
-import com.synchtask.user.application.dto.UserStatusDTO
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.exception.UserAlreadyExistsException
@@ -333,7 +333,7 @@ class UserServiceTest {
     fun `should throw if setting online status for missing user`() {
         every { userRepository.findByEmail(any()) } returns Optional.empty()
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ResourceNotFoundException> {
             userService.setUserOnlineStatus("ghost@email.com", true)
         }
     }
@@ -342,7 +342,7 @@ class UserServiceTest {
     fun `should throw if updating activity for missing user`() {
         every { userRepository.findByEmail(any()) } returns Optional.empty()
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ResourceNotFoundException> {
             userService.updateLastActivity("ghost@email.com")
         }
     }

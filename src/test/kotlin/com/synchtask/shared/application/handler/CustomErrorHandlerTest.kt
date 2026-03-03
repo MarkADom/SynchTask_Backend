@@ -1,10 +1,10 @@
 package com.synchtask.shared.application.handler
 
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.friend.domain.exception.FriendRequestAlreadySentException
 import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.shared.dto.ErrorResponseDTO
 import com.synchtask.shared.exception.AccessDeniedException
-import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.exception.UserAlreadyExistsException
 import io.jsonwebtoken.ExpiredJwtException

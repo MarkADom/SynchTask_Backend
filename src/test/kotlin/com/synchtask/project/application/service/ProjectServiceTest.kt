@@ -8,6 +8,7 @@ import com.synchtask.project.domain.entity.ProjectMember
 import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.shared.domain.membership.MembershipRole
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.domain.entity.User
 import io.mockk.every
 import io.mockk.mockk
@@ -107,6 +108,7 @@ class ProjectServiceTest {
         )
 
         every { projectRepository.findById(project.id!!) } returns java.util.Optional.of(project)
+        every { projectMemberRepository.existsByProjectIdAndUserId(project.id!!, owner.id!!) } returns true
         every { projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!) } returns
 
             ProjectMember(
@@ -161,6 +163,7 @@ class ProjectServiceTest {
         )
 
         every { projectRepository.findById(project.id!!) } returns java.util.Optional.of(project)
+        every { projectMemberRepository.existsByProjectIdAndUserId(project.id!!, owner.id!!) } returns true
         every { projectMemberRepository.findByProjectIdAndUserId(project.id!!, owner.id!!) } returns
             ProjectMember(
                 project = project,
@@ -213,7 +216,7 @@ class ProjectServiceTest {
         every { projectRepository.findById(project.id!!) } returns java.util.Optional.of(project)
         every { projectMemberRepository.existsByProjectIdAndUserId(project.id!!, owner.id!!) } returns false
 
-        assertThrows(NoSuchElementException::class.java) {
+        assertThrows(ResourceNotFoundException::class.java) {
             service.getById(project.id!!, owner)
         }
     }

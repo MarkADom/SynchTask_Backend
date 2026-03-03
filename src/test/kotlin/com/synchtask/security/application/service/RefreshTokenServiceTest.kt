@@ -2,7 +2,7 @@ package com.synchtask.security.application.service
 
 import com.synchtask.security.domain.entity.RefreshToken
 import com.synchtask.security.domain.repository.RefreshTokenRepository
-import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.user.domain.entity.User
 import io.mockk.*
 import org.junit.jupiter.api.*
@@ -75,7 +75,7 @@ class RefreshTokenServiceTest {
         every { refreshTokenRepository.findByToken("revoked-token") } returns Optional.of(token)
 
         val exception =
-            assertFailsWith<IllegalArgumentException> {
+            assertFailsWith<InvalidCredentialsException> {
                 refreshTokenService.validateRefreshToken("revoked-token")
             }
 
@@ -95,7 +95,7 @@ class RefreshTokenServiceTest {
         every { refreshTokenRepository.findByToken("expired-token") } returns Optional.of(token)
 
         val exception =
-            assertFailsWith<IllegalArgumentException> {
+            assertFailsWith<InvalidCredentialsException> {
                 refreshTokenService.validateRefreshToken("expired-token")
             }
 
@@ -157,7 +157,7 @@ class RefreshTokenServiceTest {
     fun `should throw if token not found during revoke`() {
         every { refreshTokenRepository.findByToken("missing-token") } returns Optional.empty()
 
-        assertFailsWith<ResourceNotFoundException> {
+        assertFailsWith<InvalidCredentialsException> {
             refreshTokenService.revokeToken("missing-token")
         }
     }
@@ -166,7 +166,7 @@ class RefreshTokenServiceTest {
     fun `should throw if token not found during validate`() {
         every { refreshTokenRepository.findByToken("missing-token") } returns Optional.empty()
 
-        assertFailsWith<ResourceNotFoundException> {
+        assertFailsWith<InvalidCredentialsException> {
             refreshTokenService.validateRefreshToken("missing-token")
         }
     }
