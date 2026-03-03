@@ -100,6 +100,14 @@ class CustomErrorHandlerTest {
     }
 
     @Test
+    fun `should handle IllegalArgumentException as bad request`() {
+        val response = handler.handleIllegalArgument(IllegalArgumentException("invalid argument"))
+
+        Assertions.assertEquals("invalid argument", response.message)
+        Assertions.assertEquals("Bad Request", response.error)
+    }
+
+    @Test
     fun `should handle spring access denied exceptions`() {
         val response = handler.handleSpringAccessDenied(
             org.springframework.security.access.AccessDeniedException("denied"))

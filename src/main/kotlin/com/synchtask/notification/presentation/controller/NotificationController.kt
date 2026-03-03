@@ -7,6 +7,7 @@ import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -33,7 +34,7 @@ class NotificationController(
     @PreAuthorize("isAuthenticated()")
     fun sendNotification(
         @AuthenticationPrincipal user: UserDetails,
-        @RequestBody request: NotificationRequestDTO,
+        @Valid @RequestBody request: NotificationRequestDTO,
     ): ResponseEntity<ApiMessageResponseDTO> {
         notificationService.sendNotificationAsActor(
             actorEmail = user.username,

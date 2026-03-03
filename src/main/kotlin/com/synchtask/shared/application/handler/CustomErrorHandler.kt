@@ -114,6 +114,14 @@ class CustomErrorHandler {
         return ErrorResponseDTO(message = message.ifBlank { "Constraint violation" }, error = "Bad Request")
     }
 
+    @ExceptionHandler(IllegalArgumentException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    fun handleIllegalArgument(ex: IllegalArgumentException): ErrorResponseDTO {
+        logger.warn("Illegal argument: ${ex.message}")
+        return ErrorResponseDTO(message = ex.message ?: "Invalid request", error = "Bad Request")
+    }
+
     @ExceptionHandler(SpringAccessDeniedException::class, AuthorizationDeniedException::class)
     fun handleSpringAccessDenied(ex: Exception): ResponseEntity<ErrorResponseDTO> {
         logger.warn("Access denied by spring security: ${ex.message}")

@@ -4,6 +4,7 @@ import com.synchtask.friend.application.dto.FriendRequestDTO
 import com.synchtask.friend.application.dto.FriendResponseDTO
 import com.synchtask.friend.application.service.FriendService
 import com.synchtask.shared.dto.ApiMessageResponseDTO
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -29,7 +30,7 @@ class FriendController(
     @PostMapping("/request", produces = ["application/json"])
     @PreAuthorize("isAuthenticated()")
     fun sendFriendRequest(
-        @RequestBody request: FriendRequestDTO,
+        @Valid @RequestBody request: FriendRequestDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<ApiMessageResponseDTO> {
         friendService.sendFriendRequest(user.username, request.friendEmail)
