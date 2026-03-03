@@ -17,6 +17,10 @@ It serves as the backend core of the SynchTask ecosystem and is developed as a p
 - Validation-hardened HTTP contract
 - Backend-only repository (frontend under development)
 
+## Trade-offs & Design Decisions
+
+See: [Engineering Decisions (v1.0)](docs/engineering_decisions_v1.0.md)
+
 ## Tech stack
 
 - Kotlin + Spring Boot 3

@@ -12,7 +12,6 @@ Source of truth: `SecurityConfig.securityFilterChain()`.
 - `GET /auth/jwks`
 - `GET /jwks`
 - `GET /auth/.well-known/openid-configuration`
-- `GET /auth/.well-known/oauth-authorization-server`
 - `/oauth2/**`
 
 ### API documentation and static helpers
