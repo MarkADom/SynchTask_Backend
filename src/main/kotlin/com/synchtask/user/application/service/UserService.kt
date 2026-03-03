@@ -1,5 +1,6 @@
 package com.synchtask.user.application.service
 
+import com.synchtask.shared.exception.InvalidInputException
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.application.dto.UserResponseDTO
 import com.synchtask.user.application.dto.UserStatusDTO
@@ -24,7 +25,7 @@ import java.util.UUID
 @Suppress("TooManyFunctions")
 class UserService(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
 ) {
     private val logger = LoggerFactory.getLogger(UserService::class.java)
 
@@ -85,7 +86,7 @@ class UserService(
                 .orElseThrow { ResourceNotFoundException("User not found") }
 
         if (!passwordEncoder.matches(currentPassword, user.passwordHash)) {
-            throw IllegalArgumentException("Current password is incorrect")
+            throw InvalidInputException("Current password is incorrect")
         }
 
         user.passwordHash = passwordEncoder.encode(newPassword)
@@ -109,7 +110,7 @@ class UserService(
     fun setUserOnlineStatus(email: String, isOnline: Boolean) {
         val user =
             userRepository.findByEmail(email)
-                .orElseThrow { IllegalArgumentException("User not found") }
+                .orElseThrow { ResourceNotFoundException("User not found") }
 
         user.isOnline = isOnline
         if (!isOnline) {
@@ -124,7 +125,7 @@ class UserService(
     fun updateLastActivity(email: String) {
         val user =
             userRepository.findByEmail(email)
-                .orElseThrow { IllegalArgumentException("User not found") }
+                .orElseThrow { ResourceNotFoundException("User not found") }
 
         user.lastActivity = LocalDateTime.now()
         userRepository.save(user)

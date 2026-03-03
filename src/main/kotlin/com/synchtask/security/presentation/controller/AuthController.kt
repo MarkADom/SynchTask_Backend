@@ -8,6 +8,7 @@ import com.synchtask.security.application.dto.OidcUserInfoDTO
 import com.synchtask.security.application.dto.RefreshTokenRequestDTO
 import com.synchtask.security.application.dto.TokenPairDTO
 import com.synchtask.security.infrastructure.jwt.JwtKeyManager
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.user.application.dto.UserLoginDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
@@ -39,7 +40,9 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
+import com.synchtask.shared.exception.InvalidInputException
+import com.synchtask.shared.exception.ResourceNotFoundException
+
 
 /**
  * Authentication endpoints for registration, login and token management.
@@ -69,7 +72,7 @@ class AuthController(
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
             UserResponseDTO(
-                id = newUser.id ?: throw IllegalArgumentException("User ID cannot be null"),
+                id = newUser.id ?: throw ResourceNotFoundException("Registered user id is missing"),
                 name = newUser.name,
                 email = newUser.email,
                 profilePictureUrl = newUser.profilePictureUrl ?: "N/A"
@@ -85,11 +88,11 @@ class AuthController(
             val tokens = authManager.authenticateUser(loginRequest.email, loginRequest.password)
             val user =
                 userService.getUserByEmail(loginRequest.email)
-                    ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+                    ?: throw ResourceNotFoundException("User not found")
 
             val userDto =
                 UserResponseDTO(
-                    id = user.id ?: throw IllegalArgumentException("User ID cannot be null"),
+                    id = user.id ?: throw ResourceNotFoundException("User ID cannot be null"),
                     name = user.name,
                     email = user.email,
                     profilePictureUrl = user.profilePictureUrl ?: "N/A"
@@ -104,7 +107,7 @@ class AuthController(
 
         } catch (e: SecurityException) {
             logger.warn("Authentication failed", e)
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials", e)
+            throw InvalidCredentialsException("Invalid credentials")
         }
     }
 
@@ -173,7 +176,7 @@ class AuthController(
         @RequestParam newRole: UserRole,
     ): ResponseEntity<ApiMessageResponseDTO> {
         if (newRole == UserRole.ADMIN) {
-            throw IllegalArgumentException("Assigning 'ADMIN' role is blocked via API.")
+            throw InvalidInputException("Assigning 'ADMIN' role is blocked via API.")
         }
 
         authService.updateUserRole(adminUser.username, userId, newRole)

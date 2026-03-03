@@ -1,5 +1,6 @@
 package com.synchtask.security.infrastructure.jwt
 
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -18,7 +19,7 @@ class CustomJwtAuthenticationConverter(
     override fun convert(jwt: Jwt): UsernamePasswordAuthenticationToken {
         val username =
             jwt.claims["sub"] as String?
-                ?: throw IllegalArgumentException("JWT does not contain 'sub' claim")
+                ?: throw InvalidCredentialsException("JWT does not contain 'sub' claim")
 
         val userDetails = userDetailsService.loadUserByUsername(username)
 

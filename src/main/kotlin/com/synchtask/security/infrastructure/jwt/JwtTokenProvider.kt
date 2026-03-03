@@ -5,7 +5,7 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jws
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
-import jakarta.servlet.http.HttpServletRequest
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.userdetails.UserDetails
@@ -37,7 +37,7 @@ class JwtTokenProvider(
 
         val user =
             userRepository.findByEmail(userDetails.username)
-                .orElseThrow { IllegalArgumentException("User not found") }
+                .orElseThrow { InvalidCredentialsException("User not found") }
 
         return Jwts.builder()
             .subject(user.email)

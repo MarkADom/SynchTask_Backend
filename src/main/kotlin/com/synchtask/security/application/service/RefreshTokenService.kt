@@ -2,7 +2,7 @@ package com.synchtask.security.application.service
 
 import com.synchtask.security.domain.entity.RefreshToken
 import com.synchtask.security.domain.repository.RefreshTokenRepository
-import com.synchtask.shared.exception.ResourceNotFoundException
+import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.user.domain.entity.User
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -29,11 +29,13 @@ class RefreshTokenService(
     fun validateRefreshToken(token: String): RefreshToken {
         val refreshToken =
             refreshTokenRepository.findByToken(token)
-                .orElseThrow { ResourceNotFoundException("Invalid refresh token") }
-
-        require(!refreshToken.isRevoked) { "Refresh token is revoked" }
-        require(refreshToken.expiryDate.isAfter(LocalDateTime.now())) { "Refresh token is expired" }
-
+                .orElseThrow { InvalidCredentialsException("Invalid refresh token") }
+        if (refreshToken.isRevoked) {
+            throw InvalidCredentialsException("Refresh token is revoked")
+        }
+        if (!refreshToken.expiryDate.isAfter(LocalDateTime.now())) {
+            throw InvalidCredentialsException("Refresh token is expired")
+        }
         return refreshToken
     }
 
@@ -41,7 +43,7 @@ class RefreshTokenService(
     fun revokeToken(token: String) {
         val refreshToken =
             refreshTokenRepository.findByToken(token)
-                .orElseThrow { ResourceNotFoundException("Refresh token not found") }
+                .orElseThrow { InvalidCredentialsException("Refresh token not found") }
 
         refreshToken.isRevoked = true
         refreshTokenRepository.save(refreshToken)

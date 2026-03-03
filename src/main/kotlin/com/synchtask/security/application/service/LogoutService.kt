@@ -27,9 +27,10 @@ class LogoutService(
 
         val refreshToken = refreshTokenRepository.findByToken(token)
         if (refreshToken.isPresent) {
-            refreshToken.get().isRevoked = true
-            refreshTokenRepository.save(refreshToken.get())
-            logger.info("Revoked refresh token for user: ${refreshToken.get().user.email}")
+            val existingToken = refreshToken.get()
+            existingToken.isRevoked = true
+            refreshTokenRepository.save(existingToken)
+            logger.info("Revoked refresh token for user: ${existingToken.user.email}")
         } else {
             logger.warn("No refresh token found for the provided token")
         }

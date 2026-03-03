@@ -8,14 +8,14 @@ import com.synchtask.security.infrastructure.jwt.JwtTokenProvider
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.repository.UserRepository
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import org.springframework.web.server.ResponseStatusException
+import com.synchtask.shared.exception.AccessDeniedException
+import com.synchtask.shared.exception.ResourceNotFoundException
 
 @Service
 class AuthService(
@@ -68,20 +68,20 @@ class AuthService(
     fun updateUserRole(adminEmail: String, targetUserId: Long, newRole: UserRole) {
         val adminUser =
             userRepository.findByEmail(adminEmail)
-                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Admin not found") }
+                .orElseThrow { ResourceNotFoundException("Admin not found") }
 
         if (adminUser.role != UserRole.ADMIN) {
             logger.warn("Unauthorized role update attempt by $adminEmail")
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can update roles")
+            throw AccessDeniedException("Only ADMIN can update roles")
         }
 
         val targetUser =
             userRepository.findById(targetUserId)
-                .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Target user not found") }
+                .orElseThrow { ResourceNotFoundException("Target user not found") }
 
         if (newRole == UserRole.ADMIN) {
             logger.warn("Blocked ADMIN role assignment via API")
-            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot assign ADMIN role via API")
+            throw AccessDeniedException("Cannot assign ADMIN role via API")
         }
 
         targetUser.role = newRole

@@ -14,6 +14,8 @@ import com.synchtask.project.domain.repository.ProjectMemberRepository
 import com.synchtask.project.domain.repository.ProjectRepository
 import com.synchtask.project.presentation.mapper.ProjectMapper
 import com.synchtask.shared.domain.membership.MembershipRole
+import com.synchtask.shared.exception.AccessDeniedException
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import org.slf4j.LoggerFactory
@@ -89,15 +91,19 @@ class ProjectService(
     fun getById(id: Long, actor: User): ProjectResponseDTO =
         projectRepository.findById(id)
             .filter { hasProjectAccess(it, actor) }
-            .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
+            .orElseThrow { ResourceNotFoundException("Project $id not found") }
             .let(ProjectMapper::toResponse)
 
     @Transactional
     fun update(id: Long, dto: ProjectUpdateDTO, actor: User): ProjectResponseDTO {
         val project =
             projectRepository.findById(id)
-                .filter { isProjectOwner(it, actor) }
-                .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
+                .filter { hasProjectAccess(it, actor) }
+                .orElseThrow { ResourceNotFoundException("Project $id not found") }
+
+        if (!isProjectOwner(project, actor)) {
+            throw AccessDeniedException("Only the project owner can perform this action")
+        }
 
         var boardsUpdated = false
 
@@ -148,8 +154,12 @@ class ProjectService(
     fun delete(id: Long, actor: User) {
         val project =
             projectRepository.findById(id)
-                .filter { isProjectOwner(it, actor) }
-                .orElseThrow { NoSuchElementException("Project $id not found or unauthorized") }
+                .filter { hasProjectAccess(it, actor) }
+                .orElseThrow { ResourceNotFoundException("Project $id not found") }
+
+        if (!isProjectOwner(project, actor)) {
+            throw AccessDeniedException("Only the project owner can perform this action")
+        }
 
         val snapshot =
             ActivityContextSnapshot(
@@ -170,7 +180,7 @@ class ProjectService(
 
     private fun validateBoardsExist(expectedIds: List<Long>, actualBoards: List<Board>) {
         if (actualBoards.size != expectedIds.size) {
-            throw IllegalArgumentException("One or more boards not found for provided IDs")
+            throw ResourceNotFoundException("One or more boards not found for provided IDs")
         }
     }
 
