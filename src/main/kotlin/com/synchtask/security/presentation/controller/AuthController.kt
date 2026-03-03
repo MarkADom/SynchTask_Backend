@@ -64,7 +64,7 @@ class AuthController(
     }
 
     @PostMapping("/register")
-    fun registerUser(@RequestBody signUpRequest: UserRegistrationDTO): ResponseEntity<UserResponseDTO> {
+    fun registerUser(@Valid @RequestBody signUpRequest: UserRegistrationDTO): ResponseEntity<UserResponseDTO> {
         logger.info("Registering new user: ${signUpRequest.email}")
 
         val newUser = authManager.registerUser(signUpRequest)
@@ -81,7 +81,7 @@ class AuthController(
     }
 
     @PostMapping("/login")
-    fun login(@RequestBody loginRequest: UserLoginDTO): ResponseEntity<AuthLoginResponseDTO> {
+    fun login(@Valid @RequestBody loginRequest: UserLoginDTO): ResponseEntity<AuthLoginResponseDTO> {
         logger.info("Login attempt for email: ${loginRequest.email}")
 
         return try {

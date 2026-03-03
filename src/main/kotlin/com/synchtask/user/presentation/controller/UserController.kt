@@ -56,7 +56,7 @@ class UserController(
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    fun createUser(@RequestBody userRegistrationDTO: UserRegistrationDTO): ResponseEntity<UserResponseDTO> {
+    fun createUser(@Valid @RequestBody userRegistrationDTO: UserRegistrationDTO): ResponseEntity<UserResponseDTO> {
         val newUser =
             userService.createUser(
                 UserCommandMapper.toNewUser(
@@ -95,7 +95,7 @@ class UserController(
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #id == authentication.principal.id")
     fun updateUser(
         @PathVariable id: Long,
-        @RequestBody updateUserDTO: UpdateUserDTO,
+        @Valid @RequestBody updateUserDTO: UpdateUserDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<UserResponseDTO> {
         val userEmail = authenticatedUserService.requireUser(user).email
@@ -170,7 +170,7 @@ class UserController(
     @PutMapping("/me")
     @PreAuthorize("isAuthenticated()")
     fun updateCurrentUser(
-        @RequestBody updateUserDTO: UpdateUserDTO,
+        @Valid @RequestBody updateUserDTO: UpdateUserDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<UserResponseDTO> {
         val currentUser = authenticatedUserService.requireUser(user)

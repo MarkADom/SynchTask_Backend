@@ -12,6 +12,7 @@ import com.synchtask.task.application.service.TaskService
 import com.synchtask.task.domain.entity.TaskStatus
 import com.synchtask.task.presentation.mapper.TaskMapper
 import com.synchtask.user.application.service.AuthenticatedUserService
+import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
@@ -35,7 +36,7 @@ class TaskController(
 ) {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    fun createTask(@RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
+    fun createTask(@Valid @RequestBody request: TaskCreateDTO, @AuthenticationPrincipal user: UserDetails): TaskResponseDTO {
         val creator = authenticatedUserService.requireUser(user)
         val created = taskService.createTask(creator, request)
         return TaskMapper.toResponse(created)
@@ -84,7 +85,7 @@ class TaskController(
     @PreAuthorize("isAuthenticated()")
     fun updateTask(
         @PathVariable taskId: Long,
-        @RequestBody updatedTask: TaskUpdateDTO,
+        @Valid @RequestBody updatedTask: TaskUpdateDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<TaskResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
@@ -136,7 +137,7 @@ class TaskController(
     @PreAuthorize("isAuthenticated()")
     fun updateLabels(
         @PathVariable taskId: Long,
-        @RequestBody request: TaskLabelUpdateDTO,
+        @Valid @RequestBody request: TaskLabelUpdateDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<ApiMessageResponseDTO> {
         val userEntity = authenticatedUserService.requireUser(user)
@@ -149,7 +150,7 @@ class TaskController(
     @PreAuthorize("isAuthenticated()")
     fun updateAssignees(
         @PathVariable taskId: Long,
-        @RequestBody request: TaskAssigneeUpdateDTO,
+        @Valid @RequestBody request: TaskAssigneeUpdateDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<ApiMessageResponseDTO> {
         val userEntity = authenticatedUserService.requireUser(user)

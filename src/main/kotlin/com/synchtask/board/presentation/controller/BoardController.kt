@@ -9,6 +9,7 @@ import com.synchtask.board.application.service.BoardService
 import com.synchtask.shared.dto.ApiMessageResponseDTO
 import com.synchtask.user.application.service.AuthenticatedUserService
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -37,7 +38,7 @@ class BoardController(
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     fun createBoard(
-        @RequestBody request: BoardCreateDTO,
+        @Valid @RequestBody request: BoardCreateDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<BoardResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
@@ -68,7 +69,7 @@ class BoardController(
     @PreAuthorize("isAuthenticated()")
     fun updateBoard(
         @PathVariable id: Long,
-        @RequestBody request: BoardUpdateDTO,
+        @Valid @RequestBody request: BoardUpdateDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<BoardResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
@@ -101,7 +102,7 @@ class BoardController(
     @PreAuthorize("isAuthenticated()")
     fun updateBoardCollaborators(
         @PathVariable id: Long,
-        @RequestBody dto: BoardCollaboratorUpdateDTO,
+        @Valid @RequestBody dto: BoardCollaboratorUpdateDTO,
         @AuthenticationPrincipal user: UserDetails,
     ): ResponseEntity<BoardResponseDTO> {
         val actor = authenticatedUserService.requireUser(user)
