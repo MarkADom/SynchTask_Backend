@@ -1,7 +1,8 @@
 package com.synchtask.user.application.service
 
+import com.synchtask.shared.exception.InvalidInputException
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.user.application.dto.UserResponseDTO
-import com.synchtask.user.application.dto.UserStatusDTO
 import com.synchtask.user.domain.entity.User
 import com.synchtask.user.domain.entity.UserRole
 import com.synchtask.user.domain.exception.UserAlreadyExistsException
@@ -333,7 +334,7 @@ class UserServiceTest {
     fun `should throw if setting online status for missing user`() {
         every { userRepository.findByEmail(any()) } returns Optional.empty()
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ResourceNotFoundException> {
             userService.setUserOnlineStatus("ghost@email.com", true)
         }
     }
@@ -342,7 +343,7 @@ class UserServiceTest {
     fun `should throw if updating activity for missing user`() {
         every { userRepository.findByEmail(any()) } returns Optional.empty()
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ResourceNotFoundException> {
             userService.updateLastActivity("ghost@email.com")
         }
     }
@@ -364,5 +365,29 @@ class UserServiceTest {
 
         assertEquals(1, result.size)
         verify { UserMapper.toResponseDTO(user) }
+    }
+
+    @Test
+    fun `should throw invalid input when current password is incorrect`() {
+        val existing = buildUser(email = "test@email.com", passwordHash = "old-hash")
+        every { userRepository.findByEmail(existing.email) } returns Optional.of(existing)
+        every { passwordEncoder.matches("wrong-pass", "old-hash") } returns false
+
+        val exception = assertFailsWith<InvalidInputException> {
+            userService.updatePassword(existing.email, "wrong-pass", "new-pass")
+        }
+
+        assertEquals("Current password is incorrect", exception.message)
+    }
+
+    @Test
+    fun `should throw not found when updating password for missing user`() {
+        every { userRepository.findByEmail("ghost@email.com") } returns Optional.empty()
+
+        val exception = assertFailsWith<ResourceNotFoundException> {
+            userService.updatePassword("ghost@email.com", "current", "new")
+        }
+
+        assertEquals("User not found", exception.message)
     }
 }

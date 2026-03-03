@@ -30,7 +30,7 @@ body:json {
 }
 
 tests {
-  test("status 500", function () {
-    expect(res.getStatus()).to.equal(500);
-  });
+  test("status 404", function () {
+      expect(res.getStatus()).to.equal(404);
+    });
 }

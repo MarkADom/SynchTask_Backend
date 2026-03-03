@@ -10,12 +10,11 @@ import com.synchtask.user.domain.repository.UserRepository
 import io.mockk.*
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
-import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.web.server.ResponseStatusException
+import com.synchtask.shared.exception.AccessDeniedException
 import java.time.LocalDateTime
 import java.util.*
 
@@ -169,11 +168,11 @@ class AuthServiceTest {
         every { userRepository.findByEmail(nonAdmin.email) } returns Optional.of(nonAdmin)
 
         val exception =
-            assertThrows<ResponseStatusException> {
+            assertThrows<AccessDeniedException> {
                 authService.updateUserRole(nonAdmin.email, 999L, UserRole.COLLABORATOR)
             }
 
-        assertEquals(HttpStatus.FORBIDDEN, exception.statusCode)
+        assertEquals("Only ADMIN can update roles", exception.message)
     }
 
     @Test
@@ -201,10 +200,10 @@ class AuthServiceTest {
         every { userRepository.findById(targetUser.id!!) } returns Optional.of(targetUser)
 
         val exception =
-            assertThrows<ResponseStatusException> {
+            assertThrows<AccessDeniedException> {
                 authService.updateUserRole(admin.email, targetUser.id!!, UserRole.ADMIN)
             }
 
-        assertEquals(HttpStatus.FORBIDDEN, exception.statusCode)
+        assertEquals("Cannot assign ADMIN role via API", exception.message)
     }
 }

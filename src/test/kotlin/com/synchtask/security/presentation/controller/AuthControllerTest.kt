@@ -5,6 +5,9 @@ import com.synchtask.security.application.dto.JwksResponseDTO
 import com.synchtask.security.application.dto.TokenPairDTO
 import com.synchtask.security.application.manager.AuthManager
 import com.synchtask.security.application.service.AuthService
+import com.synchtask.security.domain.exception.InvalidCredentialsException
+import com.synchtask.shared.exception.InvalidInputException
+import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.security.infrastructure.jwt.JwtKeyManager
 import com.synchtask.user.application.dto.UserLoginDTO
 import com.synchtask.user.application.dto.UserRegistrationDTO
@@ -26,7 +29,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.security.oauth2.core.user.OAuth2User
-import org.springframework.web.server.ResponseStatusException
 
 class AuthControllerTest {
     private lateinit var authManager: AuthManager
@@ -115,10 +117,9 @@ class AuthControllerTest {
         val loginDto = UserLoginDTO(email = "fake@email.com", password = "wrong")
         every { authManager.authenticateUser(any(), any()) } throws SecurityException("Invalid credentials")
 
-        val exception = assertThrows(ResponseStatusException::class.java) { authController.login(loginDto) }
+        val exception = assertThrows(InvalidCredentialsException::class.java) { authController.login(loginDto) }
 
-        assertEquals(HttpStatus.UNAUTHORIZED, exception.statusCode)
-        assertEquals("Invalid credentials", exception.reason)
+        assertEquals("Invalid credentials", exception.message)
         verify { authManager.authenticateUser(loginDto.email, loginDto.password) }
     }
 
@@ -186,4 +187,42 @@ class AuthControllerTest {
 
         verify { authService.updateUserRole("admin@example.com", 42L, UserRole.OWNER) }
     }
+
+    @Test
+    fun `should throw not found when login user does not exist after auth`() {
+        val loginDto = UserLoginDTO(email = "ghost@email.com", password = "pass")
+        every { authManager.authenticateUser(loginDto.email, loginDto.password) } returns TokenPairDTO("jwt", "refresh")
+        every { userService.getUserByEmail(loginDto.email) } returns null
+
+        val exception = assertThrows(ResourceNotFoundException::class.java) { authController.login(loginDto) }
+
+        assertEquals("User not found", exception.message)
+    }
+
+    @Test
+    fun `should block assigning admin role at controller level`() {
+        val adminUser = mockk<UserDetails>()
+        every { adminUser.username } returns "admin@example.com"
+
+        val exception = assertThrows(InvalidInputException::class.java) {
+            authController.updateUserRole(adminUser, 42L, UserRole.ADMIN)
+        }
+
+        assertEquals("Assigning 'ADMIN' role is blocked via API.", exception.message)
+    }
+
+    @Test
+    fun `should throw not found when register returns user without id`() {
+        val dto = UserRegistrationDTO(name = "User", email = "user@test.com", password = "123456")
+        val userWithoutId = User(name = "User", email = dto.email, passwordHash = "hash")
+
+        every { authManager.registerUser(dto) } returns userWithoutId
+
+        val exception = assertThrows(ResourceNotFoundException::class.java) {
+            authController.registerUser(dto)
+        }
+
+        assertEquals("Registered user id is missing", exception.message)
+    }
+
 }

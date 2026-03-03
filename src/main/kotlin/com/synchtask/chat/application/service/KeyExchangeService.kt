@@ -52,7 +52,8 @@ class KeyExchangeService(
 
         val keyEntry = userEncryptionKeysRepository.findByUser(user)
         return if (keyEntry.isPresent) {
-            userEncryptionKeysRepository.delete(keyEntry.get())
+            val existingKeyEntry = keyEntry.get()
+            userEncryptionKeysRepository.delete(existingKeyEntry)
             logger.info("Revoked public key for user: $userEmail")
             true
         } else {
