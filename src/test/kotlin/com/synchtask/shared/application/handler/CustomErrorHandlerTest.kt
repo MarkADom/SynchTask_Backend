@@ -3,6 +3,7 @@ package com.synchtask.shared.application.handler
 import com.synchtask.friend.domain.exception.FriendRequestAlreadySentException
 import com.synchtask.security.domain.exception.InvalidCredentialsException
 import com.synchtask.shared.dto.ErrorResponseDTO
+import com.synchtask.shared.exception.AccessDeniedException
 import com.synchtask.shared.exception.ResourceNotFoundException
 import com.synchtask.shared.exception.UnauthorizedAccessException
 import com.synchtask.user.domain.exception.UserAlreadyExistsException
@@ -12,7 +13,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.springframework.http.HttpStatus
-import org.springframework.security.access.AccessDeniedException
+
 
 class CustomErrorHandlerTest {
     private val handler = CustomErrorHandler()
@@ -36,20 +37,29 @@ class CustomErrorHandlerTest {
     }
 
     @Test
-    fun `should handle UserAlreadyExistsException`() {
+    fun `should handle UserAlreadyExistsException as conflict`() {
         val exception = UserAlreadyExistsException("User already exists")
-        val response = handler.handleUserAlreadyExists(exception)
+        val response = handler.handleDomainConflict(exception)
 
-        Assertions.assertEquals("Email is already registered.", response.message)
+        Assertions.assertEquals("User already exists", response.message)
         Assertions.assertEquals("Conflict", response.error)
     }
 
     @Test
-    fun `should handle UnauthorizedAccessException`() {
+    fun `should handle UnauthorizedAccessException as forbidden`() {
         val exception = UnauthorizedAccessException("Forbidden access")
-        val response = handler.handleUnauthorizedAccess(exception)
+        val response = handler.handleDomainAccessDenied(exception)
 
-        Assertions.assertEquals("You do not have permission to perform this action.", response.message)
+        Assertions.assertEquals("Forbidden access", response.message)
+        Assertions.assertEquals("Forbidden", response.error)
+    }
+
+    @Test
+    fun `should handle AccessDeniedException as forbidden`() {
+        val exception = AccessDeniedException("Role is insufficient")
+        val response = handler.handleDomainAccessDenied(exception)
+
+        Assertions.assertEquals("Role is insufficient", response.message)
         Assertions.assertEquals("Forbidden", response.error)
     }
 
@@ -67,7 +77,7 @@ class CustomErrorHandlerTest {
         val exception = ResourceNotFoundException("Not found")
         val response = handler.handleResourceNotFound(exception)
 
-        Assertions.assertEquals("Requested resource was not found.", response.message)
+        Assertions.assertEquals("Not found", response.message)
         Assertions.assertEquals("Not Found", response.error)
     }
 
@@ -81,8 +91,9 @@ class CustomErrorHandlerTest {
     }
 
     @Test
-    fun `should handle access denied exceptions`() {
-        val response = handler.handleAccessDenied(AccessDeniedException("denied"))
+    fun `should handle spring access denied exceptions`() {
+        val response = handler.handleSpringAccessDenied(
+            org.springframework.security.access.AccessDeniedException("denied"))
 
         Assertions.assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
         Assertions.assertEquals("Access Denied", response.body?.message)
@@ -90,11 +101,10 @@ class CustomErrorHandlerTest {
     }
 
     @Test
-    fun `should handle friend request already sent`() {
-        val response = handler.handleFriendRequestAlreadySent(FriendRequestAlreadySentException("Already sent"))
+    fun `should handle friend request already sent as conflict`() {
+        val response = handler.handleDomainConflict(FriendRequestAlreadySentException("Already sent"))
 
-        Assertions.assertEquals(HttpStatus.CONFLICT, response.statusCode)
-        Assertions.assertEquals("Already sent", response.body?.message)
-        Assertions.assertEquals("Conflict", response.body?.error)
+        Assertions.assertEquals("Already sent", response.message)
+        Assertions.assertEquals("Conflict", response.error)
     }
 }
