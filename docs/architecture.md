@@ -1,6 +1,6 @@
-# Architecture (Practical Overview)
+# Architecture Overview
 
-This is a concise view of how the backend is organized.
+This section provides a concise overview of how the backend is structured.
 
 ## Layers
 
@@ -21,7 +21,7 @@ This is a concise view of how the backend is organized.
 ## Request flow 
 
 1. Controller validates/parses request.
-2. Application service resolves actor (`AuthenticatedUserService`) and coordinates use-case.
+2. Application service resolves the authenticated actor (`AuthenticatedUserService`) and coordinates use-case.
 3. Domain/service rules enforce ownership or collaborator membership.
 4. Repository persists/loads data.
 5. Controller returns response DTO.
