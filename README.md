@@ -1,13 +1,24 @@
 # SynchTask Backend
 
-![Kotlin](https://img.shields.io/badge/Kotlin-1.9+-purple)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)
-![Gradle](https://img.shields.io/badge/Gradle-Build-blueviolet)
-![JWT](https://img.shields.io/badge/Auth-JWT%20RS256-blue)
-![License](https://img.shields.io/badge/License-MIT-lightgrey)
+![Release](https://img.shields.io/github/v/release/MarkADom/SynchTask_Backend?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-stable-blue?style=for-the-badge)
 
-SynchTask Backend is a production-ready collaborative task management API built with Kotlin (JVM), Spring Boot 3 and Clean Architecture principles.
-It serves as the backend core of the SynchTask ecosystem and is developed as a portfolio-grade engineering project.
+![Build](https://img.shields.io/badge/build-passing-2ea44f?style=for-the-badge)
+![Coverage](https://img.shields.io/badge/coverage-80%25-2ea44f?style=for-the-badge)
+![Quality](https://img.shields.io/badge/quality-passed-2ea44f?style=for-the-badge)
+
+![Kotlin](https://img.shields.io/badge/Kotlin-1.9.x-7F52FF?style=for-the-badge)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-4CAF50?style=for-the-badge)
+![Gradle](https://img.shields.io/badge/Gradle-8.x-02303A?style=for-the-badge)
+
+
+SynchTask Backend is a collaborative task management API built with Kotlin (JVM) and Spring Boot 3.
+
+It serves as the backend core of the SynchTask ecosystem and is developed as engineering-focused backend project
+
+> Current stable release: **v1.0.0**
+> 
+> This version establishes a contract-stable and security-hardened backend baseline.
 
 ## Scope (v1.0)
 
@@ -25,7 +36,7 @@ See: [Engineering Decisions (v1.0)](docs/engineering_decisions_v1.0.md)
 
 - Kotlin + Spring Boot 3
 - MySQL + Redis
-- JWT/OAuth2 security
+- OAuth2 Resource Server with RS256 JWT
 - OpenAPI / Swagger UI
 - Bruno integration test suites
 
@@ -79,6 +90,21 @@ SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 - [OpenAPI Export](docs/openapi/api-docs.json)
 - [Bruno Test Suites](bruno/README.md)
 
+
+## Roadmap
+
+### v1.1 (Planned)
+
+- Pagination & sorting standardization 
+- Observability improvements (structured logging + metrics exposure)
+- Membership query performance optimization 
+- OpenAPI schema enrichment (error models + examples)
+- Extended integration tests for authorization edge cases 
+
+### Longer-term 
+- Event-driven extensions 
+- Modularization of bounded contexts 
+- Public demo deployment
 ## License
 
 Licensed under the terms in [`LICENSE.md`](LICENSE.md).
