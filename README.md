@@ -2,7 +2,6 @@
 
 ![Release](https://img.shields.io/github/v/release/MarkADom/SynchTask_Backend?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-stable-blue?style=for-the-badge)
-
 ![Build](https://img.shields.io/badge/build-passing-2ea44f?style=for-the-badge)
 ![Coverage](https://img.shields.io/badge/coverage-80%25-2ea44f?style=for-the-badge)
 ![Quality](https://img.shields.io/badge/quality-passed-2ea44f?style=for-the-badge)
